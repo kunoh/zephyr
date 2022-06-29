@@ -21,19 +21,19 @@ Initialization (one time only, executed from zephyrproject dir):
 Build and flash using ./build.py
 Run ./build.py --help to get options
 
+West commands work as well in the project directories
+# Working with zephyr repository
 
-# Manual builds
-Zephyrproject contains the directory that is controlled by west init and west update commands
-In order to use west manually, source zephyr environment:
+Zephyr repository can be found in zephyrproject/zephyr while all modules repositories are in zephyrproject
+In order to fetch remote branches in the repositories run:
 ``` bash
-$ . zephyrproject/zephyr/zephyr-env.sh
+git fetch --all
 ```
+Zephyr repository is using zephyrproject remote.
 
 In order to checkout different zephyr branch:
 ``` bash
 $ cd zephyrproject/zephyr
 $ git co [branch/SHA of interest]
 $ west update
-$ # To push changes
-$ cd ../.. && git add zephyrproject && git commit -m "Updated zephyr repo to XXX"
 ```

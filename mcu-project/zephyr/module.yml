@@ -1,0 +1,10 @@
+# For more info https://docs.zephyrproject.org/3.1.0/guides/modules.html
+build:
+  cmake: .
+  kconfig: Kconfig
+  settings:
+    board_root: .
+    dts_root: .
+    soc_root: .
+    arch_root: .
+    #    module_ext_root: .

@@ -3,7 +3,7 @@
 #include <sys/printk.h>
 #include <sys/util.h>
 #include <zephyr/types.h>
-
+#include <tm_hello_module.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/gatt.h>
 #include <bluetooth/hci.h>
@@ -129,6 +129,7 @@ static void hrs_notify(void)
 void main(void) {
   int err;
 
+  print_hello();
   printk("BLE MCU started \n");
 
   /* Initialize the Bluetooth Subsystem */

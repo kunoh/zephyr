@@ -1,0 +1,4 @@
+config TM_HELLO_MODULE
+	bool "TM hello module"
+	help
+	  TM hello module

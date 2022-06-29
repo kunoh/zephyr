@@ -1,0 +1,7 @@
+[manifest]
+path = mcu-project
+file = west.yml
+
+[zephyr]
+base = zephyrproject/zephyr
+

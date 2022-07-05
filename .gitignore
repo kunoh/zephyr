@@ -1,2 +1,16 @@
 build
 zephyrproject
+twister-out*/
+__pycache__/
+*.pyc
+*.zip
+*.cmd
+*.bit.bin
+*.mod
+*.mod.c
+*.mod.o
+*.o
+*.o.d
+*.a
+*.ko
+.*.swp

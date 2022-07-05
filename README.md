@@ -37,3 +37,13 @@ $ cd zephyrproject/zephyr
 $ git co [branch/SHA of interest]
 $ west update
 ```
+
+# Unit tests
+Zephyr's ztest framework is used for the unit tests
+All tests should be placed in mcu-project/tests
+Tests can be run as
+
+``` bash
+build.py --test
+```
+

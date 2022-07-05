@@ -15,7 +15,7 @@ BOARD= {
         "io_display": "mimxrt1050_evk"
         }
 
-def run_zephyr_cmd(cmd):
+def run_cmd(cmd):
     logging.info("Running: %s", cmd)
     try:
         return subprocess.run(cmd, check=True, shell=True, executable="/bin/bash")
@@ -31,18 +31,18 @@ def build_bootloader(mcu_type, board, pristine):
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
         cmd += f" -- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
-    ret = run_zephyr_cmd(cmd)
+    ret = run_cmd(cmd)
     print(ret)
 
 def build_app(mcu_type, board, pristine):
-    run_zephyr_cmd(f"west build -b {board} -p {pristine} -d {BUILD_DIR}/{mcu_type}/app {APP_DIR}/{mcu_type}")
+    run_cmd(f"west build -b {board} -p {pristine} -d {BUILD_DIR}/{mcu_type}/app {APP_DIR}/{mcu_type}")
 
 def flash(mcu_type, board, bootloader):
     if bootloader:
         app = "bootloader"
     else:
         app = "app"
-    run_zephyr_cmd(f"west build -b {board} -d {BUILD_DIR}/{mcu_type}/{app}")
+    run_cmd(f"west build -b {board} -d {BUILD_DIR}/{mcu_type}/{app}")
 
 def main():
     logging.basicConfig(level=logging.INFO)
@@ -63,14 +63,19 @@ def main():
                         help='build/flash bootloader fw instead of app firmware')
     parser.add_argument('-f', '--flash', action='store_true',
                         help='flash firmware')
+    parser.add_argument('--test', action='store_true',
+                        help='Run unit tests')
 
 
     args = parser.parse_args()
 
+    if args.test:
+        run_cmd("zephyrproject/zephyr/scripts/twister  -T mcu-project/tests/")
+        sys.exit(0)
 
     if args.update:
         try:
-            run_zephyr_cmd("west update")
+            run_cmd("west update")
         except:
             logging.exception("Error doing west update")
         sys.exit(0)

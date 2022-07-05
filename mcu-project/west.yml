@@ -1,52 +1,17 @@
-# The west manifest file (west.yml) for the nRF Connect SDK (NCS).
-#
-# The per-workspace west configuration file, ncs/.west/config,
-# specifies the location of this manifest file like this:
-#
-#     [manifest]
-#     path = nrf
-#
-# See the west documentation for more information:
-#
-# https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/west/index.html
-
 manifest:
   version: "0.12"
-
-  # "remotes" is a list of locations where git repositories are cloned
-  # and fetched from.
   remotes:
-    # Third-party repository sources:
     - name: zephyrproject
       url-base: https://github.com/zephyrproject-rtos
-  # If not otherwise specified, the projects below should be obtained
-  # from the ncs remote.
   defaults:
     remote: zephyrproject
 
-    #  group-filter: [-homekit, -nrf-802154, -find-my, -nrf5340_audio]
-
-  # "projects" is a list of git repositories which make up the NCS
-  # source code.
   projects:
-
-    # The Zephyr RTOS fork in the NCS, along with the subset of its
-    # modules which NCS imports directly.
-    #
-    # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/introduction/index.html
-    # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: zephyr
       path: zephyr
       revision: v3.1.0
       import:
         path-prefix: zephyrproject
-      #          name-allowlist:
-      #    - TraceRecorderSource
-      #    - canopennode
-  # West-related configuration for the nrf repository.
   self:
-    # This repository should be cloned to ncs/nrf.
-    path: nrf
-    # This line configures west extensions.
-    #    west-commands: scripts/west-commands.yml
+    path: mcu-project

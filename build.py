@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import shutil
 import subprocess
 import sys
 
@@ -23,9 +24,13 @@ def run_cmd(cmd):
         logging.error("Error running cmd %s. Try clean build or build.py update", cmd)
 
 
-def build_bootloader(mcu_type, board, pristine):
+def build_bootloader(mcu_type, board, clean):
 
-    cmd = f"west build -b{board} -p{pristine} -d{BUILD_DIR}/{mcu_type}/bootloader zephyrproject/bootloader/mcuboot/boot/zephyr "
+    build_dir = f"{BUILD_DIR}/{mcu_type}/bootloader"
+    if clean:
+        logging.info("Removing dir %s", build_dir)
+        shutil.rmtree(build_dir)
+    cmd = f"west build -b{board} -d{build_dir} zephyrproject/bootloader/mcuboot/boot/zephyr "
     if mcu_type in "io":
         config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
@@ -34,15 +39,20 @@ def build_bootloader(mcu_type, board, pristine):
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board, pristine):
-    run_cmd(f"west build -b {board} -p {pristine} -d {BUILD_DIR}/{mcu_type}/app {APP_DIR}/{mcu_type}")
+def build_app(mcu_type, board,  clean):
 
-def flash(mcu_type, board, bootloader):
+    build_dir = f"{BUILD_DIR}/{mcu_type}/app"
+    if clean:
+        logging.info("Removing dir %s", build_dir)
+        shutil.rmtree(build_dir)
+    run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type}")
+
+def flash(mcu_type, bootloader):
     if bootloader:
         app = "bootloader"
     else:
         app = "app"
-    run_cmd(f"west build -b {board} -d {BUILD_DIR}/{mcu_type}/{app}")
+    run_cmd(f"west flash -d {BUILD_DIR}/{mcu_type}/{app}")
 
 def main():
     logging.basicConfig(level=logging.INFO)
@@ -84,19 +94,14 @@ def main():
         parser.error("build and flash requires --type (-t)")
 
     board=BOARD.get(args.type)
-    if args.clean:
-        pristine="always"
-    else:
-        pristine="never"
-
     if args.bootloader:
-        build_bootloader(args.type, board, pristine)
+        build_bootloader(args.type, board, args.clean)
         sys.exit(0)
     if args.flash:
-        flash(args.type, board, args.bootloader)
+        flash(args.type, args.bootloader)
         sys.exit()
 
-    build_app(args.type, board, pristine)
+    build_app(args.type, board, args.clean)
 
 
 if __name__ == '__main__':

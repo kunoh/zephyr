@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+from glob import glob
 
 BUILD_DIR = "build"
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +23,7 @@ def run_cmd(cmd):
         return subprocess.run(cmd, check=True, shell=True, executable="/bin/bash")
     except:
         logging.error("Error running cmd %s. Try clean build or build.py update", cmd)
-
+        sys.exit(1)
 
 def build_bootloader(mcu_type, board, clean):
 
@@ -54,6 +55,17 @@ def flash(mcu_type, bootloader):
         app = "app"
     run_cmd(f"west flash -d {BUILD_DIR}/{mcu_type}/{app}")
 
+def run_unit_tests(clean):
+
+    output_dir = f"{BUILD_DIR}/unit_tests/twister-out"
+
+    if clean:
+        for directory in glob(f"{output_dir}*"):
+            shutil.rmtree(directory)
+
+    run_cmd(f"zephyrproject/zephyr/scripts/twister  -T mcu-project/tests/ -O {output_dir}")
+    sys.exit(0)
+
 def main():
     logging.basicConfig(level=logging.INFO)
 
@@ -80,14 +92,14 @@ def main():
     args = parser.parse_args()
 
     if args.test:
-        run_cmd("zephyrproject/zephyr/scripts/twister  -T mcu-project/tests/")
-        sys.exit(0)
+        run_unit_tests(args.clean)
 
     if args.update:
         try:
             run_cmd("west update")
         except:
             logging.exception("Error doing west update")
+            sys.exit(1)
         sys.exit(0)
 
     if not args.update and not args.type:
@@ -97,12 +109,12 @@ def main():
     if args.bootloader:
         build_bootloader(args.type, board, args.clean)
         sys.exit(0)
-    if args.flash:
-        flash(args.type, args.bootloader)
-        sys.exit()
 
     build_app(args.type, board, args.clean)
 
+    if args.flash:
+        flash(args.type, args.bootloader)
+        sys.exit()
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,194 @@
+
+variables:
+  major: 0
+  minor: 1
+  patch: 0
+  jyu: 0
+  normalizedBranchName: $(Build.SourceBranchName)
+  buildCounter: $[counter(variables['Build.SourceBranch'], 0)]
+  isReleaseBranch: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')]
+  versionSuffix: -$(normalizedBranchName).$(buildCounter)
+  version: '$(major).$(minor).$(patch)$(versionSuffix)'
+  docker_version: latest
+
+  #  trigger:
+  #  branches:
+  #    include:
+  #      - release/*
+
+pool:
+  name: 'Embedded'
+  demands: TM_CAP_YOCTO_BUILD -equals 1
+
+stages:
+  - stage: west_init
+    displayName: Initialize west
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_YOCTO_BUILD -equals 1
+
+    jobs:
+      - job: Init_Zephyr
+        timeoutInMinutes: 360
+        container:
+          image: mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - checkout: self
+          clean: false
+          persistCredentials: true
+
+        - template: set-version.yml
+        - script: |
+            rm -rf build
+            unset ZEPHYR_BASE
+            echo "Updating Zephyr repositories"
+            if ! ./build.py --update; then
+                # Sometimes git lock files remain if a job was stopped. Make a clean update in that case
+                rm -rf zephyrproject
+                ./build.py --update
+            fi
+            if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+                echo "Updating python requirements"
+                pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+            fi
+
+          displayName: Initialize Zephyr environment
+
+  - stage: ztest
+    displayName: Unit tests
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_YOCTO_BUILD -equals 1
+
+    jobs:
+      - job: run_unit_tests
+        timeoutInMinutes: 360
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - checkout: self
+          clean: false
+          persistCredentials: true
+
+        - script: |
+            unset ZEPHYR_BASE
+            if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+                echo "Updating Zephyr python requirements"
+                pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+            fi
+            ./build.py --test
+
+            tar -czf "$(Build.ArtifactStagingDirectory)/unit_tests_$(System.JobId).tar.gz" -C build/unit_tests .
+            rm -rf build/unit_tests
+          displayName: Run unit tests
+
+        - task: PublishPipelineArtifact@1
+          displayName: 'Publish Unit tests'
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifact: 'unit_tests_$(System.JobId)'
+          condition: always()
+
+  - stage: build_io_bootloader
+    displayName: Build IO bootloader
+    dependsOn: ztest
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_YOCTO_BUILD -equals 1
+
+    jobs:
+      - job: build_io_bootloader
+        timeoutInMinutes: 360
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - checkout: self
+          clean: false
+          persistCredentials: true
+
+        - script: |
+            unset ZEPHYR_BASE
+            if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+                echo "Updating Zephyr python requirements"
+                pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+            fi
+            ./build.py -t io -l
+            tar -czf "$(Build.ArtifactStagingDirectory)/io_bootloader_$(Build.BuildNumber).tar.gz" -C build/io/bootloader .
+          displayName: Build IO bootloader
+
+        - publish: $(Build.ArtifactStagingDirectory)
+          artifact: IO Bootloader FW
+          displayName: Publish FW
+
+  - stage: build_io
+    displayName: Build IO
+    dependsOn: ztest
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_YOCTO_BUILD -equals 1
+
+    jobs:
+      - job: build_io
+        timeoutInMinutes: 360
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - checkout: self
+          clean: false
+          persistCredentials: true
+
+        - script: |
+            unset ZEPHYR_BASE
+            if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+                echo "Updating Zephyr python requirements"
+                pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+            fi
+            ./build.py -t io
+            tar -czf "$(Build.ArtifactStagingDirectory)/io_app$(Build.BuildNumber).tar.gz" -C build/io/app .
+          displayName: Build IO
+
+        - publish: $(Build.ArtifactStagingDirectory)
+          artifact: IO MCU FW
+          displayName: Publish FW
+
+  - stage: build_ble
+    displayName: Build BLE
+    dependsOn: ztest
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_YOCTO_BUILD -equals 1
+
+    jobs:
+      - job: build_ble
+        timeoutInMinutes: 360
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - checkout: self
+          clean: false
+          persistCredentials: true
+
+        - script: |
+            unset ZEPHYR_BASE
+            if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+                echo "Updating Zephyr python requirements"
+                pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+            fi
+            ./build.py -t ble
+            tar -czf "$(Build.ArtifactStagingDirectory)/ble_app_$(Build.BuildNumber).tar.gz" -C build/ble/app .
+          displayName: Build BLE
+
+        - publish: $(Build.ArtifactStagingDirectory)
+          artifact: BLE MCU FW
+          displayName: Publish FW
+

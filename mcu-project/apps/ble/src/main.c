@@ -11,9 +11,10 @@
 #include <bluetooth/services/hrs.h>
 #include <bluetooth/uuid.h>
 
+#include <zephyr/logging/log.h>
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
-
+LOG_MODULE_REGISTER(main);
 static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 };
@@ -139,7 +140,9 @@ void main(void) {
     return;
   }
   bt_gatt_cb_register(&gatt_callbacks);
+  LOG_INF("GATT callbacek registered");
   bt_conn_auth_cb_register(&auth_cb_display);
+  LOG_INF("BT conn atuth callback registered");
 
   while (1) {
     k_sleep(K_SECONDS(1));

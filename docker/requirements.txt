@@ -1,0 +1,121 @@
+# Generetad from zephyr requirements v3.1.0 and added yq for reading yaml
+files
+yq
+# BASE: required to build or create images with zephyr
+#
+# While technically west isn't required it's considered in base since it's
+# part of the recommended workflow
+
+# used by various build scripts
+pyelftools>=0.26
+
+# used by dts generation to parse binding YAMLs, also used by
+# twister to parse YAMLs, by west, zephyr_module,...
+PyYAML>=5.1
+
+# YAML validation. Used by zephyr_module.
+pykwalify
+
+# used by west_commands
+canopen
+packaging
+progress
+psutil
+pylink-square
+
+# for ram/rom reports
+anytree
+
+# intelhex used by mergehex.py
+intelhex
+
+# it's west
+west>=0.10.1
+
+# used for windows based 'menuconfig'
+# "win32" is used for 64-bit Windows as well
+windows-curses; sys_platform == "win32"
+# BUILD-TEST: required to do build tests of zephyr
+#
+# things used by twister or other things like code coverage or python
+# testing
+
+# used by twister for ansi color
+colorama
+
+# python lex/yex used by twister
+ply>=3.10
+
+# used for code coverage
+gcovr>=4.2
+coverage
+
+# used for west-command testing
+pytest
+mypy
+
+# used for mocking functions in pytest
+mock>=4.0.1
+# COMPLIANCE: required by the compliance scripts
+
+# used by ci/check_compliance
+python-magic
+junitparser<2
+pylint
+# DOC: used to generate docs
+
+breathe>=4.30,<4.33 # 4.33: disabled due to #803 and #805 issues
+sphinx~=4.0
+sphinx_rtd_theme~=1.0
+sphinx-tabs
+sphinxcontrib-svg2pdfconverter
+pygments>=2.9
+sphinx-notfound-page
+sphinx-copybutton
+
+# YAML validation. Used by zephyr_module.
+PyYAML>=5.1
+pykwalify
+# EXTRAS: optional or useful for development/developers workflow
+
+# used by twister for --test-tree option
+anytree
+
+# helper for developers - check git commit messages
+gitlint
+
+# helper for developers
+junit2html
+
+# Script used to build firmware images for NXP LPC MCUs.
+lpc_checksum
+
+# used by scripts/gen_cfb_font_header.py - helper script for user
+Pillow
+
+# can be used to sign a Zephyr application binary for consumption by a bootloader
+imgtool>=1.7.1
+
+# used by nanopb module to generate sources from .proto files
+protobuf
+
+# used by scripts/release/bug_bash.py for generating top ten bug squashers
+PyGithub
+# RUN-TEST: required to do run time tests of zephyr
+#
+# things used by twister or related in run time testing
+
+# used to connect to boards for console IO
+pyserial
+
+# used to flash & debug various boards
+pyocd>=0.29.0
+
+# used by twister for board/hardware map
+tabulate
+
+# used by mcuboot
+cbor>=1.0.0
+
+# use for twister
+psutil

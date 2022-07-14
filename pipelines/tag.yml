@@ -1,0 +1,14 @@
+parameters:
+- name: forceTag
+  type: boolean
+  default: false
+
+steps:
+- script: |
+    git config --global user.name "BuildServiceAccount"
+    git config --global user.email "BuildServiceAccount@trackman.com"
+    git tag -a "v$(version)" -m "Tag v$(version)"
+    git push origin "v$(version)" 
+  displayName: Tag commit
+  workingDirectory: $(Build.SourcesDirectory)
+  condition: and(succeeded(), or(eq(True, ${{ parameters.forceTag }}), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))

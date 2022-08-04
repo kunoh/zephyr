@@ -1,1 +1,2 @@
 add_subdirectory_ifdef(CONFIG_TM_HELLO_MODULE tm_hello_module)
+add_subdirectory_ifdef(CONFIG_TM_EVENT_MGR event_mgr)

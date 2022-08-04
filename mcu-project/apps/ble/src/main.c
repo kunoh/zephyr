@@ -10,10 +10,25 @@
 #include <bluetooth/services/bas.h>
 #include <bluetooth/services/hrs.h>
 #include <bluetooth/uuid.h>
-
+#include <event_mgr.h>
 #include <zephyr/logging/log.h>
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
+
+
+
+void put_event(struct k_timer *dummy)
+{
+
+  static int counter = 1;
+  struct event event = {
+     .type = EVENT_ERROR,
+     .value = counter++
+  };
+  event_put(&event);
+}
+
+K_TIMER_DEFINE(event_timer, put_event , NULL);
 LOG_MODULE_REGISTER(main);
 static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -129,7 +144,7 @@ static void hrs_notify(void)
 
 void main(void) {
   int err;
-
+  struct event event;
   print_hello();
   printk("BLE MCU started \n");
 
@@ -145,10 +160,12 @@ void main(void) {
   LOG_INF("BT conn atuth callback registered");
 
   while (1) {
-    k_sleep(K_SECONDS(1));
+    k_sleep(K_SECONDS(3));
 
     /* Battery level simulation */
     bas_notify();
     hrs_notify();
+    event_get(&event);
+    LOG_INF("Event error count %d", event.value);
   }
 }

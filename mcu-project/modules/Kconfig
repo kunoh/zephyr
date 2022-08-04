@@ -1,1 +1,2 @@
 rsource "tm_hello_module/Kconfig"
+rsource "event_mgr/Kconfig"

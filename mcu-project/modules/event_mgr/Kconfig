@@ -1,0 +1,11 @@
+config  TM_EVENT_MGR
+	bool "Event manager"
+	help
+	  TM Event manager for communication between MCU modules, MCU and Linux and MCUs
+
+config TM_EVENT_QUEUE_SIZE
+       int "Event queue size"
+       default 10
+       range 1 30
+          help
+	    Size of the event queue

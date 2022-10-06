@@ -11,10 +11,10 @@ variables:
   version: '$(major).$(minor).$(patch)$(versionSuffix)'
   docker_version: latest
 
-  #  trigger:
-  #  branches:
-  #    include:
-  #      - release/*
+trigger:
+  branches:
+    include:
+      - master
 
 pool:
   name: 'Embedded'
@@ -151,13 +151,30 @@ stages:
                 echo "Updating Zephyr python requirements"
                 pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
             fi
-            ./build.py -t io
-            tar -czf "$(Build.ArtifactStagingDirectory)/io_app$(Build.BuildNumber).tar.gz" -C build/io/app .
+            pip3 install --user -I protobuf==3.6.1
+            if ! ./build.py -t io; then
+              echo "Failed to build IO controller"
+              exit 1
+            fi
+            cp build/io/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(major).$(minor).$(buildCounter).bin
+            cp -r mcu-project/apps/io/proto $(Build.ArtifactStagingDirectory)
           displayName: Build IO
 
         - publish: $(Build.ArtifactStagingDirectory)
           artifact: IO MCU FW
           displayName: Publish FW
+
+        - task: UniversalPackages@0
+          displayName: Publish .proto to Azure Artifacts
+          condition: eq(variables['system.pullrequest.pullrequestid'], '')
+          inputs:
+            command: publish
+            publishDirectory: $(Build.ArtifactStagingDirectory)
+            vstsFeedPublish: 'Embedded/io-controller'
+            vstsFeedPackagePublish: 'io-tma0005'
+            versionOption: custom
+            versionPublish: '$(major).$(minor).$(buildCounter)'
+            packagePublishDescription: 'Publish IO Proto files'
 
   - stage: build_ble
     displayName: Build BLE

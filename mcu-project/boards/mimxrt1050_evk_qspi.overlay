@@ -4,12 +4,6 @@
 /delete-node/ &scratch_partition;
 /delete-node/ &storage_partition;
 
-/ {
-    aliases {
-        bootloader-led0 = &green_led;
-    };
-};
-
 &is25wp064 {
     partitions {
         boot_partition: partition@0 {
@@ -25,11 +19,4 @@
             reg = <0x00120000 DT_SIZE_K(7040)>;
         };
     };
-};
-
-&zephyr_udc0 {
-	cdc_acm_uart0 {
-		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_0";
-	};
 };

@@ -35,6 +35,7 @@ def build_bootloader(mcu_type, board, clean):
     if mcu_type in "io":
         config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
+        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.overlay" + "\"")
         cmd += f" -- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     ret = run_cmd(cmd)

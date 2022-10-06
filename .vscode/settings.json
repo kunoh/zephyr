@@ -1,0 +1,29 @@
+{
+    "files.associations": {
+        "message_handler.h": "c",
+        "string": "cpp",
+        "cstring": "cpp",
+        "vector": "cpp",
+        "deque": "cpp",
+        "*.inc": "c",
+        "zephyr.h": "c",
+        "init.h": "c",
+        "array": "cpp",
+        "chrono": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "message_handler.hpp": "c",
+        "message_encoder.hpp": "c",
+        "simple.pb.h": "c",
+        "message.hpp": "c",
+        "tm_hello_module.h": "c",
+        "ztest.h": "c",
+        "string_view": "cpp",
+        "log.h": "c"
+    }
+}

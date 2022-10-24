@@ -30,7 +30,7 @@ void MessageThreadRun(void) {
 
 	if (usb_enable(StatusCb) != 0) {
 		LOG_ERR("Failed to enable USB");
-		return;
+		//return;
 	}
 
     while (1) {

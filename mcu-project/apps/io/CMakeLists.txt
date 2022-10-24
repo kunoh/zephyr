@@ -35,6 +35,7 @@ zephyr_library_include_directories(${CMAKE_CURRENT_BINARY_DIR}
 FILE(GLOB app_sources
     src/*.cpp
     lib/**/*.cpp    
+    lib/**/*.c
     )
 
 include_directories(${CMAKE_SOURCE_DIR})

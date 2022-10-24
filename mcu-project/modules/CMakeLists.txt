@@ -1,2 +1,4 @@
 add_subdirectory_ifdef(CONFIG_TM_HELLO_MODULE tm_hello_module)
 add_subdirectory_ifdef(CONFIG_TM_EVENT_MGR event_mgr)
+add_subdirectory_ifdef(CONFIG_DISK_DRIVER_FRAMERAM framedisk)
+add_subdirectory_ifdef(CONFIG_DISPLAY_LCD display_lcd)

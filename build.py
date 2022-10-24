@@ -47,7 +47,14 @@ def build_app(mcu_type, board,  clean):
     if clean:
         logging.info("Removing dir %s", build_dir)
         shutil.rmtree(build_dir)
-    run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type}")
+
+    if mcu_type in "io":
+#        config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
+        dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
+        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.overlay" + "\"")
+        overlay = f"-- -DDTC_OVERLAY_FILE={dts_overlay}"
+
+    run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
 
 def flash(mcu_type, bootloader):
     if bootloader:

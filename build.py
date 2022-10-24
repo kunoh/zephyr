@@ -48,6 +48,7 @@ def build_app(mcu_type, board,  clean):
         logging.info("Removing dir %s", build_dir)
         shutil.rmtree(build_dir)
 
+    overlay = ""
     if mcu_type in "io":
 #        config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")

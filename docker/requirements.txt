@@ -120,6 +120,6 @@ cbor>=1.0.0
 # use for twister
 psutil
 
-protobuf 
+protobuf==3.20.*
 
 grpcio-tools

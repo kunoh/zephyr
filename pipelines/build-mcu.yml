@@ -73,6 +73,10 @@ stages:
           persistCredentials: true
 
         - script: |
+            pack_logs () {
+              tar -czf "$(Build.ArtifactStagingDirectory)/unit_tests_$(System.JobId).tar.gz" -C build/unit_tests .
+              rm -rf build/unit_tests
+            }
             unset ZEPHYR_BASE
             if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
                 echo "Updating Zephyr python requirements"
@@ -85,13 +89,13 @@ stages:
             for testsuite in $(jq '.testsuites[]' build/unit_tests/twister-out/twister.json | tr -d '\t\r\n '); do
               for status in $(echo ${testsuite} | jq '.status'); do
                 if [[ "${status}" != "\"passed\"" ]]; then
+                  pack_logs
                   exit 1
                 fi
               done
             done
 
-            tar -czf "$(Build.ArtifactStagingDirectory)/unit_tests_$(System.JobId).tar.gz" -C build/unit_tests .
-            rm -rf build/unit_tests
+            pack_logs
           displayName: Run unit tests
 
         - task: PublishPipelineArtifact@1

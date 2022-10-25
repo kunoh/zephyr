@@ -28,7 +28,7 @@ zephyr_library_include_directories(${CMAKE_CURRENT_BINARY_DIR}
 
 include_directories(${CMAKE_SOURCE_DIR}/../../apps/io)
 
-FILE(GLOB app_sources src/*.cpp
+FILE(GLOB app_sources src/*.cpp src/display_mock.c
                       ${CMAKE_SOURCE_DIR}/../../apps/io/src/message_type_handler.cpp
                       )
 

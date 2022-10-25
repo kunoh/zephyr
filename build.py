@@ -65,6 +65,11 @@ def flash(mcu_type, bootloader):
     run_cmd(f"west flash -d {BUILD_DIR}/{mcu_type}/{app}")
 
 def run_unit_tests(clean):
+    test_proto_dir = os.path.join(PATH, f"mcu-project/tests/message/proto/")
+    apps_proto_path = os.path.join(PATH, f"mcu-project/apps/io/proto/message.options")
+    shutil.copy(apps_proto_path, test_proto_dir)
+    apps_proto_path = os.path.join(PATH, f"mcu-project/apps/io/proto/message.proto")
+    shutil.copy(apps_proto_path, test_proto_dir)
 
     output_dir = f"{BUILD_DIR}/unit_tests/twister-out"
 

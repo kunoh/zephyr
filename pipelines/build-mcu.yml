@@ -3,13 +3,11 @@ variables:
   major: 0
   minor: 1
   patch: 0
-  jyu: 0
-  normalizedBranchName: $(Build.SourceBranchName)
+  normalizedBranchName: ${{ replace(replace(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), '_', '-'), '/', '-') }}
   buildCounter: $[counter(variables['Build.SourceBranch'], 0)]
   isReleaseBranch: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')]
   versionSuffix: -$(normalizedBranchName).$(buildCounter)
   version: '$(major).$(minor).$(patch)$(versionSuffix)'
-  docker_version: latest
 
 trigger:
   branches:
@@ -81,6 +79,16 @@ stages:
                 pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
             fi
             ./build.py --test
+
+            # Validate that all test passed by looking at the twister output file.
+            # Twister is not returning any exit codes on failures, therefore we will manual scan the results.
+            for testsuite in $(jq '.testsuites[]' build/unit_tests/twister-out/twister.json | tr -d '\t\r\n '); do
+              for status in $(echo ${testsuite} | jq '.status'); do
+                if [[ "${status}" != "\"passed\"" ]]; then
+                  exit 1
+                fi
+              done
+            done
 
             tar -czf "$(Build.ArtifactStagingDirectory)/unit_tests_$(System.JobId).tar.gz" -C build/unit_tests .
             rm -rf build/unit_tests
@@ -156,7 +164,7 @@ stages:
               echo "Failed to build IO controller"
               exit 1
             fi
-            cp build/io/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(major).$(minor).$(buildCounter).bin
+            cp build/io/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(version).bin
             cp -r mcu-project/apps/io/proto $(Build.ArtifactStagingDirectory)
           displayName: Build IO
 
@@ -173,7 +181,7 @@ stages:
             vstsFeedPublish: 'Embedded/io-controller'
             vstsFeedPackagePublish: 'io-tma0005'
             versionOption: custom
-            versionPublish: '$(major).$(minor).$(buildCounter)'
+            versionPublish: '$(version)'
             packagePublishDescription: 'Publish IO Proto files'
 
   - stage: build_ble

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+include(functions.cmake)
 
 set(overlay_file ${CMAKE_CURRENT_SOURCE_DIR}/../../boards/${BOARD}.overlay)
 if(EXISTS ${overlay_file})
@@ -12,38 +13,51 @@ project(io-controller)
 
 set(NANOPB_OPTIONS "-I${CMAKE_SOURCE_DIR}")
 nanopb_generate_cpp(proto_sources proto_headers RELPATH .
-    proto/message.proto
+    proto/outer.proto
+    proto/system.proto
+    proto/display.proto
+    proto/inclinometer.proto
     proto/google/protobuf/any.proto
 )
 
 find_package(PythonInterp REQUIRED)
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/message/message_handler.cpp 
-                          ${CMAKE_CURRENT_BINARY_DIR}/message/message_handler.h
-                          ${CMAKE_CURRENT_BINARY_DIR}/message/message_encoder.cpp
-                          ${CMAKE_CURRENT_BINARY_DIR}/message/message_encoder.h
-    COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/lib/message/message_generator.py" ${CMAKE_CURRENT_SOURCE_DIR}/proto/message.proto ${CMAKE_CURRENT_BINARY_DIR}/message ${CMAKE_CURRENT_SOURCE_DIR}/lib/message/templates
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/proto/message.proto)
+generate_message_handler(system.proto 
+                         inclinometer.proto
+                         display.proto)
 
 add_custom_target(message_handler_cpp ALL
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/message/message_handler.cpp)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/message/system_message_handler.cpp
+            ${CMAKE_CURRENT_BINARY_DIR}/message/inclinometer_message_handler.cpp
+            ${CMAKE_CURRENT_BINARY_DIR}/message/display_message_handler.cpp)
 
 # we need to be able to include generated header files
 zephyr_library_include_directories(${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_BINARY_DIR}/message)
-
-FILE(GLOB app_sources
-    src/*.cpp
-    lib/**/*.cpp    
-    lib/**/*.c
-    )
+                                   ${CMAKE_CURRENT_BINARY_DIR}/message
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/lib/message
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/lib/sensors
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/src/message_handlers)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
 target_sources(app PRIVATE ${proto_sources}
-                           ${app_sources}
-                           ${CMAKE_CURRENT_BINARY_DIR}/message/message_handler.cpp
-                           ${CMAKE_CURRENT_BINARY_DIR}/message/message_encoder.cpp
+                            src/main.cpp
+                            src/message_thread.cpp
+                            src/message_handlers/system_message_handler_impl.cpp
+                            src/message_handlers/display_message_handler_impl.cpp
+                            src/message_handlers/inclinometer_message_handler_impl.cpp
+                            lib/message/message_handler.cpp
+                            lib/message/message_dispatcher.cpp
+                            lib/message/message_encoder.cpp
+                            lib/display/display.c
+                            lib/sensors/inclinometer.cpp
+                            lib/usb/usb_hid.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/system_message_handler.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/system_message_encoder.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/display_message_handler.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/display_message_encoder.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/inclinometer_message_handler.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/message/inclinometer_message_encoder.cpp
                            )
 
 add_dependencies(app message_handler_cpp)

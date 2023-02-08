@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+message RequestStopSpinner {
+    //
+}
+
+message ResponseStopSpinner {
+    bool status = 1;
+}
+
+message RequestNewFrame {
+    //
+}
+
+message ResponseNewFrame {
+    bool status = 1;
+}

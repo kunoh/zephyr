@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+//--- Example messages ---
+message RequestVersion {
+    //
+}
+
+message ResponseVersion {
+    int32 version = 1;
+}

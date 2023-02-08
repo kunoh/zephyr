@@ -2,6 +2,8 @@
 
 LOG_MODULE_REGISTER(message_encoder, LOG_LEVEL_INF);
 
+namespace MessageEncoder {
+
 bool EncodeOuterMessage(MessageBuffer &outer_buffer, 
                         MessageBuffer &inner_buffer, 
                         const char* type) {
@@ -10,16 +12,16 @@ bool EncodeOuterMessage(MessageBuffer &outer_buffer,
 
     message.has_inner = true;
     strncpy(message.inner.type_url, type, sizeof(message.inner.type_url));
-    memcpy(message.inner.value.bytes, inner_buffer.buffer, inner_buffer.message_length);
-    message.inner.value.size = inner_buffer.message_length;
+    memcpy(message.inner.value.bytes, inner_buffer.data, inner_buffer.length);
+    message.inner.value.size = inner_buffer.length;
 
-    stream = pb_ostream_from_buffer(outer_buffer.buffer, sizeof(outer_buffer.buffer));
+    stream = pb_ostream_from_buffer(outer_buffer.data, sizeof(outer_buffer.data));
 
     if (!pb_encode(&stream, MessageOuter_fields, &message)) {
         LOG_WRN("Encoding outer failed: %s\n", PB_GET_ERROR(&stream));
         return false;
     }
-    outer_buffer.message_length = stream.bytes_written;
+    outer_buffer.length = stream.bytes_written;
 
     return true;
 }
@@ -27,12 +29,12 @@ bool EncodeOuterMessage(MessageBuffer &outer_buffer,
 bool EncodeInnerMessage(MessageBuffer &inner_buffer, 
                         const pb_msgdesc_t *fields, const void *src_struct){
     pb_ostream_t stream;
-    stream = pb_ostream_from_buffer(inner_buffer.buffer, sizeof(inner_buffer.buffer));
+    stream = pb_ostream_from_buffer(inner_buffer.data, sizeof(inner_buffer.data));
     if (!pb_encode(&stream, fields, src_struct)){
         LOG_WRN("Encoding inner failed: %s\n", PB_GET_ERROR(&stream));
         return false;
     }
-    inner_buffer.message_length = stream.bytes_written;
+    inner_buffer.length = stream.bytes_written;
     return true;
 }
 
@@ -46,15 +48,4 @@ bool EncodeMessage(MessageBuffer &outer_buffer,
     return status;
 }
 
-namespace MessageEncoder {
-{% for function in functions %}
-bool Encode{{ function.name }}(MessageBuffer &buffer{% for variable in function.variables %}, {{ variable.type }} {{ variable.name }}{% endfor %}) {
-    {{ function.name }} message = {{ function.name }}_init_zero;
-
-    {% for variable in function.variables -%}
-    message.{{ variable.name }} = {{ variable.name }};
-    {% endfor %}
-    return EncodeMessage(buffer, {{ function.name }}_fields, &message, "/{{ function.name }}");
-}
-{% endfor %}
 }

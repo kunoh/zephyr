@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+//--- Footer ---
+message MessageOuter {
+    google.protobuf.Any inner = 1;
+}
+

@@ -1,0 +1,4 @@
+config MESSAGE_HANDLER
+	bool "Message handler and dispatcher"
+	help
+	  Message handler and dispatcher

@@ -1,0 +1,15 @@
+#pragma once
+#include "message_handler.h"
+#include "{{ basename }}_message_encoder.h"
+#include "{{ basename }}.pb.h"
+
+class {{ basename[0]|upper }}{{ basename[1:] }}MessageHandler: public MessageHandler {
+public:
+    virtual ~{{ basename[0]|upper }}{{ basename[1:] }}MessageHandler() = default;
+    bool Handle(MessageProto& msg, MessageBuffer &buffer);
+
+private:
+    {% for function in functions -%}
+    virtual bool Handle{{ function.name }}(MessageProto& msg, MessageBuffer &buffer) = 0;
+    {% endfor -%}
+};

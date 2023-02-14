@@ -6,9 +6,6 @@ SystemMessageHandlerImpl::SystemMessageHandlerImpl(Logger& logger)
 }
 
 bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBuffer& buffer) {
-
-    logger_.inf("ResponseVersion Received\n");
-
     RequestVersion rv = RequestVersion_init_zero;
     if (!msg.DecodeInnerMessage(RequestVersion_fields, &rv)){
         return false;

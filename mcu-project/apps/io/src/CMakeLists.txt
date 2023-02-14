@@ -1,0 +1,3 @@
+add_subdirectory(message_handlers)
+add_subdirectory(sensors)
+add_subdirectory(logger)

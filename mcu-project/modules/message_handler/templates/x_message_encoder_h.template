@@ -1,0 +1,10 @@
+#pragma once
+#include "message_encoder.h"
+#include "{{ basename }}.pb.h"
+
+namespace {{ basename[0]|upper }}{{ basename[1:] }}MessageEncoder {
+
+    {% for function in functions -%}
+    bool Encode{{ function.name }}(MessageBuffer &buffer{% for variable in function.variables %}, {{ variable.type }} {{ variable.name }}{% endfor %});
+    {% endfor %}
+};

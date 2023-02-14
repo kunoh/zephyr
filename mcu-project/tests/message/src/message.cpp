@@ -1,6 +1,7 @@
 #include <ztest.h>
 
 #include "message_dispatcher.h"
+
 #include "system_message_handler_impl.h"
 #include "display_message_handler_impl.h"
 #include "inclinometer_message_handler_impl.h"
@@ -9,12 +10,18 @@
 #include "display_message_encoder.h"
 #include "inclinometer_message_encoder.h"
 
+#include "display_impl.h"
+#include "inclinometer_impl.h"
+
+#include "logger_impl.h"
+
 void test_message_version(void)
 {
+	LoggerImpl logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	SystemMessageHandlerImpl sys_impl;
+	SystemMessageHandlerImpl sys_impl(logger);
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(sys_impl);
 
@@ -35,11 +42,12 @@ void test_message_version(void)
 
 void test_message_stop_spinner(void)
 {
+	LoggerImpl logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	Display disp;
-	DisplayMessageHandlerImpl disp_impl(disp);
+	DisplayImpl disp;
+	DisplayMessageHandlerImpl disp_impl(logger, disp);
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(disp_impl);
 
@@ -60,11 +68,12 @@ void test_message_stop_spinner(void)
 
 void test_message_new_frame(void)
 {
+	LoggerImpl logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	Display disp;
-	DisplayMessageHandlerImpl disp_impl(disp);
+	DisplayImpl disp;
+	DisplayMessageHandlerImpl disp_impl(logger, disp);
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(disp_impl);
 
@@ -85,10 +94,10 @@ void test_message_new_frame(void)
 
 void test_main(void)
 {
-	ztest_test_suite(message_version_unit_tests,
+	ztest_test_suite(message_unit_tests,
 			 ztest_unit_test(test_message_version),
 			 ztest_unit_test(test_message_stop_spinner),
 			 ztest_unit_test(test_message_new_frame)
 	);
-	ztest_run_test_suite(message_version_unit_tests);
+	ztest_run_test_suite(message_unit_tests);
 }

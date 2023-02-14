@@ -5,13 +5,14 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main);
 
-#define STACKSIZE 2048
+#define STACKSIZE 1024 * 2
 #define PRIORITY 7
 
 K_THREAD_DEFINE(message_thread_run_id, STACKSIZE, MessageThreadRun, NULL, NULL, NULL, PRIORITY, 0, 0);
 
-extern "C" void display_run(void);
-K_THREAD_DEFINE(display_tid, STACKSIZE, display_run, NULL, NULL, NULL, PRIORITY, 0, 0);
+// Comment out display until a proper structure is made
+//extern "C" void display_run(void);
+//K_THREAD_DEFINE(display_tid, STACKSIZE, display_run, NULL, NULL, NULL, PRIORITY, 0, 0);
 
 void main(void)
 {

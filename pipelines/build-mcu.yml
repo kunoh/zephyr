@@ -169,7 +169,12 @@ stages:
               exit 1
             fi
             cp build/io/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(version).bin
-            cp -r mcu-project/apps/io/proto $(Build.ArtifactStagingDirectory)
+
+            mkdir -p $(Build.ArtifactStagingDirectory)/proto/inner/
+            mkdir -p $(Build.ArtifactStagingDirectory)/proto/outer/
+            cp -r mcu-project/apps/io/src/message_handlers/proto/. $(Build.ArtifactStagingDirectory)/proto/inner/
+            cp mcu-project/modules/message_handler/outer.proto $(Build.ArtifactStagingDirectory)/proto/outer/
+            cp -r mcu-project/modules/message_handler/google $(Build.ArtifactStagingDirectory)/proto/outer/
           displayName: Build IO
 
         - publish: $(Build.ArtifactStagingDirectory)

@@ -10,6 +10,7 @@ from glob import glob
 
 BUILD_DIR = "build"
 PATH = os.path.dirname(os.path.abspath(__file__))
+BOOT_DIR = "mcu-project/bootloaders"
 APP_DIR = "mcu-project/apps"
 BOARD= {
         "ble": "nrf52840dk_nrf52840",
@@ -33,15 +34,15 @@ def build_bootloader(mcu_type, board, clean):
         shutil.rmtree(build_dir)
     cmd = f"west build -b{board} -d{build_dir} zephyrproject/bootloader/mcuboot/boot/zephyr "
     if mcu_type in "io":
-        config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
+        config_overlay = os.path.join(PATH, f"{BOOT_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.conf")
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
-        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.overlay" + "\"")
+        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{BOOT_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.overlay" + "\"")
         cmd += f" -- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board,  clean):
+def build_app(mcu_type, board,  clean, without_bootloader):
 
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
@@ -51,9 +52,12 @@ def build_app(mcu_type, board,  clean):
     overlay = ""
     if mcu_type in "io":
 #        config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
+        config_overlay = ""
+        if not without_bootloader:
+            config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/bootloader.conf")
         dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
         dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.overlay" + "\"")
-        overlay = f"-- -DDTC_OVERLAY_FILE={dts_overlay}"
+        overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
 
@@ -65,12 +69,6 @@ def flash(mcu_type, bootloader):
     run_cmd(f"west flash -d {BUILD_DIR}/{mcu_type}/{app}")
 
 def run_unit_tests(clean):
-    test_proto_dir = os.path.join(PATH, f"mcu-project/tests/message/proto/")
-    apps_proto_path = os.path.join(PATH, f"mcu-project/apps/io/proto/message.options")
-    shutil.copy(apps_proto_path, test_proto_dir)
-    apps_proto_path = os.path.join(PATH, f"mcu-project/apps/io/proto/message.proto")
-    shutil.copy(apps_proto_path, test_proto_dir)
-
     output_dir = f"{BUILD_DIR}/unit_tests/twister-out"
 
     if clean:
@@ -101,6 +99,8 @@ def main():
                         help='flash firmware')
     parser.add_argument('--test', action='store_true',
                         help='Run unit tests')
+    parser.add_argument('-wb', '--without-bootloader', action='store_true',
+                        help='build app without the need of a bootloader')
 
 
     args = parser.parse_args()
@@ -124,7 +124,7 @@ def main():
         build_bootloader(args.type, board, args.clean)
         sys.exit(0)
 
-    build_app(args.type, board, args.clean)
+    build_app(args.type, board, args.clean, args.without_bootloader)
 
     if args.flash:
         flash(args.type, args.bootloader)

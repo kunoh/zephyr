@@ -1,4 +1,12 @@
 #include "message_thread.h"
+#include "message_dispatcher.h"
+#include "lib/usb/usb_hid.h"
+#include "system_message_handler_impl.h"
+#include "display_message_handler_impl.h"
+#include "inclinometer_message_handler_impl.h"
+#include "logger_impl.h"
+#include "display_impl.h"
+#include "inclinometer_impl.h"
 
 LOG_MODULE_REGISTER(message_thread, LOG_LEVEL_INF);
 
@@ -15,7 +23,7 @@ static int SetReportCbCustom(const struct device *dev, struct usb_setup_packet *
     // For testing, to be deleted later
     if (0){
         printk("Received bytes: \n");
-        int i;
+        size_t i;
         for (i = 0; i < buffer.length; i++)
         {
             if (i > 0) printk(":");
@@ -32,18 +40,19 @@ static int SetReportCbCustom(const struct device *dev, struct usb_setup_packet *
 	return 0;
 }
 
-void MessageThreadRun(void) {
-
+void MessageThreadRun(void)
+{
     MessageProto msg_proto;
     MessageBuffer buffer;
     MessageDispatcher dispatcher;
 
-    Display disp;
-    Inclinometer incl;
+    DisplayImpl disp;
+    InclinometerImpl incl;
+    LoggerImpl logger("");
 
-    SystemMessageHandlerImpl sys_impl;
-    DisplayMessageHandlerImpl disp_impl(disp);
-    InclinometerMessageHandlerImpl incl_impl(incl);
+    SystemMessageHandlerImpl sys_impl(logger);
+    DisplayMessageHandlerImpl disp_impl(logger, disp);
+    InclinometerMessageHandlerImpl incl_impl(logger, incl);
 
     dispatcher.AddHandler(sys_impl);
     dispatcher.AddHandler(disp_impl);
@@ -70,7 +79,7 @@ void MessageThreadRun(void) {
         // For testing, to be deleted later
         if (0){
             printk("Sending bytes: \n");
-            int i;
+            size_t i;
             for (i = 0; i < buffer.length; i++)
             {
                 if (i > 0) printk(":");

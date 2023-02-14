@@ -1,0 +1,14 @@
+#include "{{ basename }}_message_encoder.h"
+
+namespace {{ basename[0]|upper }}{{ basename[1:] }}MessageEncoder {
+{% for function in functions %}
+bool Encode{{ function.name }}(MessageBuffer &buffer{% for variable in function.variables %}, {{ variable.type }} {{ variable.name }}{% endfor %}) {
+    {{ function.name }} message = {{ function.name }}_init_zero;
+
+    {% for variable in function.variables -%}
+    message.{{ variable.name }} = {{ variable.name }};
+    {% endfor %}
+    return MessageEncoder::EncodeMessage(buffer, {{ function.name }}_fields, &message, "/{{ function.name }}");
+}
+{% endfor %}
+}

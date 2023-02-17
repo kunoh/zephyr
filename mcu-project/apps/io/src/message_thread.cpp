@@ -1,12 +1,13 @@
 #include "message_thread.h"
-#include "message_dispatcher.h"
 #include "lib/usb/usb_hid.h"
+#include "logger_zephyr.h"
+#include "display_com35.h"
+#include "inclinometer_impl.h"
+#include "display_manager.h"
+#include "message_dispatcher.h"
 #include "system_message_handler_impl.h"
 #include "display_message_handler_impl.h"
 #include "inclinometer_message_handler_impl.h"
-#include "logger_impl.h"
-#include "display_impl.h"
-#include "inclinometer_impl.h"
 
 LOG_MODULE_REGISTER(message_thread, LOG_LEVEL_INF);
 
@@ -42,13 +43,20 @@ static int SetReportCbCustom(const struct device *dev, struct usb_setup_packet *
 
 void MessageThreadRun(void)
 {
+    /* Initialize Logger */
+    LoggerZephyr logger("");
+
+    /* Initialize External Devices */
+    DisplayCOM35 disp(logger);
+    InclinometerImpl incl;
+
+    /* Initialize Managers */
+    DisplayManager disp_manager(&logger, &disp);
+
+    /* Initialize Message Handlers and Disptacher */
     MessageProto msg_proto;
     MessageBuffer buffer;
     MessageDispatcher dispatcher;
-
-    DisplayImpl disp;
-    InclinometerImpl incl;
-    LoggerImpl logger("");
 
     SystemMessageHandlerImpl sys_impl(logger);
     DisplayMessageHandlerImpl disp_impl(logger, disp);
@@ -60,6 +68,10 @@ void MessageThreadRun(void)
 
     SetReportCallback(SetReportCbCustom);
     UsbHidInit();
+
+    /* Playground */
+    disp_manager.SetBootLogo();
+    disp_manager.StartSpinner();
 
 	if (usb_enable(StatusCb) != 0) {
 		LOG_ERR("Failed to enable USB");

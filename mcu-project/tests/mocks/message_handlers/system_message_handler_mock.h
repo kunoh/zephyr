@@ -2,10 +2,10 @@
 #include <logger.h>
 #include "system_message_handler.h"
 
-class SystemMessageHandlerImpl : public SystemMessageHandler {
+class SystemMessageHandlerMock : public SystemMessageHandler {
 public:
-    SystemMessageHandlerImpl(Logger& logger);
-    virtual ~SystemMessageHandlerImpl() = default;
+    SystemMessageHandlerMock(Logger& logger);
+    virtual ~SystemMessageHandlerMock() = default;
 
 private:
     bool HandleRequestVersion(MessageProto& msg, MessageBuffer &buffer) override;

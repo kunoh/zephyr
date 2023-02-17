@@ -3,7 +3,7 @@
  * Copyright (c) 2021, Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: Apache-2.0
- * 
+ *
  * framedisk is based on drivers/disk/ramdisk
  * The standard ramdisk driver uses a local static buffer s
  * This ramdisk driver gets its ramdisk_buf set to a framebuffer allocated by the display driver
@@ -16,6 +16,8 @@
 #include <zephyr/init.h>
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
+
+#include <framedisk.h>
 
 LOG_MODULE_REGISTER(framedisk, CONFIG_DISK_LOG_LEVEL);
 

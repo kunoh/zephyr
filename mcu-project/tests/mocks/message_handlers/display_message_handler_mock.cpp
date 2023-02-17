@@ -1,12 +1,12 @@
-#include "display_message_handler_impl.h"
+#include "display_message_handler_mock.h"
 
-DisplayMessageHandlerImpl::DisplayMessageHandlerImpl(Logger& logger, Display& disp)
+DisplayMessageHandlerMock::DisplayMessageHandlerMock(Logger& logger, Display& disp)
     : logger_{logger}
     , disp_{disp}
 {
 }
 
-bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer) {
+bool DisplayMessageHandlerMock::HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer) {
     bool status = true;
     RequestStopSpinner ss = RequestStopSpinner_init_zero;
         if (!msg.DecodeInnerMessage(RequestStopSpinner_fields, &ss)){
@@ -21,7 +21,7 @@ bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, Mess
     return true;
 }
 
-bool DisplayMessageHandlerImpl::HandleResponseStopSpinner(MessageProto& msg, MessageBuffer& buffer) {
+bool DisplayMessageHandlerMock::HandleResponseStopSpinner(MessageProto& msg, MessageBuffer& buffer) {
     ResponseStopSpinner ss = ResponseStopSpinner_init_zero;
     if (!msg.DecodeInnerMessage(ResponseStopSpinner_fields, &ss)){
         return false;
@@ -29,7 +29,7 @@ bool DisplayMessageHandlerImpl::HandleResponseStopSpinner(MessageProto& msg, Mes
     return true;
 }
 
-bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, MessageBuffer& buffer) {
+bool DisplayMessageHandlerMock::HandleRequestNewFrame(MessageProto& msg, MessageBuffer& buffer) {
     bool status = true;
     RequestNewFrame nf = RequestNewFrame_init_zero;
     if (!msg.DecodeInnerMessage(RequestNewFrame_fields, &nf)){
@@ -44,7 +44,7 @@ bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, Message
     return true;
 }
 
-bool DisplayMessageHandlerImpl::HandleResponseNewFrame(MessageProto& msg, MessageBuffer& buffer) {
+bool DisplayMessageHandlerMock::HandleResponseNewFrame(MessageProto& msg, MessageBuffer& buffer) {
     ResponseNewFrame nf = ResponseNewFrame_init_zero;
     if (!msg.DecodeInnerMessage(ResponseNewFrame_fields, &nf)){
         return false;

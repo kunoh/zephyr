@@ -9,7 +9,6 @@
 #include <zephyr/drivers/display.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/gpio.h>
-#include <fsl_clock.h>
 
 #include "fsl_elcdif.h"
 
@@ -18,6 +17,9 @@
 #endif
 
 #include <zephyr/logging/log.h>
+
+#include <display_lcd.h>
+#include <framedisk.h>
 
 LOG_MODULE_REGISTER(display_lcd, CONFIG_DISK_LOG_LEVEL);
 
@@ -28,11 +30,6 @@ LOG_MODULE_REGISTER(display_lcd, CONFIG_DISK_LOG_LEVEL);
 K_HEAP_DEFINE(mcux_elcdif_pool,
 	      CONFIG_LCD_POOL_BLOCK_MAX *
 	      CONFIG_LCD_POOL_BLOCK_NUM);
-
-#define CONFIG_DYNAMIC_RAMDISK_BUF
-#ifdef CONFIG_DYNAMIC_RAMDISK_BUF
-extern void framedisk_buffer_set(uint8_t *p_buf);
-#endif
 
 struct mcux_elcdif_config {
 	LCDIF_Type *base;
@@ -122,54 +119,6 @@ int display_rect_overwrite(const struct device *dev, const uint16_t x,
 	return 0;
 }
 
-/*
-int mcux_elcdif_rect_write(const struct device *dev, const uint16_t x,
-			     const uint16_t y,
-			     const struct display_buffer_descriptor *desc,
-			     const void *buf)
-{
-	const struct mcux_elcdif_config *elcdif_config = dev->config;
-	struct mcux_elcdif_data *dev_data = dev->data;
-
-	uint8_t write_idx = dev_data->write_idx;
-	uint8_t read_idx = !write_idx;
-
-	int h_idx;
-	const uint8_t *src;
-	uint8_t *dst;
-
-	__ASSERT((dev_data->pixel_bytes * desc->pitch * desc->height) <=
-		 desc->buf_size, "Input buffer too small");
-
-	LOG_DBG("W=%d, H=%d, @%d,%d", desc->width, desc->height, x, y);
-
-	k_sem_take(&dev_data->sem, K_FOREVER);
-
-//	memcpy(dev_data->fb[write_idx].data, dev_data->fb[read_idx].data,
-//	       dev_data->fb_bytes);
-
-	src = buf;
-	for (h_idx = 0; h_idx < desc->height; h_idx++) {
-		memcpy(dst, src, dev_data->pixel_bytes * desc->width);
-		src += dev_data->pixel_bytes * desc->pitch;
-		dst += dev_data->pixel_bytes * elcdif_config->rgb_mode.panelWidth;
-	}
-
-#ifdef CONFIG_HAS_MCUX_CACHE
-	DCACHE_CleanByRange((uint32_t) dev_data->fb[write_idx].data,
-			    dev_data->fb_bytes);
-#endif
-
-	ELCDIF_SetNextBufferAddr(elcdif_config->base,
-				 (uint32_t) dev_data->fb[write_idx].data);
-
-	dev_data->write_idx = read_idx;
-
-	return 0;
-}
-*/
-
-
 //Private
 static int mcux_elcdif_write(const struct device *dev, const uint16_t x,
 			     const uint16_t y,
@@ -229,13 +178,10 @@ static int mcux_elcdif_read(const struct device *dev, const uint16_t x,
 	return -ENOTSUP;
 }
 
-/*static*/ void* mcux_elcdif_get_framebuffer(const struct device *dev)
+void* mcux_elcdif_get_framebuffer(const struct device *dev)
 {
 	struct mcux_elcdif_data *dev_data = dev->data;
 	return (uint8_t *)(dev_data->fb[0].data);
-
-//	LOG_ERR("Direct framebuffer access not implemented");
-//	return NULL;
 }
 
 static int mcux_elcdif_display_blanking_off(const struct device *dev)
@@ -369,7 +315,7 @@ static int mcux_elcdif_init(const struct device *dev)
 #ifdef CONFIG_HAS_MCUX_CACHE
 	DCACHE_CleanByRange((uint32_t) dev_data->fb[i].data,
 			    dev_data->fb_bytes);
-#endif	
+#endif
 		LOG_INF("fb[%i] = %p", i, dev_data->fb[i].data);
 
 	}
@@ -384,16 +330,16 @@ static int mcux_elcdif_init(const struct device *dev)
 	ELCDIF_RgbModeSetPixelFormat(config->base, kELCDIF_PixelFormatRGB888);
 
 	//Set Order of "RGB" components to match display
-	config->base->CTRL2 = 0x855000; //Was 0x800000	
+	config->base->CTRL2 = 0x855000; //Was 0x800000
 
-	LOG_INF("CTRL=0x%x, CTRL1=0x%x, CTRL2=0x%x, TRANSFER_COUNT=0x%x", config->base->CTRL, config->base->CTRL1, config->base->CTRL2, config->base->TRANSFER_COUNT);   
-	LOG_INF("VDCTRL0=0x%x, VDCTRL1=0x%x, VDCTRL3=0x%x, VDCTRL1=0x%x", config->base->VDCTRL0, config->base->VDCTRL1, config->base->VDCTRL2, config->base->VDCTRL3);    
+	LOG_INF("CTRL=0x%x, CTRL1=0x%x, CTRL2=0x%x, TRANSFER_COUNT=0x%x", config->base->CTRL, config->base->CTRL1, config->base->CTRL2, config->base->TRANSFER_COUNT);
+	LOG_INF("VDCTRL0=0x%x, VDCTRL1=0x%x, VDCTRL3=0x%x, VDCTRL1=0x%x", config->base->VDCTRL0, config->base->VDCTRL1, config->base->VDCTRL2, config->base->VDCTRL3);
 	LOG_INF("CUR_BUF=0x%x, NEXT_BUF=0x%x", config->base->CUR_BUF, config->base->NEXT_BUF);
 
 
 	ELCDIF_EnableInterrupts(config->base, kELCDIF_CurFrameDoneInterruptEnable);
 	ELCDIF_RgbModeStart(config->base);
-	
+
 	return 0;
 }
 

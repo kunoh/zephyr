@@ -2,10 +2,10 @@
 
 #include <logger.h>
 
-class LoggerImpl : public Logger {
+class LoggerMock : public Logger {
 public:
-    LoggerImpl(const char* name) : name_(name) {};
-    virtual ~LoggerImpl() = default;
+    LoggerMock(const char* name) : name_(name) {};
+    virtual ~LoggerMock() = default;
     virtual void inf(const char* msg) override;
     virtual void wrn(const char* msg) override;
     virtual void err(const char* msg) override;

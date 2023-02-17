@@ -1,11 +1,11 @@
-#include "system_message_handler_impl.h"
+#include "system_message_handler_mock.h"
 
-SystemMessageHandlerImpl::SystemMessageHandlerImpl(Logger& logger)
+SystemMessageHandlerMock::SystemMessageHandlerMock(Logger& logger)
     : logger_{logger}
 {
 }
 
-bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBuffer& buffer) {
+bool SystemMessageHandlerMock::HandleRequestVersion(MessageProto& msg, MessageBuffer& buffer) {
     RequestVersion rv = RequestVersion_init_zero;
     if (!msg.DecodeInnerMessage(RequestVersion_fields, &rv)){
         return false;
@@ -18,7 +18,7 @@ bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBu
     return true;
 }
 
-bool SystemMessageHandlerImpl::HandleResponseVersion(MessageProto& msg, MessageBuffer& buffer) {
+bool SystemMessageHandlerMock::HandleResponseVersion(MessageProto& msg, MessageBuffer& buffer) {
     ResponseVersion rv = ResponseVersion_init_zero;
     if (!msg.DecodeInnerMessage(ResponseVersion_fields, &rv)){
         return false;

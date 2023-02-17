@@ -1,5 +1,4 @@
 #pragma once
-#include <inclinometer.h>
 
 class Inclinometer {
 public:

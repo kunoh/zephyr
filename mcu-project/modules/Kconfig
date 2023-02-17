@@ -1,5 +1,3 @@
 rsource "tm_hello_module/Kconfig"
 rsource "event_mgr/Kconfig"
-rsource "framedisk/Kconfig"
-rsource "display_lcd/Kconfig"
 rsource "message_handler/Kconfig"

@@ -1,0 +1,1 @@
+add_subdirectory_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK display_lcd_w_framedisk)

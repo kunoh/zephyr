@@ -1,4 +1,5 @@
 config MESSAGE_HANDLER
 	bool "Message handler and dispatcher"
+	select NANOPB
 	help
 	  Message handler and dispatcher

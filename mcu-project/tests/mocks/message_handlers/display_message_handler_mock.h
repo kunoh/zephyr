@@ -4,9 +4,9 @@
 #include "display_message_handler.h"
 
 
-class DisplayMessageHandlerImpl : public DisplayMessageHandler {
+class DisplayMessageHandlerMock : public DisplayMessageHandler {
 public:
-    DisplayMessageHandlerImpl(Logger& logger, Display& disp);
+    DisplayMessageHandlerMock(Logger& logger, Display& disp);
 
 private:
     bool HandleRequestStopSpinner(MessageProto& msg, MessageBuffer &buffer) override;

@@ -2,28 +2,28 @@
 
 #include "message_dispatcher.h"
 
-#include "system_message_handler_impl.h"
-#include "display_message_handler_impl.h"
-#include "inclinometer_message_handler_impl.h"
+#include "system_message_handler_mock.h"
+#include "display_message_handler_mock.h"
+#include "inclinometer_message_handler_mock.h"
 
 #include "system_message_encoder.h"
 #include "display_message_encoder.h"
 #include "inclinometer_message_encoder.h"
 
-#include "display_impl.h"
-#include "inclinometer_impl.h"
+#include "display_mock.h"
+#include "inclinometer_mock.h"
 
-#include "logger_impl.h"
+#include "logger_mock.h"
 
 void test_message_version(void)
 {
-	LoggerImpl logger("");
+	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	SystemMessageHandlerImpl sys_impl(logger);
+	SystemMessageHandlerMock sys_mock(logger);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(sys_impl);
+	dispatcher.AddHandler(sys_mock);
 
 	/* Encode a request version message */
 	MessageBuffer message;
@@ -42,14 +42,14 @@ void test_message_version(void)
 
 void test_message_stop_spinner(void)
 {
-	LoggerImpl logger("");
+	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	DisplayImpl disp;
-	DisplayMessageHandlerImpl disp_impl(logger, disp);
+	DisplayMock disp(logger);
+	DisplayMessageHandlerMock disp_mock(logger, disp);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(disp_impl);
+	dispatcher.AddHandler(disp_mock);
 
 	/* Encode a request StopSpinner message */
 	MessageBuffer message;
@@ -68,14 +68,14 @@ void test_message_stop_spinner(void)
 
 void test_message_new_frame(void)
 {
-	LoggerImpl logger("");
+	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	/* Initialize message dispatcher and add handler*/
-	DisplayImpl disp;
-	DisplayMessageHandlerImpl disp_impl(logger, disp);
+	DisplayMock disp(logger);
+	DisplayMessageHandlerMock disp_mock(logger, disp);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(disp_impl);
+	dispatcher.AddHandler(disp_mock);
 
 	/* Encode a request NewFrame message */
 	MessageBuffer message;

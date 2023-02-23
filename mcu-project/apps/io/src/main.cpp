@@ -10,10 +10,6 @@ LOG_MODULE_REGISTER(main);
 
 K_THREAD_DEFINE(message_thread_run_id, STACKSIZE, MessageThreadRun, NULL, NULL, NULL, PRIORITY, 0, 0);
 
-// Comment out display until a proper structure is made
-//extern "C" void display_run(void);
-//K_THREAD_DEFINE(display_tid, STACKSIZE, display_run, NULL, NULL, NULL, PRIORITY, 0, 0);
-
 void main(void)
 {
 	LOG_INF("********************************");
@@ -22,9 +18,3 @@ void main(void)
 
 	return;
 }
-
-
-// #define STACKSIZE 512
-// #define PRIORITY 5
-
-

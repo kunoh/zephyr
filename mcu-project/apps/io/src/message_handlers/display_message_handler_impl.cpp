@@ -15,7 +15,7 @@ bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, Mess
     //Kept commented until the interface for display is made, to remember which funtion is used
     //display_stop_spinner();
     if (!DisplayMessageEncoder::EncodeResponseStopSpinner(buffer, status)){
-        logger_.wrn("Failed to Encode ResponseStopSpinner\n");
+        logger_.wrn("Failed to Encode ResponseStopSpinner");
         return false;
     }
     return true;
@@ -38,7 +38,7 @@ bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, Message
     //Kept commented until the interface for display is made, to remember which funtion is used
     //display_signal_new_frame();
     if (!DisplayMessageEncoder::EncodeResponseNewFrame(buffer, status)){
-        logger_.wrn("Failed to Encode ResponseNewFrame\n");
+        logger_.wrn("Failed to Encode ResponseNewFrame");
         return false;
     }
     return true;

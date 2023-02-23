@@ -7,7 +7,7 @@ SystemMessageHandlerImpl::SystemMessageHandlerImpl(Logger& logger)
 
 bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBuffer& buffer) {
 
-    logger_.inf("ResponseVersion Received\n");
+    logger_.inf("ResponseVersion Received");
 
     RequestVersion rv = RequestVersion_init_zero;
     if (!msg.DecodeInnerMessage(RequestVersion_fields, &rv)){
@@ -16,7 +16,7 @@ bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBu
     // TODO: Get Version
     int version = 2;
     if (!SystemMessageEncoder::EncodeResponseVersion(buffer, version)){
-        logger_.wrn("Failed to Encode ResponseVersion\n");
+        logger_.wrn("Failed to Encode ResponseVersion");
     }
     return true;
 }

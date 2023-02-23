@@ -11,8 +11,7 @@ project(io-controller)
 add_subdirectory(src)
 
 target_include_directories(app
-    PRIVATE ${CMAKE_SOURCE_DIR}
-            ${CMAKE_SOURCE_DIR}/src
+    PRIVATE ${CMAKE_SOURCE_DIR}/src/usb
             ${CMAKE_SOURCE_DIR}/src/managers
             ${CMAKE_SOURCE_DIR}/src/display
             ${CMAKE_SOURCE_DIR}/src/sensors
@@ -22,14 +21,14 @@ target_include_directories(app
 target_sources(app PRIVATE src/main.cpp
                            src/message_thread.cpp
                            src/logger/logger_zephyr.cpp
+                           src/usb/usb_hid_zephyr.cpp
                            src/display/display_com35.cpp
                            src/sensors/inclinometer_impl.cpp
                            src/managers/display_manager.cpp
+                           src/managers/message_manager.cpp
                            src/message_handlers/system_message_handler_impl.cpp
                            src/message_handlers/display_message_handler_impl.cpp
                            src/message_handlers/inclinometer_message_handler_impl.cpp
-
-                           lib/usb/usb_hid.cpp
 )
 
 target_link_libraries(app PRIVATE logger)

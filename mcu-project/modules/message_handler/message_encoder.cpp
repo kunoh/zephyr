@@ -2,9 +2,8 @@
 
 namespace MessageEncoder {
 
-bool EncodeOuterMessage(MessageBuffer &outer_buffer,
-                        MessageBuffer &inner_buffer,
-                        const char* type) {
+bool EncodeOuterMessage(MessageBuffer &outer_buffer, MessageBuffer &inner_buffer, const char *type)
+{
     pb_ostream_t stream;
     MessageOuter message = MessageOuter_init_zero;
 
@@ -23,19 +22,21 @@ bool EncodeOuterMessage(MessageBuffer &outer_buffer,
     return true;
 }
 
-bool EncodeInnerMessage(MessageBuffer &inner_buffer,
-                        const pb_msgdesc_t *fields, const void *src_struct){
+bool EncodeInnerMessage(MessageBuffer &inner_buffer, const pb_msgdesc_t *fields,
+                        const void *src_struct)
+{
     pb_ostream_t stream;
     stream = pb_ostream_from_buffer(inner_buffer.data, sizeof(inner_buffer.data));
-    if (!pb_encode(&stream, fields, src_struct)){
+    if (!pb_encode(&stream, fields, src_struct)) {
         return false;
     }
     inner_buffer.length = stream.bytes_written;
     return true;
 }
 
-bool EncodeMessage(MessageBuffer &outer_buffer,
-                   const pb_msgdesc_t *fields, const void *src_struct, const char* type){
+bool EncodeMessage(MessageBuffer &outer_buffer, const pb_msgdesc_t *fields, const void *src_struct,
+                   const char *type)
+{
     bool status;
     MessageBuffer inner_buffer;
 
@@ -44,4 +45,4 @@ bool EncodeMessage(MessageBuffer &outer_buffer,
     return status;
 }
 
-}
+}  // namespace MessageEncoder

@@ -1,6 +1,7 @@
 #pragma once
-#include <logger.h>
 #include <inclinometer.h>
+#include <logger.h>
+
 #include "inclinometer_message_handler.h"
 
 class InclinometerMessageHandlerImpl : public InclinometerMessageHandler {

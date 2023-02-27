@@ -97,7 +97,7 @@ Pillow
 imgtool>=1.7.1
 
 # used by nanopb module to generate sources from .proto files
-protobuf
+protobuf==3.20.*
 
 # used by scripts/release/bug_bash.py for generating top ten bug squashers
 PyGithub
@@ -119,7 +119,5 @@ cbor>=1.0.0
 
 # use for twister
 psutil
-
-protobuf==3.20.*
 
 grpcio-tools

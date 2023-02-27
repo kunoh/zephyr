@@ -1,29 +1,22 @@
-#include <zephyr.h>
-
-#include <logger.h>
-#include <display.h>
-
 #include "display_manager.h"
 
 // Graphic Resources
 const uint8_t logo[] = {
-    #include "images/TrackManLogo.h"
+#include "images/TrackManLogo.h"
 };
 
 const uint8_t spinner[] = {
-    #include "images/Circle1.h"
-    #include "images/Circle2.h"
-    #include "images/Circle3.h"
-    #include "images/Circle4.h"
-    #include "images/Circle5.h"
-    #include "images/Circle6.h"
-    #include "images/Circle7.h"
-    #include "images/Circle8.h"
+#include "images/Circle1.h"
+#include "images/Circle2.h"
+#include "images/Circle3.h"
+#include "images/Circle4.h"
+#include "images/Circle5.h"
+#include "images/Circle6.h"
+#include "images/Circle7.h"
+#include "images/Circle8.h"
 };
 
-DisplayManager::DisplayManager(Logger* logger, Display* disp)
-    : logger_{logger}
-    , disp_{disp}
+DisplayManager::DisplayManager(Logger *logger, Display *disp) : logger_{logger}, disp_{disp}
 {
     logo_ = logo;
     spinner_ = spinner;
@@ -36,7 +29,7 @@ DisplayManager::DisplayManager(Logger* logger, Display* disp)
 
 void DisplayManager::SetBootLogo()
 {
-    disp_->DisplayWrite((320-198)/2, 10, 198, 16, 198, logo_);
+    disp_->DisplayWrite((320 - 198) / 2, 10, 198, 16, 198, logo_);
 }
 
 void DisplayManager::NextFrame()
@@ -62,10 +55,10 @@ void DisplayManager::SpinnerTimerHandler(struct k_timer *timer)
 
 void DisplayManager::DoSpin(struct k_work *work)
 {
-    static uint32_t spinner_idx=0;
+    static uint32_t spinner_idx = 0;
     DisplayManager *self = CONTAINER_OF(work, DisplayManager, work_);
 
-	uint8_t *spin = (uint8_t*)self->spinner_ +  spinner_idx%8 * (64*64*3);
-    self->disp_->DisplayWrite((320-64)/2, 90, 64, 64, 64, spin);
-	spinner_idx++;
+    uint8_t *spin = (uint8_t *)self->spinner_ + spinner_idx % 8 * (64 * 64 * 3);
+    self->disp_->DisplayWrite((320 - 64) / 2, 90, 64, 64, 64, spin);
+    spinner_idx++;
 }

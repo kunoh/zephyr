@@ -3,19 +3,11 @@
 
 #define EVENT_QUEUE_SIZE CONFIG_TM_EVENT_QUEUE_SIZE
 
-enum event_type
-{
-    EVENT_ERROR,
-    EVENT_BATTERY_UPDATE,
-    EVENT_SUSPEND,
-    EVENT_IDLE
-};
+enum event_type { EVENT_ERROR, EVENT_BATTERY_UPDATE, EVENT_SUSPEND, EVENT_IDLE };
 
-struct event
-{
+struct event {
     enum event_type type;
-    union
-    {
+    union {
         int value;
     };
 };

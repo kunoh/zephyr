@@ -1,5 +1,6 @@
 #include "inclinometer_impl.h"
 
-bool InclinometerImpl::write() {
+bool InclinometerImpl::write()
+{
     return true;
 }

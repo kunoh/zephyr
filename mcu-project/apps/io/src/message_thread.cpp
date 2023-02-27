@@ -1,35 +1,36 @@
+#include "message_thread.h"
+
 #include <usb/usb_device.h>
 
-#include "message_thread.h"
-#include "logger_zephyr.h"
-#include "usb_hid_zephyr.h"
 #include "display_com35.h"
-#include "inclinometer_impl.h"
-#include "message_manager.h"
 #include "display_manager.h"
-#include "message_dispatcher.h"
-#include "system_message_handler_impl.h"
 #include "display_message_handler_impl.h"
+#include "inclinometer_impl.h"
 #include "inclinometer_message_handler_impl.h"
+#include "logger_zephyr.h"
+#include "message_dispatcher.h"
+#include "message_manager.h"
+#include "system_message_handler_impl.h"
+#include "usb_hid_zephyr.h"
 
 /* Message Queues */
 K_MSGQ_DEFINE(usb_hid_msgq, sizeof(MessageBuffer), 10, 1);
 
 /* Work Items */
-static k_work* usb_hid_work;
+static k_work *usb_hid_work;
 
-static int HandleReceiveCallback(const struct device *dev, struct usb_setup_packet *setup, int32_t *len, uint8_t **data)
+static int HandleReceiveCallback(const struct device *dev, struct usb_setup_packet *setup,
+                                 int32_t *len, uint8_t **data)
 {
     MessageBuffer buffer;
     memcpy(buffer.data, *data, (size_t)*len);
     buffer.length = *len;
 
     // For testing, to be deleted later
-    if (0){
+    if (0) {
         printk("Received bytes: \n");
         size_t i;
-        for (i = 0; i < buffer.length; i++)
-        {
+        for (i = 0; i < buffer.length; i++) {
             if (i > 0) printk(":");
             printk("%02X", buffer.data[i]);
         }
@@ -47,7 +48,6 @@ static int HandleReceiveCallback(const struct device *dev, struct usb_setup_pack
 
 void MessageThreadRun(void)
 {
-
     /* Initialize Logger */
     LoggerZephyr logger("");
 
@@ -76,15 +76,14 @@ void MessageThreadRun(void)
 
     /* Playground */
 
-	if (usb_enable(NULL) != 0) {
-		logger.err("Failed to enable USB");
-	}
+    if (usb_enable(NULL) != 0) {
+        logger.err("Failed to enable USB");
+    }
 
     disp_manager.SetBootLogo();
     disp_manager.StartSpinner();
 
-    while(1)
-    {
+    while (1) {
         k_sleep(K_MSEC(1000));
     }
 }

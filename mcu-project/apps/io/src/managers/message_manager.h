@@ -1,16 +1,21 @@
 #pragma once
 
-#include "message_handler.h"
+#include <logger.h>
+#include <usb_hid.h>
+#include <zephyr.h>
+
 #include "message_dispatcher.h"
+#include "message_handler.h"
 
 class MessageManager {
 public:
-    MessageManager(Logger* logger, UsbHid* usb_hid, MessageProto* msg_proto, MessageDispatcher* dispatcher, k_msgq* msgq);
+    MessageManager(Logger* logger, UsbHid* usb_hid, MessageProto* msg_proto,
+                   MessageDispatcher* dispatcher, k_msgq* msgq);
     ~MessageManager() = default;
     k_work* GetWorkItem();
 
 private:
-    static void HandleReceivedMessage(k_work *work);
+    static void HandleReceivedMessage(k_work* work);
 
 private:
     Logger* logger_;

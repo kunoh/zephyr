@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pb_decode.h"
 #include "outer.pb.h"
+#include "pb_decode.h"
 
 struct MessageBuffer {
     uint8_t data[MessageOuter_size];
@@ -9,7 +9,7 @@ struct MessageBuffer {
     bool is_received = false;
 };
 
-class MessageProto{
+class MessageProto {
 public:
     MessageOuter msg_outer = MessageOuter_init_zero;
 
@@ -21,5 +21,5 @@ public:
 class MessageHandler {
 public:
     virtual ~MessageHandler() = default;
-    virtual bool Handle(MessageProto&, MessageBuffer &buffer) = 0;
+    virtual bool Handle(MessageProto &, MessageBuffer &buffer) = 0;
 };

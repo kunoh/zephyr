@@ -1,5 +1,9 @@
 #pragma once
 
+#include <display.h>
+#include <logger.h>
+#include <zephyr.h>
+
 class DisplayManager {
 public:
     DisplayManager(Logger* logger, Display* disp);
@@ -10,8 +14,8 @@ public:
     void StopSpinner();
 
 private:
-    static void SpinnerTimerHandler(struct k_timer *timer);
-    static void DoSpin(struct k_work *work);
+    static void SpinnerTimerHandler(struct k_timer* timer);
+    static void DoSpin(struct k_work* work);
 
 private:
     Logger* logger_;
@@ -20,6 +24,6 @@ private:
     k_work work_;
 
     // Graphic Resources
-    const uint8_t *logo_;
-    const uint8_t *spinner_;
+    const uint8_t* logo_;
+    const uint8_t* spinner_;
 };

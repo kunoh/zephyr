@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from glob import glob
+from pathlib import Path
 
 BUILD_DIR = "build"
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -76,7 +77,27 @@ def run_unit_tests(clean):
             shutil.rmtree(directory)
 
     run_cmd(f"zephyrproject/zephyr/scripts/twister  -T mcu-project/tests/ -O {output_dir}")
-    sys.exit(0)
+
+def format():
+    clang_format_bin = shutil.which('clang-format-12')
+    if not clang_format_bin:
+        clang_format_bin = shutil.which('clang-format-13')
+    if not clang_format_bin:
+        logging.error('Cannot find clang-format. Run: sudo apt install clang-format')
+        sys.exit(1)
+
+    root_dir = Path(PATH)
+    dirs_to_format = [
+        root_dir / 'mcu-project' / 'apps',
+        root_dir / 'mcu-project' / 'modules'
+        ]
+
+    for d in dirs_to_format:
+        if run_cmd(f"find {d} -iname *.h -o -iname *.cpp | xargs {clang_format_bin} -style=file -i").returncode != 0:
+            logging.error('Failed to format code')
+            sys.exit(1)
+
+    logging.info('Done')
 
 def main():
     logging.basicConfig(level=logging.INFO)
@@ -92,21 +113,27 @@ def main():
     parser.add_argument('-t', '--type', choices=['io', 'ble', 'io_display'],
                         help='Build type')
     parser.add_argument('-c', '--clean', action='store_true',
-                        help='clean before build')
+                        help='Clean before build')
     parser.add_argument('-l', '--bootloader', action='store_true',
-                        help='build/flash bootloader fw instead of app firmware')
+                        help='Build/flash bootloader fw instead of app firmware')
     parser.add_argument('-f', '--flash', action='store_true',
-                        help='flash firmware')
+                        help='Flash firmware')
     parser.add_argument('--test', action='store_true',
                         help='Run unit tests')
     parser.add_argument('-wb', '--without-bootloader', action='store_true',
-                        help='build app without the need of a bootloader')
-
+                        help='Build app without the need of a bootloader')
+    parser.add_argument('--format', action='store_true',
+                        help='Format code using clang')
 
     args = parser.parse_args()
 
+    if args.format:
+        format()
+        sys.exit(0)
+
     if args.test:
         run_unit_tests(args.clean)
+        sys.exit(0)
 
     if args.update:
         try:

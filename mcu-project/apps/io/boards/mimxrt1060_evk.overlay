@@ -1,0 +1,18 @@
+&usb1 {
+    maximum-speed = "high-speed";
+};
+
+&usb2 {
+    maximum-speed = "high-speed";
+};
+
+&lcdif {
+	width = <320>;
+	height = <240>;
+	hsync = <48>;
+	hfp = <40>;
+	hbp = <88>;
+	vsync = <3>;
+	vfp = <13>;
+	vbp = <32>;
+};

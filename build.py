@@ -16,6 +16,7 @@ APP_DIR = "mcu-project/apps"
 BOARD= {
         "ble": "nrf52840dk_nrf52840",
         "io": "mimxrt1050_evk_qspi",
+        "io1060": "mimxrt1060_evk",
         "io_display": "mimxrt1050_evk"
         }
 
@@ -45,6 +46,7 @@ def build_bootloader(mcu_type, board, clean):
 
 def build_app(mcu_type, board,  clean, without_bootloader):
 
+    
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
         logging.info("Removing dir %s", build_dir)
@@ -56,8 +58,8 @@ def build_app(mcu_type, board,  clean, without_bootloader):
         config_overlay = ""
         if not without_bootloader:
             config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/bootloader.conf")
-        dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
-        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.overlay" + "\"")
+        dts_overlay = os.path.join(PATH, f"mcu-project/boards/{board}.overlay")
+        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/{board}.overlay" + "\"")
         overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
@@ -110,7 +112,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=mcu_help, formatter_class = argparse.RawTextHelpFormatter)
     parser.add_argument('-u', '--update', help='Update west modules', action='store_true')
-    parser.add_argument('-t', '--type', choices=['io', 'ble', 'io_display'],
+    parser.add_argument('-t', '--type', choices=['io', 'io1060', 'ble', 'io_display'],
                         help='Build type')
     parser.add_argument('-c', '--clean', action='store_true',
                         help='Clean before build')
@@ -151,10 +153,15 @@ def main():
         build_bootloader(args.type, board, args.clean)
         sys.exit(0)
 
-    build_app(args.type, board, args.clean, args.without_bootloader)
+    if args.type in "io1060":
+        mcu_type = "io"
+    else:
+        mcu_type = args.type
+
+    build_app(mcu_type, board, args.clean, args.without_bootloader)
 
     if args.flash:
-        flash(args.type, args.bootloader)
+        flash(mcu_type, args.bootloader)
         sys.exit()
 
 if __name__ == '__main__':

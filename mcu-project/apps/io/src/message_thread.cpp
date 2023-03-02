@@ -57,22 +57,23 @@ void MessageThreadRun(void)
     DisplayCOM35 disp(logger);
     InclinometerImpl incl;
 
-    /* Initialize Message Handlers and Disptacher */
+    /* Initialize Message Disptacher */
     MessageProto msg_proto;
     MessageDispatcher dispatcher;
-
-    SystemMessageHandlerImpl sys_impl(logger);
-    DisplayMessageHandlerImpl disp_impl(logger, disp);
-    InclinometerMessageHandlerImpl incl_impl(logger, incl);
-
-    dispatcher.AddHandler(sys_impl);
-    dispatcher.AddHandler(disp_impl);
-    dispatcher.AddHandler(incl_impl);
 
     /* Initialize Managers */
     DisplayManager disp_manager(&logger, &disp);
     MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
     usb_hid_work = msg_manager.GetWorkItem();
+
+    /* Initialize Message Handlers*/
+    SystemMessageHandlerImpl sys_impl(logger);
+    DisplayMessageHandlerImpl disp_impl(logger, disp_manager);
+    InclinometerMessageHandlerImpl incl_impl(logger, incl);
+
+    dispatcher.AddHandler(sys_impl);
+    dispatcher.AddHandler(disp_impl);
+    dispatcher.AddHandler(incl_impl);
 
     /* Playground */
 

@@ -1,12 +1,12 @@
 #pragma once
-#include <display.h>
+#include <display_manager.h>
 #include <logger.h>
 
 #include "display_message_handler.h"
 
 class DisplayMessageHandlerImpl : public DisplayMessageHandler {
 public:
-    DisplayMessageHandlerImpl(Logger& logger, Display& disp);
+    DisplayMessageHandlerImpl(Logger& logger, DisplayManager& disp_mgr);
 
 private:
     bool HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer) override;
@@ -16,5 +16,5 @@ private:
 
 private:
     Logger& logger_;
-    Display& disp_;
+    DisplayManager& disp_mgr_;
 };

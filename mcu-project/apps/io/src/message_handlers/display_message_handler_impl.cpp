@@ -1,7 +1,7 @@
 #include "display_message_handler_impl.h"
 
-DisplayMessageHandlerImpl::DisplayMessageHandlerImpl(Logger& logger, Display& disp)
-    : logger_{logger}, disp_{disp}
+DisplayMessageHandlerImpl::DisplayMessageHandlerImpl(Logger& logger, DisplayManager& disp_mgr)
+    : logger_{logger}, disp_mgr_{disp_mgr}
 {}
 
 bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer)
@@ -11,8 +11,7 @@ bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, Mess
     if (!msg.DecodeInnerMessage(RequestStopSpinner_fields, &ss)) {
         return false;
     }
-    // Kept commented until the interface for display is made, to remember which funtion is used
-    // display_stop_spinner();
+    disp_mgr_.StopSpinner();
     if (!DisplayMessageEncoder::EncodeResponseStopSpinner(buffer, status)) {
         logger_.wrn("Failed to Encode ResponseStopSpinner");
         return false;
@@ -36,8 +35,7 @@ bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, Message
     if (!msg.DecodeInnerMessage(RequestNewFrame_fields, &nf)) {
         return false;
     }
-    // Kept commented until the interface for display is made, to remember which funtion is used
-    // display_signal_new_frame();
+    disp_mgr_.NextFrame();
     if (!DisplayMessageEncoder::EncodeResponseNewFrame(buffer, status)) {
         logger_.wrn("Failed to Encode ResponseNewFrame");
         return false;

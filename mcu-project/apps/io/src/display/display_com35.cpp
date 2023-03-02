@@ -8,8 +8,7 @@ DisplayCOM35::DisplayCOM35(Logger& logger) : logger_{logger}
 {
     display_dev_ = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     if (!device_is_ready(display_dev_)) {
-        // logger_.err("Device %s not found. Aborting...", display_dev_->name);
-        logger_.err("Device not found. Aborting...");
+        logger_.err("Display not found. Aborting...");
     }
 }
 

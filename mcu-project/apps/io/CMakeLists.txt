@@ -27,12 +27,15 @@ target_sources(app PRIVATE src/main.cpp
                            src/sensors/battery_mock.cpp
                            src/sensors/battery_charger_mock.cpp
                            src/sensors/imu_mock.cpp
-                           src/sensors/inclinometer_impl.cpp
                            src/managers/state_manager_sml.cpp
                            src/managers/battery_manager.cpp
                            src/managers/imu_manager.cpp
-                           src/managers/display_manager.cpp
+                           src/sensors/inclinometer_mock.cpp
+                           src/sensors/leg_control_impl.cpp
                            src/managers/message_manager.cpp
+                           src/managers/display_manager.cpp
+                           src/managers/inclinometer_manager.cpp
+                           src/managers/leg_manager.cpp
                            src/message_handlers/system_message_handler_impl.cpp
                            src/message_handlers/battery_message_handler_impl.cpp
                            src/message_handlers/display_message_handler_impl.cpp
@@ -43,3 +46,5 @@ target_sources_ifdef(CONFIG_BATTERY_CHARGER_BQ25713 app PRIVATE src/sensors/batt
 target_sources_ifdef(CONFIG_BATTERY_NH2054QE34 app PRIVATE src/sensors/battery_nh2054qe34.cpp)
 target_sources_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK app PRIVATE src/display/display_com35.cpp)
 target_sources_ifdef(CONFIG_FXOS8700 app PRIVATE src/sensors/imu_fxos8700.cpp)
+target_sources_ifdef(CONFIG_INCL_SCL3300 app PRIVATE src/sensors/inclinometer_scl3300.cpp)
+

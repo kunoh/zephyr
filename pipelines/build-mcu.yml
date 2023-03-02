@@ -34,7 +34,7 @@ stages:
 
         steps:
         - checkout: self
-          clean: false
+          clean: true
           persistCredentials: true
 
         - script: |
@@ -49,6 +49,8 @@ stages:
               exit 1
             fi
             if [[ `git status --porcelain mcu-project/apps mcu-project/modules` ]]; then
+              git status
+              git diff
               echo "##vso[task.logissue type=error]C/C++ code in apps/ or modules/ is not correctly formatted. Run 'build.py --format'."
               exit 1
             fi

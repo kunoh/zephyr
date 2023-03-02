@@ -4,5 +4,5 @@
 class InclinometerMock: public Inclinometer {
 public:
     virtual ~InclinometerMock() = default;
-    bool write() override;
+    bool Write() override;
 };

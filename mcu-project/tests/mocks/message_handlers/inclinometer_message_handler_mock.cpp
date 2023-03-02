@@ -11,6 +11,6 @@ bool InclinometerMessageHandlerMock::HandleSetSampleRate(MessageProto& msg, Mess
     if (!msg.DecodeInnerMessage(SetSampleRate_fields, &sr)){
         return false;
     }
-    incl_.write();
+    incl_.Write();
     return true;
 }

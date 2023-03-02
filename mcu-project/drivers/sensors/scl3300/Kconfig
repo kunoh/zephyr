@@ -1,0 +1,5 @@
+config INCL_SCL3300
+	bool "scl3300 driver"
+	
+	help
+	  Enable support for SCL3300 inclinometer driver.

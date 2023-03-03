@@ -1,4 +1,1 @@
-add_subdirectory(logger)
-add_subdirectory(display)
-add_subdirectory(sensors)
 add_subdirectory(message_handlers)

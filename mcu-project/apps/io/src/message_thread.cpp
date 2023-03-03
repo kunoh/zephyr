@@ -5,13 +5,17 @@
 #include "display_com35.h"
 #include "display_manager.h"
 #include "display_message_handler_impl.h"
+#include "imu_fxos8700.h"
+#include "imu_manager.h"
 #include "inclinometer_impl.h"
 #include "inclinometer_message_handler_impl.h"
 #include "logger_zephyr.h"
 #include "message_dispatcher.h"
 #include "message_manager.h"
+#include "message_thread.h"
 #include "system_message_handler_impl.h"
 #include "usb_hid_zephyr.h"
+#include "util.h"
 
 /* Message Queues */
 K_MSGQ_DEFINE(usb_hid_msgq, sizeof(MessageBuffer), 10, 1);
@@ -46,6 +50,13 @@ static int HandleReceiveCallback(const struct device *dev, struct usb_setup_pack
     return k_work_submit(usb_hid_work);
 }
 
+// This function is being used as an example for adding a subscriber to IMU sample data
+void on_imu_data(ImuSampleData sample_data)
+{
+    printk("AX=%10.6f AY=%10.6f AZ=%10.6f\n", sample_data.acc.x, sample_data.acc.y,
+           sample_data.acc.z);
+}
+
 void MessageThreadRun(void)
 {
     /* Initialize Logger */
@@ -55,6 +66,7 @@ void MessageThreadRun(void)
     UsbHidZephyr usb_hid(logger);
     usb_hid.SetReceiveCallback(HandleReceiveCallback);
     DisplayCOM35 disp(logger);
+    ImuFxos8700 imu(logger);
     InclinometerImpl incl;
 
     /* Initialize Message Disptacher */
@@ -62,6 +74,8 @@ void MessageThreadRun(void)
     MessageDispatcher dispatcher;
 
     /* Initialize Managers */
+    ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger),
+                           std::make_unique<ImuFxos8700>(std::move(imu)));
     DisplayManager disp_manager(&logger, &disp);
     MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
     usb_hid_work = msg_manager.GetWorkItem();
@@ -81,6 +95,8 @@ void MessageThreadRun(void)
         logger.err("Failed to enable USB");
     }
 
+    imu_manager.AddSubscriber(on_imu_data);
+    imu_manager.StartSampling();
     disp_manager.SetBootLogo();
     disp_manager.StartSpinner();
 

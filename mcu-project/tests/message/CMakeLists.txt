@@ -17,12 +17,12 @@ target_include_directories(app
 
 target_sources(app PRIVATE
     src/message.cpp
-    ../mocks/logger/logger_mock.cpp
-    ../mocks/display/display_mock.cpp
-    ../mocks/sensors/inclinometer_mock.cpp
-    ../mocks/message_handlers/system_message_handler_mock.cpp
-    ../mocks/message_handlers/display_message_handler_mock.cpp
-    ../mocks/message_handlers/inclinometer_message_handler_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/logger/logger_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/display/display_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/sensors/inclinometer_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/message_handlers/system_message_handler_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/message_handlers/display_message_handler_mock.cpp
+    ${CMAKE_SOURCE_DIR}/../mocks/message_handlers/inclinometer_message_handler_mock.cpp
 )
 
 target_link_libraries(app PRIVATE logger)

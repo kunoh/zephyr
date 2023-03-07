@@ -3,7 +3,7 @@ MCU something
 # Initialization
 Initialization (one time only, executed from zephyrproject dir):
 
-* Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/2.7.0/getting_started/index.html) except from west init. Instalation can also be seen in the pipelines.
+* Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/3.1.0/develop/getting_started/index.html) except from west init. Instalation can also be seen in the pipelines.
 * Update zephyr
 
 ``` bash
@@ -40,6 +40,14 @@ $ west update
 
 # Unit tests
 Zephyr's ztest framework is used for the unit tests
+
+For GCC >= 11
+Compiling the Zephyr library using cpp20 is currently causing some compilation issue.
+In order to fix it copy the bits directory, placed in directory files;
+``` bash
+cp -r files/bits zephyrproject/zephyr/boards/posix/native_posix
+```
+
 All tests should be placed in mcu-project/tests
 Tests can be run as
 
@@ -47,3 +55,11 @@ Tests can be run as
 build.py --test
 ```
 
+# Run in Docker
+```
+docker run --rm -i -v <path/to/mcu-root-directory>:/mcu -t tmesw.azurecr.io/mcu-builder:latest
+cd mcu
+git config --global --add safe.directory '*'
+west update
+./build.py -t io
+```

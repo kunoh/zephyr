@@ -8,8 +8,13 @@ ARG ZEPHYR_SDK_VERSION="0.14.2"
 # Zephyr docker does not work with azure since it creates user with UID 1000
 # Also some more vars are set to indicate ZEPHYR Base dirs, that we have it different place
 ENV TZ=Europe/Copenhagen
+
 RUN apt-get update && \
-    apt install -y wget locales protobuf-compiler
+    apt install -y wget locales protobuf-compiler \
+    software-properties-common
+
+RUN add-apt-repository ppa:ubuntu-toolchain-r/ppa && \
+    apt-get update
 
 RUN wget https://apt.kitware.com/kitware-archive.sh && \
     bash kitware-archive.sh && \
@@ -19,8 +24,10 @@ RUN wget https://apt.kitware.com/kitware-archive.sh && \
 RUN DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -y git cmake ninja-build gperf \
     ccache dfu-util device-tree-compiler jq \
     python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
-    make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 \
-    clang-format-12
+    build-essential make gcc-10 g++-10 cpp-10 gcc-10-multilib g++-10-multilib libsdl2-dev libmagic1 \
+    clang-format-12 linux-libc-dev
+
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
 
 RUN mkdir -p /opt/toolchains && \
     cd /opt/toolchains && \
@@ -34,6 +41,9 @@ RUN mkdir -p /opt/toolchains && \
 
 COPY requirements.txt .
 RUN pip install -r /requirements.txt
+
+# GCC expect the path to be /usr/include/asm but it is renamed to /usr/include/asm-generic in this Ubuntu image
+RUN ln -s /usr/include/asm-generic /usr/include/asm
 
 RUN /usr/sbin/locale-gen en_US.UTF-8
 

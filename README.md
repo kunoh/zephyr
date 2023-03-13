@@ -6,9 +6,25 @@ Initialization (one time only, executed from zephyrproject dir):
 * Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/3.1.0/develop/getting_started/index.html) except from west init. Instalation can also be seen in the pipelines.
 * Update zephyr
 
+
+
 ``` bash
   $ ./build.py update
 ```
+
+* You might need to install the following apt packages manually:
+  * protobuf-compiler
+
+* It is recommended to setup a python virtual environment for the repo, and install the python packages from requirements into it. Because som of the required version might confilct with the ones install on your system.
+  * make sure you get protobuf==3.19.0  as newer versions currently dont compile (12-03-2023).
+
+* If you areworking with a 1060 board you will need to change the debugger firmware to J-Link.
+  * https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1060-EVKB/ta-p/1452717
+  * https://www.nxp.com/docs/en/application-note/AN13206.pdf
+    * you might need LPCScrypt:
+      * https://www.nxp.com/design/microcontrollers-developer-resources/lpcscrypt-v2-1-2:LPCSCRYPT?tid=vanLPCSCRYPT
+      * https://www.nxp.com/docs/en/user-guide/LPCScrypt_User_Guide.pdf
+
 * For IO build and flash bootloader:
 
 ``` bash

@@ -25,7 +25,7 @@ target_sources(app PRIVATE src/main.cpp
                            src/logger/logger_zephyr.cpp
                            src/usb/usb_hid_zephyr.cpp
                            src/display/display_com35.cpp
-                           src/sensors/imu_fxos8700.cpp
+                           src/sensors/imu_mock.cpp
                            src/sensors/inclinometer_impl.cpp
                            src/managers/imu_manager.cpp
                            src/managers/display_manager.cpp

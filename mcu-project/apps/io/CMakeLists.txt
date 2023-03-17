@@ -21,7 +21,6 @@ target_include_directories(app
 )
 
 target_sources(app PRIVATE src/main.cpp
-                           src/message_thread.cpp
                            src/logger/logger_zephyr.cpp
                            src/usb/usb_hid_zephyr.cpp
                            src/display/display_com35.cpp

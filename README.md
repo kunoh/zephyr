@@ -23,7 +23,9 @@ Initialization (one time only, executed from zephyrproject dir):
     * you might need LPCScrypt:
       * https://www.nxp.com/design/microcontrollers-developer-resources/lpcscrypt-v2-1-2:LPCSCRYPT?tid=vanLPCSCRYPT
       * https://www.nxp.com/docs/en/user-guide/LPCScrypt_User_Guide.pdf
-    * DFU jumper is J12, board power usb port is J48, usb port for debug circuit is J1.
+    * There is a number of mismatched names in the application note when applied to the evkb:
+      * DFU jumper is J12.
+      * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.
 
 * For IO build and flash bootloader:
 

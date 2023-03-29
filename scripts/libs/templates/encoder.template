@@ -1,0 +1,28 @@
+import struct
+from . import outer_pb2, {% for message in messages -%}
+{{ message }}_pb2
+{%- if not loop.last %}, {% endif %}
+{%- endfor %}
+
+class Encoder:
+    def __init__(self) -> None:
+        self._messages = {{ messages }}
+
+    def _encode(self, msg):
+        return struct.pack(">{}B".format(len(msg)), *msg)
+
+    def get_messages(self):
+        return self._messages
+    {% for message in messages -%}
+    {% for function in messages[message].functions %}
+    def {{ function.name }}(self{% for variable in function.variables %}, {{ variable.name }}{% endfor %}):
+        outer = outer_pb2.MessageOuter()
+        outer.inner.type_url = "/{{ function.name }}"
+        inner = {{ message }}_pb2.{{ function.name }}()
+        {% for variable in function.variables -%}
+        inner.{{ variable.name }} = {{ variable.name }}
+        {%- endfor %}
+        outer.inner.value = inner.SerializeToString()
+        return self._encode(outer.SerializeToString())
+    {% endfor %}
+    {%- endfor %}

@@ -1,0 +1,48 @@
+from . import log
+from .proto import encoder, decoder
+
+class  {{ target[0]|upper }}{{ target[1:] }}():
+    def __init__(self) -> None:
+        self._enc = encoder.Encoder()
+        self._dec = decoder.Decoder()
+
+    def get_messages(self):
+        return self._enc.get_messages()
+
+    def handle_cli_input(self, input):
+        type = input[0]
+
+        {% for message in messages -%}
+        {% set outer_loop = loop %}
+        {% for function in messages[message].functions %}
+
+        {%- if not outer_loop.first or not loop.first %}el{% endif -%}if type == '{{ function.name }}':
+            if len(input) != {{ function.variables|length + 1}}:
+                log.wrn("Wrong number of arguments")
+                return None
+            return self._enc.{{ function.name }}({% for variable in function.variables %}input[{{ loop.index }}]{% endfor %})
+        {% endfor %}
+        {%- endfor %}
+
+        log.wrn("Input handler not implemented")
+        return None
+
+    def handle_response(self, response):
+        type = self._dec.ParseOuterAndGetType(response)
+
+        {% for message in messages -%}
+        {% set outer_loop = loop %}
+        {% for function in messages[message].functions %}
+
+        {%- if not outer_loop.first or not loop.first %}el{% endif -%}if type == '/{{ function.name }}':
+            res = self._dec.{{ function.name }}()
+            {%- for variable in function.variables %}
+            log.inf(f'{{ variable.name }}: {res.{{ variable.name }}}')
+            {%- endfor %}
+            return True
+        {% endfor %}
+        {%- endfor %}
+
+        log.wrn("Reponse handler not implemented")
+        return False
+

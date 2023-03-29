@@ -1,0 +1,26 @@
+from . import outer_pb2, {% for message in messages -%}
+{{ message }}_pb2
+{%- if not loop.last %}, {% endif %}
+{%- endfor %}
+
+class Decoder:
+    def __init__(self) -> None:
+        pass
+
+    def ParseOuterAndGetType(self, data):
+        self.outer = outer_pb2.MessageOuter()
+        self.outer.ParseFromString(data)
+        return self.outer.inner.type_url
+    {% for message in messages %}
+    {%- for function in messages[message].functions %}
+    def {{ function.name }}(self):
+        inner = {{ message }}_pb2.{{ function.name }}()
+        inner.ParseFromString(self.outer.inner.value)
+        return inner
+    {% endfor -%}
+    {%- endfor %}
+
+    def ResponseVersion(self):
+        inner = system_pb2.ResponseVersion()
+        inner.ParseFromString(self.outer.inner.value)
+        return inner

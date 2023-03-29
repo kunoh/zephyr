@@ -176,11 +176,11 @@ stages:
                 pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
             fi
 
-            if ! ./build.py -t io -l; then
+            if ! ./build.py -t io1060 -l; then
               exit 1
             fi
 
-            tar -czf "$(Build.ArtifactStagingDirectory)/io_bootloader_$(Build.BuildNumber).tar.gz" -C build/io/bootloader .
+            tar -czf "$(Build.ArtifactStagingDirectory)/io_bootloader_$(Build.BuildNumber).tar.gz" -C build/io1060/bootloader .
           displayName: Build IO bootloader
 
         - publish: $(Build.ArtifactStagingDirectory)
@@ -214,12 +214,12 @@ stages:
             fi
             pip3 install --user -I protobuf==3.6.1
 
-            if ! ./build.py -t io; then
+            if ! ./build.py -t io1060; then
               echo "Failed to build IO controller"
               exit 1
             fi
 
-            cp build/io/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(version).bin
+            cp build/io1060/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/zephyr.signed-$(version).bin
 
             mkdir -p $(Build.ArtifactStagingDirectory)/proto/inner/
             mkdir -p $(Build.ArtifactStagingDirectory)/proto/outer/

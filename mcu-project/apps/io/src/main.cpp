@@ -72,9 +72,9 @@ void main(void)
     usb_hid.SetReceiveCallback(HandleReceiveCallback);
     DisplayCOM35 disp(logger);
 #if defined(CONFIG_FXOS8700)
-    ImuFxos8700 imu(logger);
+    std::unique_ptr<Imu> imu = std::make_unique<ImuFxos8700>(logger);
 #else
-    ImuMock imu(logger);
+    std::unique_ptr<Imu> imu = std::make_unique<ImuMock>(logger);
 #endif /* !CONFIG_FXOS8700 */
     InclinometerImpl incl;
 
@@ -83,13 +83,7 @@ void main(void)
     MessageDispatcher dispatcher;
 
     /* Initialize Managers */
-    ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger),
-#if defined(CONFIG_FXOS8700)
-                           std::make_unique<ImuFxos8700>(std::move(imu))
-#else
-                           std::make_unique<ImuMock>(std::move(imu))
-#endif /* !CONFIG_FXOS8700 */
-    );
+    ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger), std::move(imu));
     DisplayManager disp_manager(&logger, &disp);
     MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
     usb_hid_work = msg_manager.GetWorkItem();

@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+import re
 from glob import glob
 from pathlib import Path
 
@@ -15,9 +16,8 @@ BOOT_DIR = "mcu-project/bootloaders"
 APP_DIR = "mcu-project/apps"
 BOARD= {
         "ble": "nrf52840dk_nrf52840",
-        "io": "mimxrt1050_evk_qspi",
-        "io1060": "mimxrt1060_evk",
-        "io_display": "mimxrt1050_evk"
+        "io1050": "mimxrt1050_evk_qspi",
+        "io1060": "mimxrt1060_evk"
         }
 
 def run_cmd(cmd):
@@ -28,38 +28,46 @@ def run_cmd(cmd):
         logging.error("Error running cmd %s. Try clean build or build.py update", cmd)
         sys.exit(1)
 
+def add_to_overlay(current_overlay, new_overlay):
+    if not current_overlay:
+        return os.path.join(PATH, new_overlay)
+    return "\"" + current_overlay + ";" + os.path.join(PATH, new_overlay + "\"")
+
 def build_bootloader(mcu_type, board, clean):
 
     build_dir = f"{BUILD_DIR}/{mcu_type}/bootloader"
     if clean:
         logging.info("Removing dir %s", build_dir)
-        shutil.rmtree(build_dir)
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
+
     cmd = f"west build -b{board} -d{build_dir} zephyrproject/bootloader/mcuboot/boot/zephyr "
-    if mcu_type in "io":
-        config_overlay = os.path.join(PATH, f"{BOOT_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.conf")
-        dts_overlay = os.path.join(PATH, f"mcu-project/boards/mimxrt1050_evk_qspi.overlay")
-        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{BOOT_DIR}/{mcu_type}/boards/mimxrt1050_evk_qspi.overlay" + "\"")
+    if "io" in mcu_type:
+        mcu_type = "io"
+        config_overlay = add_to_overlay(None, f"{BOOT_DIR}/{mcu_type}/boards/{board}.conf")
+        dts_overlay = add_to_overlay(None, f"mcu-project/boards/{board}.overlay")
+        dts_overlay = add_to_overlay(dts_overlay, f"{BOOT_DIR}/{mcu_type}/boards/{board}.overlay")
         cmd += f" -- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board,  clean, without_bootloader):
+def build_app(mcu_type, board, clean, without_bootloader):
 
-    
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
         logging.info("Removing dir %s", build_dir)
-        shutil.rmtree(build_dir)
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
 
     overlay = ""
-    if mcu_type in "io":
-#        config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/bootloader/mimxrt1050_evk_qspi.conf")
-        config_overlay = ""
+    if "io" in mcu_type:
+        mcu_type = "io"
+        config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
         if not without_bootloader:
-            config_overlay = os.path.join(PATH, f"{APP_DIR}/{mcu_type}/bootloader.conf")
-        dts_overlay = os.path.join(PATH, f"mcu-project/boards/{board}.overlay")
-        dts_overlay = "\"" + dts_overlay + ";" + os.path.join(PATH, f"{APP_DIR}/{mcu_type}/boards/{board}.overlay" + "\"")
+            config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/bootloader.conf")
+        dts_overlay = add_to_overlay(None, f"mcu-project/boards/{board}.overlay")
+        dts_overlay = add_to_overlay(dts_overlay, f"{APP_DIR}/{mcu_type}/boards/{board}.overlay")
         overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
@@ -112,7 +120,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=mcu_help, formatter_class = argparse.RawTextHelpFormatter)
     parser.add_argument('-u', '--update', help='Update west modules', action='store_true')
-    parser.add_argument('-t', '--type', choices=['io', 'io1060', 'ble', 'io_display'],
+    parser.add_argument('-t', '--type', choices=['io1050', 'io1060', 'ble'],
                         help='Build type')
     parser.add_argument('-c', '--clean', action='store_true',
                         help='Clean before build')
@@ -153,10 +161,7 @@ def main():
         build_bootloader(args.type, board, args.clean)
         sys.exit(0)
 
-    if args.type in "io1060":
-        mcu_type = "io"
-    else:
-        mcu_type = args.type
+    mcu_type = args.type
 
     build_app(mcu_type, board, args.clean, args.without_bootloader)
 

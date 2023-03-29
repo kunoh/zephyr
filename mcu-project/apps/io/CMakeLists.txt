@@ -23,7 +23,6 @@ target_include_directories(app
 target_sources(app PRIVATE src/main.cpp
                            src/logger/logger_zephyr.cpp
                            src/usb/usb_hid_zephyr.cpp
-                           src/display/display_com35.cpp
                            src/sensors/imu_mock.cpp
                            src/sensors/inclinometer_impl.cpp
                            src/managers/imu_manager.cpp
@@ -33,3 +32,6 @@ target_sources(app PRIVATE src/main.cpp
                            src/message_handlers/display_message_handler_impl.cpp
                            src/message_handlers/inclinometer_message_handler_impl.cpp
 )
+
+target_sources_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK app PRIVATE src/display/display_com35.cpp)
+target_sources_ifdef(CONFIG_FXOS8700 app PRIVATE src/sensors/imu_fxos8700.cpp)

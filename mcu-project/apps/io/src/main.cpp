@@ -16,6 +16,8 @@
 #include "logger_zephyr.h"
 #include "message_dispatcher.h"
 #include "message_manager.h"
+#include "state_manager_smf.h"
+#include "state_manager_sml.h"
 #include "system_message_handler_impl.h"
 #include "usb_hid_zephyr.h"
 #include "util.h"
@@ -95,6 +97,7 @@ int main(void)
     MessageDispatcher dispatcher;
 
     // Initialize Managers
+    StateManager state_manager;
     MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
     BatteryManager battery_manager(std::make_shared<LoggerZephyr>(logger), std::move(battery));
     ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger), std::move(imu));

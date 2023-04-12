@@ -1,12 +1,14 @@
 #pragma once
-#include <imu.h>
-#include <logger.h>
-#include <util.h>
-#include <zephyr.h>
+
+#include <zephyr/kernel.h>
 
 #include <functional>
 #include <memory>
 #include <vector>
+
+#include "imu.h"
+#include "logger.h"
+#include "util.h"
 
 class ImuManager {
 public:

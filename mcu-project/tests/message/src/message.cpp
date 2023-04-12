@@ -1,4 +1,4 @@
-#include <ztest.h>
+#include <zephyr/ztest.h>
 
 #include "message_dispatcher.h"
 

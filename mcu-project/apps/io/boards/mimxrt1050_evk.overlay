@@ -1,8 +1,7 @@
 
-&zephyr_udc0 {
-	cdc_acm_uart0 {
-		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_0";
+/ {
+	chosen {
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
 	};
 };
 
@@ -23,4 +22,10 @@
 	vsync = <3>;
 	vfp = <13>;
 	vbp = <32>;
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
 };

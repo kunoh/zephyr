@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 ARG UID=1000
 ARG GID=1000
-ARG ZEPHYR_SDK_VERSION="0.14.2"
+ARG ZEPHYR_SDK_VERSION="0.15.2"
 
 
 # Zephyr docker does not work with azure since it creates user with UID 1000
@@ -48,7 +48,7 @@ RUN ln -s /usr/include/asm-generic /usr/include/asm
 RUN /usr/sbin/locale-gen en_US.UTF-8
 
 ENV LANG=en_US.UTF-8
-ENV ZEPHYR_REQUIREMENTS=v3.1.0
+ENV ZEPHYR_REQUIREMENTS=v3.3.0
 env ZEPHYR_TOOLCHAIN_VARIANT=zephyr
 env ZEPHYR_SDK_INSTALL_DIR=/opt/toolchains/zephyr-sdk-${ZEPHYR_SDK_VERSION}
 

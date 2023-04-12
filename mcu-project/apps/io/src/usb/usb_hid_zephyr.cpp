@@ -1,8 +1,9 @@
 #include "usb_hid_zephyr.h"
 
-#include <usb/usb_device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/usb/usb_device.h>
 
-static K_SEM_DEFINE(usb_hid_sem_, 0, 1);
+K_SEM_DEFINE(usb_hid_sem_, 0, 1);
 
 static const uint8_t hid_report_desc[] = {
     HID_USAGE_PAGE(HID_USAGE_GEN_DESKTOP),

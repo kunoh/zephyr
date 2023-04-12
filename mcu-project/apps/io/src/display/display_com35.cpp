@@ -1,8 +1,9 @@
 #include "display_com35.h"
 
-#include <display_lcd.h>
-#include <zephyr.h>
 #include <zephyr/drivers/display.h>
+#include <zephyr/kernel.h>
+
+#include "display_lcd.h"
 
 DisplayCOM35::DisplayCOM35(Logger& logger) : logger_{logger}
 {

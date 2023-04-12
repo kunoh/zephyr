@@ -10,16 +10,16 @@
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/gpio.h>
 
-#include "fsl_elcdif.h"
-
 #ifdef CONFIG_HAS_MCUX_CACHE
 #include <fsl_cache.h>
 #endif
 
 #include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
 
-#include <display_lcd.h>
-#include <framedisk.h>
+#include "fsl_elcdif.h"
+#include "display_lcd.h"
+#include "framedisk.h"
 
 LOG_MODULE_REGISTER(display_lcd, CONFIG_DISK_LOG_LEVEL);
 

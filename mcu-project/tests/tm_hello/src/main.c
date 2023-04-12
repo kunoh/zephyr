@@ -1,4 +1,4 @@
-#include <ztest.h>
+#include <zephyr/ztest.h>
 #include "tm_hello_module.h"
 
 void test_return_arg(void)

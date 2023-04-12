@@ -1,5 +1,5 @@
-#include <usb/usb_device.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/usb/usb_device.h>
 
 #include "display_com35.h"
 #include "display_manager.h"
@@ -58,7 +58,7 @@ void on_imu_data(ImuSampleData sample_data)
            sample_data.acc.z);
 }
 
-void main(void)
+int main(void)
 {
     LOG_INF("********************************");
     LOG_INF("**  TM5 IO Controller v.%s", "0.13  **");
@@ -111,4 +111,5 @@ void main(void)
     while (1) {
         k_sleep(K_MSEC(1000));
     }
+    return 0;
 }

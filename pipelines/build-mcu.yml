@@ -125,9 +125,7 @@ stages:
                 pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
             fi
 
-            if ! ./build.py --test; then
-              exit 1
-            fi
+            ./build.py --test
 
             # Validate that all test passed by looking at the twister output file.
             # Twister is not returning any exit codes on failures, therefore we will manual scan the results.

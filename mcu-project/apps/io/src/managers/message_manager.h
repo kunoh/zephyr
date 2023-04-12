@@ -1,11 +1,11 @@
 #pragma once
 
-#include <logger.h>
-#include <usb_hid.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
+#include "logger.h"
 #include "message_dispatcher.h"
 #include "message_handler.h"
+#include "usb_hid.h"
 
 class MessageManager {
 public:

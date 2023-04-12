@@ -1,13 +1,14 @@
 #pragma once
 
-#include <logger.h>
 // stddef and stdint is needed by usb/class/usb_hid.h, but not included
 // therefore, they are included here
 #include <stddef.h>
 #include <stdint.h>
 //
-#include <usb/class/usb_hid.h>
-#include <usb_hid.h>
+#include <zephyr/usb/class/usb_hid.h>
+
+#include "logger.h"
+#include "usb_hid.h"
 
 class UsbHidZephyr : public UsbHid {
 public:

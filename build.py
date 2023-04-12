@@ -31,6 +31,11 @@ def run_cmd(cmd):
 def add_to_overlay(current_overlay, new_overlay):
     if not current_overlay:
         return os.path.join(PATH, new_overlay)
+    # Remove any qoutes from both start and end of existing overlay string
+    if current_overlay[0] == '"':
+        current_overlay = current_overlay[1:]
+    if current_overlay[-1] == '"':
+        current_overlay = current_overlay[:-1]
     return "\"" + current_overlay + ";" + os.path.join(PATH, new_overlay + "\"")
 
 def build_bootloader(mcu_type, board, clean):
@@ -47,6 +52,7 @@ def build_bootloader(mcu_type, board, clean):
         config_overlay = add_to_overlay(None, f"{BOOT_DIR}/{mcu_type}/boards/{board}.conf")
         dts_overlay = add_to_overlay(None, f"mcu-project/boards/{board}.overlay")
         dts_overlay = add_to_overlay(dts_overlay, f"{BOOT_DIR}/{mcu_type}/boards/{board}.overlay")
+        dts_overlay = add_to_overlay(dts_overlay, "zephyrproject/bootloader/mcuboot/boot/zephyr/app.overlay")
         cmd += f" -- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
 
     ret = run_cmd(cmd)

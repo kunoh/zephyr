@@ -1,3 +1,10 @@
+
+/ {
+	chosen {
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
+	};
+};
+
 &usb1 {
     maximum-speed = "high-speed";
 };
@@ -15,4 +22,10 @@
 	vsync = <3>;
 	vfp = <13>;
 	vbp = <32>;
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
 };

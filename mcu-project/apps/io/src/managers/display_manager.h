@@ -1,8 +1,9 @@
 #pragma once
 
-#include <display.h>
-#include <logger.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
+
+#include "display.h"
+#include "logger.h"
 
 class DisplayManager {
 public:

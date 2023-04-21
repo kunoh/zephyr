@@ -41,7 +41,9 @@ class General():
         assert out.decode() is not None
         print(out.decode())
         image_slots = General.get_list_of_images_from_str(out.decode())
-        assert len(image_slots) == 1
+        if len(image_slots) == 2 and image_slots[1]['hash'] == image_slots[0]['hash']:
+            print(f"The last firmware update was skipped")
+            # conitnue with new fw update
 
         exec_cmd_fw_upgrade = base_cmd + " image upload {}".format(env['binary']['file'])
         print(f"{exec_cmd_fw_upgrade}")
@@ -97,9 +99,9 @@ class General():
                 except Exception as e:
                     print(f"{e}")
                     print(f"Try again in 20 seconds...")
-                    time.sleep(20)
+                    time.sleep(5)
             else: 
-                time.sleep(10)
+                time.sleep(5)
         
         print(f"FW update failed: Could not validate new firmware hash within {timeout} secs ")
         return False

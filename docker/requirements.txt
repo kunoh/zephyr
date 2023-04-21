@@ -121,3 +121,6 @@ cbor>=1.0.0
 psutil
 
 grpcio-tools
+
+# Pytest Plugins
+pytest-html

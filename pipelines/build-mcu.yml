@@ -275,3 +275,112 @@ stages:
           artifact: BLE MCU FW
           displayName: Publish FW
 
+## Test MCU (TM5)
+  - stage: smoke_test_mcu_tm5
+    displayName: Smoke-testing TM5 MCU
+    dependsOn:
+      - build_io_bootloader
+      - build_io
+      - build_ble
+    condition: and(succeeded('build_io_bootloader'), succeeded('build_io'), succeeded('build_ble'))
+    pool:
+      name: Embedded
+      demands: TM_CAP_TM5_MCU -equals 1
+    jobs:
+    - job: smoke_test
+      displayName: Smoke-testing MCU TM5
+      steps:
+      - checkout: self
+        clean: true
+        fetchDepth: 1
+
+      - script: |
+          results_folder="$(System.DefaultWorkingDirectory)/pytest/results"
+          echo "Results folder: ${results_folder}"
+          echo "##vso[task.setvariable variable=results_folder]$results_folder"
+
+          tests_folder="$(System.DefaultWorkingDirectory)/pytest"
+          echo "Tests folder: ${tests_folder}"
+          echo "##vso[task.setvariable variable=tests_folder]$tests_folder"
+
+          binaries_folder="$(System.DefaultWorkingDirectory)/pytest/binaries"
+          echo "Binaries folder: ${binaries_folder}"
+          echo "##vso[task.setvariable variable=binaries_folder]$binaries_folder"
+
+          pip_r_folder="$(System.DefaultWorkingDirectory)/docker"
+          echo "Binaries folder: ${pip_r_folder}"
+          echo "##vso[task.setvariable variable=pip_r_folder]$pip_r_folder"
+        displayName: Set Folders Struct
+    
+      - script: |
+          rm -rf $(results_folder)/*
+        displayName: Remove old Test reports
+
+      - script: |
+          fw_binary_old=$(ls $(binaries_folder)/*.bin)
+          echo "Old FW file: ${fw_binary_old}"
+          rm -rf $(binaries_folder)/*
+        displayName: Remove old FWs
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Download FW
+        inputs:
+          artifact: IO MCU FW
+          path: '$(binaries_folder)/'
+          ${{ if eq('nightly', 'todo') }}:
+            source: 'specific'
+            project: 'Embedded'
+            pipeline: 1411
+            runVersion: 'latestFromBranch'
+            runBranch: 'refs/heads/master'
+          ${{ if eq('smoke', 'smoke') }}:
+            source: 'current'
+      
+      - script: |
+          echo "Current Branch: $(Build.SourceBranch)"
+        displayName: Current Branch
+      
+      - script: |
+          file_name=$(ls $(binaries_folder)/*.bin)
+          echo "FW binary file: ${file_name}"
+          echo "##vso[task.setvariable variable=file_name]$file_name"
+        displayName: Get Firmware File
+
+      - script: |
+          pytest --version
+          python3 -m venv mcu_py_venev
+          source mcu_py_venev/bin/activate
+          pip3 install -r $(pip_r_folder)/requirements.txt
+      
+          jq -n '{
+              "device": {
+                  "mcu_serial_zephyr": "$(MCU_ZEPHYR_IO_DEVICE)",
+                  "mcu_serial_jlink": "$(MCU_SEGGER_JLINK)"
+                  },
+              "binary": {
+                  "file": "$(file_name)",
+                  "path": "$(binaries_folder)"
+                  }
+              }' > env-setup.json
+          cat env-setup.json| jq empty; echo "Validate env file OK: $?"
+          if [ $? != 0 ]; then
+              exit $?
+          fi
+          
+          pytest $(tests_folder) -v -s \
+            --junitxml $(results_folder)/xunit.xml --html $(results_folder)/report.html \
+            --envfile env-setup.json
+          status=$?
+          echo "Test status: ${status}"
+          exit $status
+
+        workingDirectory: '$(System.DefaultWorkingDirectory)/'
+        displayName: Test fw version $(version)
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish test Reports'
+        inputs:
+          targetPath: '$(results_folder)/'
+          artifact: 'mcu_tm5_test_reports'
+        condition: always()
+

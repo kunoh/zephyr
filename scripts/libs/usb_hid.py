@@ -3,7 +3,7 @@ import usb.util
 from . import log
 
 class UsbHid:
-    def __init__(self, vid=0x246D, pid=0x1050, interface=1) -> None:
+    def __init__(self, vid=0x246D, pid=0x1050, interface=3) -> None:
         self.interface = interface
         self.dev = usb.core.find(idVendor=vid, idProduct=pid)
         self.endpoint = self.dev[0][(0,0)][0]
@@ -63,4 +63,4 @@ class UsbHid:
         self._hid_set_report(data)
 
     def read(self):
-        return bytes(self.dev.read(self.endpoint.bEndpointAddress + 1, self.endpoint.wMaxPacketSize, 1000*60))
+        return bytes(self.dev.read(self.endpoint.bEndpointAddress + 3, 256 if self.endpoint.wMaxPacketSize < 256 else self.endpoint.wMaxPacketSize , 1000*60))

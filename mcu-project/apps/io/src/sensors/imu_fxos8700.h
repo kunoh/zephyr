@@ -7,6 +7,7 @@ class ImuFxos8700 : public Imu {
 public:
     ImuFxos8700(Logger& logger);
     virtual ~ImuFxos8700() = default;
+    int Init() override;
     int FetchSampleData() override;
     void GetAccData(double& accx, double& accy, double& accz) override;
     void GetGyrData(double& gyrx, double& gyry, double& gyrz) override;

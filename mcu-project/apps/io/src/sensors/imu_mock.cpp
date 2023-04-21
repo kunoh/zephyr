@@ -3,6 +3,12 @@
 ImuMock::ImuMock(Logger& logger) : logger_{logger}
 {}
 
+int ImuMock::Init()
+{
+    logger_.inf("IMU Mock Init");
+    return 0;
+}
+
 int ImuMock::FetchSampleData()
 {
     return 0;

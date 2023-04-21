@@ -18,6 +18,7 @@ target_include_directories(app
             ${CMAKE_SOURCE_DIR}/src/display
             ${CMAKE_SOURCE_DIR}/src/sensors
             ${CMAKE_SOURCE_DIR}/src/message_handlers
+            ${CMAKE_SOURCE_DIR}/src/third_party
 )
 
 target_sources(app PRIVATE src/main.cpp
@@ -40,3 +41,4 @@ target_sources_ifdef(CONFIG_BATTERY_NH2054QE34 app PRIVATE src/sensors/battery_n
 target_sources_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK app PRIVATE src/display/display_com35.cpp)
 target_sources_ifdef(CONFIG_FXOS8700 app PRIVATE src/sensors/imu_fxos8700.cpp)
 target_sources_ifdef(CONFIG_SMF app PRIVATE src/managers/state_manager_smf.cpp)
+target_sources_ifdef(CONFIG_SML app PRIVATE src/managers/state_manager_sml.cpp)

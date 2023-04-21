@@ -2,19 +2,25 @@
 
 #include <zephyr/kernel.h>
 
+#include "manager.h"
 #include "display.h"
 #include "logger.h"
+#include "wrappers_zephyr.h"
+#include "util.h"
 
-class DisplayManager {
+class DisplayManager : public Manager {
 public:
     DisplayManager(Logger* logger, Display* disp);
     ~DisplayManager() = default;
+    int Init() override;
+    void AddErrorCb(void (*cb)(void*), void* user_data) override;
     void SetBootLogo();
     void NextFrame();
     void StartSpinner();
     void StopSpinner();
 
 private:
+    void Error();
     static void SpinnerTimerHandler(struct k_timer* timer);
     static void DoSpin(struct k_work* work);
 
@@ -22,8 +28,9 @@ private:
     Logger* logger_;
     Display* disp_;
     k_timer timer_;
-    k_work work_;
-
+    k_work_wrapper<DisplayManager> work_;
+    CbWrapper on_error_{.user_data = NULL, .cb = NULL};
+    int test;
     // Graphic Resources
     const uint8_t* logo_;
     const uint8_t* spinner_;

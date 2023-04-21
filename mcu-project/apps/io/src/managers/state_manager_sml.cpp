@@ -1,52 +1,79 @@
 #include "state_manager_sml.h"
 
-StateManager::StateManager(Logger* logger)
-: logger_{logger}
+StateManagerSml::StateManagerSml(Logger* logger)
+    : logger_{logger},
+    sm_{static_cast<FsmOps&>(*this)}
 {
-    k_timer_init(&timer_, RunnerTimerHandler, NULL);
-    k_timer_user_data_set(&timer_, this);
-
-    k_work_init(&work_, Running);
-
-    sm_.process_event(Start{});
+    k_work_init(&work_.work, ProcessStartEvent);
+    work_.self = this;
 }
 
-void StateManager::Initialize()
+void StateManagerSml::AddManager(Manager& m)
 {
-    logger_->inf("Finished Initializing");
-    logger_->inf("Go to Running");
+    managers_.push_back(&m);
+}
+
+void StateManagerSml::Run()
+{
+    k_work_submit(&work_.work);
+}
+
+void StateManagerSml::ProcessStartEvent(k_work *work)
+{
+    k_work_wrapper<StateManagerSml> *wrapper = CONTAINER_OF(work, k_work_wrapper<StateManagerSml>, work);
+    StateManagerSml *self = wrapper->self;
+    self->sm_.process_event(Start{});
+}
+
+// Init state
+void StateManagerSml::Initialize()
+{
+    logger_->inf("Initializing");
+    for (auto m : managers_) {
+        m->AddErrorCb(&StateManagerSml::OnError, this);
+
+        if (m->Init() != 0){
+            sm_.process_event(Failed{});
+        }
+    }
     sm_.process_event(Success{});
 }
 
-void StateManager::StartRunningTimer()
+void StateManagerSml::Selftest()
 {
-    k_timer_start(&timer_, K_MSEC(50), K_MSEC(1000));
-}
-void StateManager::StopRunningTimer()
-{
-    k_timer_stop(&timer_);
+    logger_->inf("Selftest");
+    // Do something...
+    sm_.process_event(Success{});
 }
 
-void StateManager::RunnerTimerHandler(k_timer *timer)
+// Ready state
+void StateManagerSml::Ready()
 {
-    StateManager *self = reinterpret_cast<StateManager *>(k_timer_user_data_get(timer));
-    k_work_submit(&self->work_);
+    logger_->inf("Ready");
+    // Do something...
 }
 
-void StateManager::Running(k_work *work)
+// Standby state
+void StateManagerSml::Standby()
 {
-    static int counter = 0;
-    counter++;
-    StateManager *self = CONTAINER_OF(work, StateManager, work_);
-    self->logger_->inf("Do Run");
-    if (counter % 3 == 0) {
-        self->logger_->inf("Go to Standby");
-        self->sm_.process_event(Sleep{});
-    }
+    logger_->inf("Standby");
+    // Power down or put devices to sleep
 }
 
-void StateManager::Standby()
+void StateManagerSml::Reset()
 {
-    logger_->inf("Sleeping");
-    sm_.process_event(Init{})
+    logger_->inf("Reset");
+    // Do something...
+}
+
+void StateManagerSml::Error()
+{
+    logger_->inf("Error");
+    // Do something...
+}
+
+void StateManagerSml::OnError(void* user_data)
+{
+    StateManagerSml *self = reinterpret_cast<StateManagerSml *>(user_data);
+    self->sm_.process_event(Failed{});
 }

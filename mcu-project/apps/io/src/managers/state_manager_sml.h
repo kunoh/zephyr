@@ -1,17 +1,21 @@
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
+#include <vector>
+
+#include "wrappers_zephyr.h"
 #include "boost/sml.hpp"
 #include "logger.h"
+#include "manager.h"
 
 // clang-format off
-
-namespace sml = boost::sml;
 
 // States
 struct Off {};
 struct Init {};
-struct Running {};
+struct Selftest{};
+struct Ready {};
 struct Standby {};
+struct Reset {};
 struct Error {};
 
 // Events
@@ -24,9 +28,11 @@ struct Failed {};
 class FsmOps {
 public:
     virtual void Initialize() = 0;
-    virtual void StartRunningTimer() = 0;
-    virtual void StopRunningTimer() = 0;
+    virtual void Selftest() = 0;
+    virtual void Ready() = 0;
     virtual void Standby() = 0;
+    virtual void Reset() = 0;
+    virtual void Error() = 0;
 };
 
 struct Fsm {
@@ -34,39 +40,44 @@ struct Fsm {
         using namespace boost::sml;
 
         return make_transition_table(
-            *state<Off>    + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
-            state<Init>    + event<Success>                                              = state<Running>,
-            state<Running> + on_entry<_>    / [](FsmOps& fo){ fo.StartRunningTimer(); },
-            state<Running> + on_exit<_>     / [](FsmOps& fo){ fo.StopRunningTimer(); },
-            state<Running> + event<Sleep>   / [](FsmOps& fo){ fo.Standby(); }            = state<Standby>,
-            state<Standby> + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>
+            *state<Off>      + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
+            state<Init>      + event<Success> / [](FsmOps& fo){ fo.Selftest(); }           = state<Selftest>,
+            state<Selftest>  + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
+            state<Ready>     + event<Sleep>   / [](FsmOps& fo){ fo.Standby(); }            = state<Standby>,
+            state<Standby>   + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
+            state<Error>     + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
 
-            //state<Init>    + event<Failed> / [](){...} = state<Error>,
-            //state<Running> + event<Failed> / [](){...} = state<Error>,
+            state<Init>      + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Selftest>  + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Ready>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Standby>   + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Error>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Reset>
         );
     }
 };
 
 // clang-format on
 
-class StateManager : public FsmOps {
+class StateManagerSml : public FsmOps {
 public:
-    StateManager(Logger* logger);
+    StateManagerSml(Logger* logger);
+    ~StateManagerSml() = default;
+    void AddManager(Manager& m);
+    void Run();
     void Initialize();
-    void StartRunningTimer();
-    void StopRunningTimer();
+    void Selftest();
+    void Ready();
     void Standby();
+    void Reset();
+    void Error();
+    static void OnError(void* user_data);
 
 private:
-    void StartRunner();
-    void StopRunner();
-    static void RunnerTimerHandler(k_timer *timer);
-    static void Running(k_work *work);
+    static void ProcessStartEvent(k_work *work);
 
 private:
-    boost::sml::sm<Fsm> sm_;
     Logger* logger_;
-
-    k_timer timer_;
-    k_work work_;
+    k_work_wrapper<StateManagerSml> work_;
+    std::vector<Manager*> managers_;
+    boost::sml::sm<Fsm> sm_;
 };

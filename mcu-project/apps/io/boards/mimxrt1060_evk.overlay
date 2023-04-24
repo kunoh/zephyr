@@ -24,6 +24,14 @@
 	vbp = <32>;
 };
 
+&lpi2c1 {	
+	smart_battery: nh2054qe34@b{
+		status = "okay";
+		compatible = "inspiredenergy,nh2054qe34";
+		reg = <0xb>;
+	};
+};
+
 &zephyr_udc0 {
 	cdc_acm_uart0: cdc_acm_uart0 {
 		compatible = "zephyr,cdc-acm-uart";

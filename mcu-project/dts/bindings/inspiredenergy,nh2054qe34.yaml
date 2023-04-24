@@ -1,0 +1,5 @@
+description: Inspired Energy NH2054QE34 Smart battery
+
+compatible: "inspiredenergy,nh2054qe34"
+
+include: i2c-device.yaml

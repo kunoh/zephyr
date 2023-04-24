@@ -16,6 +16,8 @@ bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBu
     if (!SystemMessageEncoder::EncodeResponseVersion(buffer, version)) {
         logger_.wrn("Failed to Encode ResponseVersion");
     }
+    buffer.msg_type = OUTGOING;
+
     return true;
 }
 

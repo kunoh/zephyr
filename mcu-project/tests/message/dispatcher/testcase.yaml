@@ -1,0 +1,8 @@
+# This file is used to define the possibly multiple different test configuration 
+# for which the tests in the current directory should be build and run.
+
+tests:
+  message.dispatcher.message_chain:
+    platform_allow: native_posix native_posix_64
+    tags: message_dispatching_chain
+    extra_args: CONF_FILE="test_dispatcher.conf"

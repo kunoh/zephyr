@@ -1,1 +1,2 @@
 add_subdirectory_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK display_lcd_w_framedisk)
+add_subdirectory_ifdef(CONFIG_BATTERY_NH2054QE34 sensors/nh2054qe34)

@@ -1,0 +1,22 @@
+# This file is used to define the possibly multiple different test configuration 
+# for which the tests in the current directory should be build and run.
+
+# Example
+# tests:
+#   bluetooth.gatt:
+#     build_only: true
+#     platform_allow: qemu_cortex_m3 qemu_x86
+#     tags: bluetooth
+#   bluetooth.gatt.br:
+#     build_only: true
+#     extra_args: CONF_FILE="prj_br.conf"
+#     filter: not CONFIG_DEBUG
+#     platform_exclude: up_squared
+#     platform_allow: qemu_cortex_m3 qemu_x86
+#     tags: bluetooth
+
+tests:
+  message.handlers:
+    platform_allow: native_posix native_posix_64
+    extra_args: CONF_FILE="test_handlers.conf"
+    tags: message_handlers

@@ -1,0 +1,2 @@
+zephyr_library_sources(nh2054qe34_driver.c)
+zephyr_include_directories(.)

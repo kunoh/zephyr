@@ -1,4 +1,0 @@
-tests:
-  message_version.unit.test1:
-    platform_allow: native_posix native_posix_64
-    tags: message_version unit

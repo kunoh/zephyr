@@ -1,0 +1,5 @@
+config UNIT_TEST_MOCKS
+	bool "Unit test device mocks"
+	default false
+	help
+	  Configures whether device mocks should contain dummy code for higher layer unit testing.

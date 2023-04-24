@@ -16,6 +16,8 @@ bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, Mess
         logger_.wrn("Failed to Encode ResponseStopSpinner");
         return false;
     }
+    buffer.msg_type = OUTGOING;
+
     return true;
 }
 
@@ -40,6 +42,8 @@ bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, Message
         logger_.wrn("Failed to Encode ResponseNewFrame");
         return false;
     }
+    buffer.msg_type = OUTGOING;
+
     return true;
 }
 

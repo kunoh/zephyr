@@ -6,6 +6,7 @@
 #include "message_dispatcher.h"
 #include "message_handler.h"
 #include "usb_hid.h"
+#include "util.h"
 
 class MessageManager {
 public:
@@ -13,9 +14,10 @@ public:
                    MessageDispatcher* dispatcher, k_msgq* msgq);
     ~MessageManager() = default;
     k_work* GetWorkItem();
+    void on_battery_data_cb(BatteryData data);
 
 private:
-    static void HandleReceivedMessage(k_work* work);
+    static void HandleQueuedMessage(k_work* work);
 
 private:
     Logger* logger_;

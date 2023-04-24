@@ -1,6 +1,10 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/usb/usb_device.h>
 
+#include "battery_manager.h"
+#include "battery_message_handler_impl.h"
+#include "battery_mock.h"
+#include "battery_nh2054qe34.h"
 #include "display_com35.h"
 #include "display_manager.h"
 #include "display_message_handler_impl.h"
@@ -30,7 +34,7 @@ static int HandleReceiveCallback(const struct device *dev, struct usb_setup_pack
     MessageBuffer buffer;
     memcpy(buffer.data, *data, (size_t)*len);
     buffer.length = *len;
-
+    buffer.msg_type = INCOMING;
     // For testing, to be deleted later
     if (0) {
         printk("Received bytes: \n");
@@ -54,8 +58,8 @@ static int HandleReceiveCallback(const struct device *dev, struct usb_setup_pack
 // This function is being used as an example for adding a subscriber to IMU sample data
 void on_imu_data(ImuSampleData sample_data)
 {
-    printk("AX=%10.6f AY=%10.6f AZ=%10.6f\n", sample_data.acc.x, sample_data.acc.y,
-           sample_data.acc.z);
+    // printk("AX=%10.6f AY=%10.6f AZ=%10.6f\n", sample_data.acc.x, sample_data.acc.y,
+    // sample_data.acc.z);
 }
 
 int main(void)
@@ -68,32 +72,43 @@ int main(void)
     LoggerZephyr logger("");
 
     /* Initialize External Devices */
+#if defined(CONFIG_BATTERY_NH2054QE34)
+    std::unique_ptr<Battery> battery = std::make_unique<BatteryNh2054qe34>(logger);
+#else
+    std::unique_ptr<Battery> battery = std::make_unique<BatteryMock>(logger);
+#endif  // _CONFIG_BATTERY_NH2054QE34_
+
     UsbHidZephyr usb_hid(logger);
     usb_hid.SetReceiveCallback(HandleReceiveCallback);
     DisplayCOM35 disp(logger);
+
 #if defined(CONFIG_FXOS8700)
     std::unique_ptr<Imu> imu = std::make_unique<ImuFxos8700>(logger);
 #else
     std::unique_ptr<Imu> imu = std::make_unique<ImuMock>(logger);
-#endif /* !CONFIG_FXOS8700 */
+#endif  // !CONFIG_FXOS8700
+
     InclinometerImpl incl;
 
-    /* Initialize Message Disptacher */
+    // Initialize Message Dispatcher
     MessageProto msg_proto;
     MessageDispatcher dispatcher;
 
-    /* Initialize Managers */
+    // Initialize Managers
+    MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
+    BatteryManager battery_manager(std::make_shared<LoggerZephyr>(logger), std::move(battery));
     ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger), std::move(imu));
     DisplayManager disp_manager(&logger, &disp);
-    MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
     usb_hid_work = msg_manager.GetWorkItem();
 
-    /* Initialize Message Handlers*/
+    // Initialize Message Handlers
     SystemMessageHandlerImpl sys_impl(logger);
+    BatteryMessageHandlerImpl battery_msg_handler(logger, battery_manager, msg_manager);
     DisplayMessageHandlerImpl disp_impl(logger, disp_manager);
     InclinometerMessageHandlerImpl incl_impl(logger, incl);
 
     dispatcher.AddHandler(sys_impl);
+    dispatcher.AddHandler(battery_msg_handler);
     dispatcher.AddHandler(disp_impl);
     dispatcher.AddHandler(incl_impl);
 
@@ -103,6 +118,7 @@ int main(void)
         logger.err("Failed to enable USB");
     }
 
+    battery_manager.StartSampling();
     imu_manager.AddSubscriber(on_imu_data);
     imu_manager.StartSampling();
     disp_manager.SetBootLogo();

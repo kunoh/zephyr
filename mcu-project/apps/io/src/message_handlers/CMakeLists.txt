@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH ${ZEPHYR_BASE}/../modules/lib/nanopb/extra)
 find_package(Nanopb REQUIRED)
 set(NANOPB_OPTIONS "-I${CMAKE_SOURCE_DIR}")
 
-set(BASENAMES "system;display;inclinometer")
+set(BASENAMES "system;display;inclinometer;battery")
 
 foreach(BASENAME ${BASENAMES})
     nanopb_generate_cpp(proto_sources proto_headers RELPATH proto

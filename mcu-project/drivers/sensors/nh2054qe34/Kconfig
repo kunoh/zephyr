@@ -1,0 +1,5 @@
+config BATTERY_NH2054QE34
+	bool "nh2054qe34 driver"
+	
+	help
+	  Enable support for NH2054QE34 Smart Battery driver.

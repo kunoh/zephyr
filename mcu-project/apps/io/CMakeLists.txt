@@ -18,6 +18,7 @@ target_include_directories(app
             ${CMAKE_SOURCE_DIR}/src/display
             ${CMAKE_SOURCE_DIR}/src/sensors
             ${CMAKE_SOURCE_DIR}/src/message_handlers
+            ${CMAKE_SOURCE_DIR}/src/third_party
 )
 
 target_sources(app PRIVATE src/main.cpp
@@ -26,10 +27,11 @@ target_sources(app PRIVATE src/main.cpp
                            src/sensors/battery_mock.cpp
                            src/sensors/imu_mock.cpp
                            src/sensors/inclinometer_impl.cpp
+                           src/managers/state_manager_sml.cpp
                            src/managers/battery_manager.cpp
                            src/managers/imu_manager.cpp
                            src/managers/display_manager.cpp
-                           src/managers/message_manager.cpp      
+                           src/managers/message_manager.cpp
                            src/message_handlers/system_message_handler_impl.cpp
                            src/message_handlers/battery_message_handler_impl.cpp
                            src/message_handlers/display_message_handler_impl.cpp

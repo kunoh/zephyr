@@ -10,7 +10,8 @@ MessageManager::MessageManager(Logger* logger, UsbHid* usb_hid, MessageProto* ms
       dispatcher_{dispatcher},
       msgq_{msgq}
 {
-    k_work_init(&work_, HandleQueuedMessage);
+    k_work_init(&work_wrapper_.work, HandleQueuedMessage);
+    work_wrapper_.self = this;
 }
 
 void MessageManager::on_battery_data_cb(BatteryData data)
@@ -22,17 +23,31 @@ void MessageManager::on_battery_data_cb(BatteryData data)
         (int)data.status, (int)data.relative_charge_state, (int)data.cycle_count);
 
     k_msgq_put(msgq_, &buffer, K_NO_WAIT);
-    k_work_submit(&work_);
+    k_work_submit(&work_wrapper_.work);
+}
+
+int MessageManager::Init()
+{
+    logger_->inf("Message Init");
+    return 0;
+}
+
+void MessageManager::AddErrorCb(void (*cb)(void*), void* user_data)
+{
+    on_error_.cb = cb;
+    on_error_.user_data = user_data;
 }
 
 k_work* MessageManager::GetWorkItem()
 {
-    return &work_;
+    return &work_wrapper_.work;
 }
 
 void MessageManager::HandleQueuedMessage(k_work* work)
 {
-    MessageManager* self = CONTAINER_OF(work, MessageManager, work_);
+    k_work_wrapper<MessageManager>* wrapper =
+        CONTAINER_OF(work, k_work_wrapper<MessageManager>, work);
+    MessageManager* self = wrapper->self;
     MessageBuffer buffer;
 
     while (k_msgq_get(self->msgq_, &buffer, K_NO_WAIT) == 0) {

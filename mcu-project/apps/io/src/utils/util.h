@@ -1,5 +1,11 @@
 #pragma once
 #include <stdint.h>
+#include <zephyr/kernel.h>
+
+struct CbWrapper {
+    void *user_data;
+    void (*cb)(void *);
+};
 
 struct SensorSampleData {
     double x;

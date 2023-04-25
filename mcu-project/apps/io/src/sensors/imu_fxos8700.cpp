@@ -1,14 +1,20 @@
 #include "imu_fxos8700.h"
 
 ImuFxos8700::ImuFxos8700(Logger& logger) : logger_{logger}
+{}
+
+int ImuFxos8700::Init()
 {
+    logger_.inf("IMU FXOS8700 Init");
+
     imu_dev_ = device_get_binding(DT_LABEL(DT_INST(0, nxp_fxos8700)));
 
     if (!device_is_ready(imu_dev_)) {
         logger_.err("ImuFxos8700 not found. Aborting...");
+        return -1;
     }
 
-    SetSamplesPerSecond(6, 250000);
+    return SetSamplesPerSecond(6, 250000);
 }
 
 int ImuFxos8700::SetSamplesPerSecond(int integer_part, int fractional_part)
@@ -73,20 +79,17 @@ int ImuFxos8700::FetchSampleData()
     if (ret) {
         logger_.err("Could not fetch sample data");
     }
-    ret = sensor_channel_get(imu_dev_, SENSOR_CHAN_ACCEL_XYZ, accel_);
+    ret |= sensor_channel_get(imu_dev_, SENSOR_CHAN_ACCEL_XYZ, accel_);
     if (ret) {
         logger_.err("Could not get accelerometer data");
-        return ret;
     }
-    ret = sensor_channel_get(imu_dev_, SENSOR_CHAN_MAGN_XYZ, magn_);
+    ret |= sensor_channel_get(imu_dev_, SENSOR_CHAN_MAGN_XYZ, magn_);
     if (ret) {
         logger_.err("Could not get magnometer data");
-        return ret;
     }
-    ret = sensor_channel_get(imu_dev_, SENSOR_CHAN_DIE_TEMP, &temp_);
+    ret |= sensor_channel_get(imu_dev_, SENSOR_CHAN_DIE_TEMP, &temp_);
     if (ret) {
         logger_.err("Could not get temperature");
-        return ret;
     }
     return ret;
 }

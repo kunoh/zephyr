@@ -7,6 +7,7 @@ class ImuMock : public Imu {
 public:
     ImuMock(Logger& logger);
     virtual ~ImuMock() = default;
+    int Init() override;
     int FetchSampleData() override;
     void GetAccData(double& accx, double& accy, double& accz) override;
     void GetGyrData(double& gyrx, double& gyry, double& gyrz) override;

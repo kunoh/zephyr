@@ -8,12 +8,16 @@
 
 #include "imu.h"
 #include "logger.h"
+#include "manager.h"
 #include "util.h"
+#include "wrappers_zephyr.h"
 
-class ImuManager {
+class ImuManager : public Manager {
 public:
     ImuManager(std::shared_ptr<Logger> logger, std::unique_ptr<Imu> imu);
     ~ImuManager() = default;
+    int Init() override;
+    void AddErrorCb(void (*cb)(void*), void* user_data) override;
     void AddSubscriber(std::function<void(ImuSampleData)> cb);
     void StartSampling();
     void StopSampling();
@@ -26,6 +30,7 @@ private:
     std::shared_ptr<Logger> logger_;
     std::unique_ptr<Imu> imu_;
     k_timer timer_;
-    k_work work_;
-    std::vector<std::function<void(ImuSampleData)> > callbacks_;
+    k_work_wrapper<ImuManager> work_wrapper_;
+    CbWrapper on_error_{.user_data = NULL, .cb = NULL};
+    std::vector<std::function<void(ImuSampleData)> > subscribers_;
 };

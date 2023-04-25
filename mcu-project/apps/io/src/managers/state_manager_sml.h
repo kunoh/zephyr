@@ -48,9 +48,9 @@ struct Fsm {
             state<Ready>     + event<Sleep>   / [](FsmOps& fo){ fo.Standby(); }            = state<Standby>,
             state<Ready>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
             state<Standby>   + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
-            state<Standby>   + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
-            state<Error>     + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
-            state<Error>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Reset>
+            state<Standby>   + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>
+            //state<Error>     + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
+            //state<Error>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Reset>
         );
     }
 };

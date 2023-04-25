@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "wrappers_zephyr.h"
 #include "boost/sml.hpp"
 #include "logger.h"
 #include "manager.h"
+#include "wrappers_zephyr.h"
 
 // clang-format off
 
@@ -42,15 +42,14 @@ struct Fsm {
         return make_transition_table(
             *state<Off>      + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
             state<Init>      + event<Success> / [](FsmOps& fo){ fo.Selftest(); }           = state<Selftest>,
-            state<Selftest>  + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
-            state<Ready>     + event<Sleep>   / [](FsmOps& fo){ fo.Standby(); }            = state<Standby>,
-            state<Standby>   + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
-            state<Error>     + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
-
             state<Init>      + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Selftest>  + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
             state<Selftest>  + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Ready>     + event<Sleep>   / [](FsmOps& fo){ fo.Standby(); }            = state<Standby>,
             state<Ready>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Standby>   + event<Start>   / [](FsmOps& fo){ fo.Initialize(); }         = state<Init>,
             state<Standby>   + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Error>,
+            state<Error>     + event<Success> / [](FsmOps& fo){ fo.Ready(); }              = state<Ready>,
             state<Error>     + event<Failed>  / [](FsmOps& fo){ fo.Error(); }              = state<Reset>
         );
     }
@@ -73,11 +72,11 @@ public:
     static void OnError(void* user_data);
 
 private:
-    static void ProcessStartEvent(k_work *work);
+    static void ProcessStartEvent(k_work* work);
 
 private:
     Logger* logger_;
-    k_work_wrapper<StateManagerSml> work_;
+    k_work_wrapper<StateManagerSml> work_wrapper_;
     std::vector<Manager*> managers_;
     boost::sml::sm<Fsm> sm_;
 };

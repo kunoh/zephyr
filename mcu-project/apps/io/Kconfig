@@ -1,5 +1,0 @@
-config SML
-    bool "Enable SML State Machine"
-    default n
-
-source "Kconfig.zephyr"

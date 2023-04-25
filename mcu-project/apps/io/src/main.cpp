@@ -76,7 +76,7 @@ int main(void)
 #if defined(CONFIG_BATTERY_NH2054QE34)
     std::unique_ptr<Battery> battery = std::make_unique<BatteryNh2054qe34>(logger);
 #else
-    std::unique_ptr<Battery> battery = std::make_unique<BatteryMock>(logger);
+    std::unique_ptr<Battery> battery = std::make_unique<BatteryMock>();
 #endif  // _CONFIG_BATTERY_NH2054QE34_
 
     UsbHidZephyr usb_hid(logger);

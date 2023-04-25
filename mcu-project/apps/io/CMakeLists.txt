@@ -27,10 +27,11 @@ target_sources(app PRIVATE src/main.cpp
                            src/sensors/battery_mock.cpp
                            src/sensors/imu_mock.cpp
                            src/sensors/inclinometer_impl.cpp
+                           src/managers/state_manager_sml.cpp
                            src/managers/battery_manager.cpp
                            src/managers/imu_manager.cpp
                            src/managers/display_manager.cpp
-                           src/managers/message_manager.cpp      
+                           src/managers/message_manager.cpp
                            src/message_handlers/system_message_handler_impl.cpp
                            src/message_handlers/battery_message_handler_impl.cpp
                            src/message_handlers/display_message_handler_impl.cpp
@@ -40,5 +41,3 @@ target_sources(app PRIVATE src/main.cpp
 target_sources_ifdef(CONFIG_BATTERY_NH2054QE34 app PRIVATE src/sensors/battery_nh2054qe34.cpp)
 target_sources_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK app PRIVATE src/display/display_com35.cpp)
 target_sources_ifdef(CONFIG_FXOS8700 app PRIVATE src/sensors/imu_fxos8700.cpp)
-target_sources_ifdef(CONFIG_SMF app PRIVATE src/managers/state_manager_smf.cpp)
-target_sources_ifdef(CONFIG_SML app PRIVATE src/managers/state_manager_sml.cpp)

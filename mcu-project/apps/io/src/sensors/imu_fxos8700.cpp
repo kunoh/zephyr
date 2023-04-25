@@ -1,8 +1,7 @@
 #include "imu_fxos8700.h"
 
 ImuFxos8700::ImuFxos8700(Logger& logger) : logger_{logger}
-{
-}
+{}
 
 int ImuFxos8700::Init()
 {

@@ -4,7 +4,7 @@
 
 struct CbWrapper {
     void *user_data;
-    void (*cb)(void*);
+    void (*cb)(void *);
 };
 
 struct SensorSampleData {

@@ -6,13 +6,13 @@
 #include <memory>
 #include <vector>
 
-#include "manager.h"
 #include "imu.h"
 #include "logger.h"
-#include "wrappers_zephyr.h"
+#include "manager.h"
 #include "util.h"
+#include "wrappers_zephyr.h"
 
-class ImuManager : public Manager{
+class ImuManager : public Manager {
 public:
     ImuManager(std::shared_ptr<Logger> logger, std::unique_ptr<Imu> imu);
     ~ImuManager() = default;
@@ -30,7 +30,7 @@ private:
     std::shared_ptr<Logger> logger_;
     std::unique_ptr<Imu> imu_;
     k_timer timer_;
-    k_work_wrapper<ImuManager> work_;
-    CbWrapper on_error_;
+    k_work_wrapper<ImuManager> work_wrapper_;
+    CbWrapper on_error_{.user_data = NULL, .cb = NULL};
     std::vector<std::function<void(ImuSampleData)> > subscribers_;
 };

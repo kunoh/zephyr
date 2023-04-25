@@ -2,11 +2,11 @@
 
 #include <zephyr/kernel.h>
 
-#include "manager.h"
 #include "display.h"
 #include "logger.h"
-#include "wrappers_zephyr.h"
+#include "manager.h"
 #include "util.h"
+#include "wrappers_zephyr.h"
 
 class DisplayManager : public Manager {
 public:
@@ -28,9 +28,8 @@ private:
     Logger* logger_;
     Display* disp_;
     k_timer timer_;
-    k_work_wrapper<DisplayManager> work_;
+    k_work_wrapper<DisplayManager> work_wrapper_;
     CbWrapper on_error_{.user_data = NULL, .cb = NULL};
-    int test;
     // Graphic Resources
     const uint8_t* logo_;
     const uint8_t* spinner_;

@@ -24,8 +24,8 @@ DisplayManager::DisplayManager(Logger *logger, Display *disp) : logger_{logger},
     k_timer_init(&timer_, SpinnerTimerHandler, NULL);
     k_timer_user_data_set(&timer_, this);
 
-    k_work_init(&work_.work, DoSpin);
-    work_.self = this;
+    k_work_init(&work_wrapper_.work, DoSpin);
+    work_wrapper_.self = this;
 }
 
 int DisplayManager::Init()
@@ -34,7 +34,7 @@ int DisplayManager::Init()
     return 0;
 }
 
-void DisplayManager::AddErrorCb(void (*cb)(void*), void* user_data)
+void DisplayManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
     on_error_.cb = cb;
     on_error_.user_data = user_data;
@@ -63,27 +63,27 @@ void DisplayManager::StopSpinner()
 void DisplayManager::SpinnerTimerHandler(struct k_timer *timer)
 {
     DisplayManager *self = reinterpret_cast<DisplayManager *>(k_timer_user_data_get(timer));
-    k_work_submit(&self->work_.work);
+    k_work_submit(&self->work_wrapper_.work);
 }
 
 void DisplayManager::DoSpin(struct k_work *work)
 {
-    k_work_wrapper<DisplayManager> *wrapper = CONTAINER_OF(work, k_work_wrapper<DisplayManager>, work);
-    DisplayManager* self = wrapper->self;
+    k_work_wrapper<DisplayManager> *wrapper =
+        CONTAINER_OF(work, k_work_wrapper<DisplayManager>, work);
+    DisplayManager *self = wrapper->self;
     static uint32_t spinner_idx = 0;
     uint8_t *spin = (uint8_t *)self->spinner_ + spinner_idx % 8 * (64 * 64 * 3);
     int ret = 0;
     ret = self->disp_->DisplayWrite((320 - 64) / 2, 90, 64, 64, 64, spin);
-    if (ret != 0){
+    if (ret != 0) {
         self->Error();
     }
     spinner_idx++;
-
 }
 
 void DisplayManager::Error()
 {
-    if (on_error_.cb != NULL && on_error_.user_data != NULL){
+    if (on_error_.cb != NULL && on_error_.user_data != NULL) {
         on_error_.cb(on_error_.user_data);
     }
 }

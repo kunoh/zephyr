@@ -20,7 +20,7 @@ class  {{ target[0]|upper }}{{ target[1:] }}():
             if len(input) != {{ function.variables|length + 1}}:
                 log.wrn("Wrong number of arguments")
                 return None
-            return self._enc.{{ function.name }}({% for variable in function.variables %}input[{{ loop.index }}]{% endfor %})
+            return self._enc.{{ function.name }}({% for variable in function.variables %}input[{{ loop.index }}]{%- if not loop.last %}, {% endif %}{% endfor %})
         {% endfor %}
         {%- endfor %}
 

@@ -18,12 +18,14 @@ public:
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     k_work* GetWorkItem();
-    void on_battery_data_cb(BatteryData data);
+    void on_battery_gen_data_cb(BatteryGeneralData sample_data);
+    void on_battery_chg_data_cb(BatteryChargingData sample_data);
 
 private:
     static void HandleQueuedMessage(k_work* work);
 
 private:
+    static int error;
     Logger* logger_;
     UsbHid* usb_hid_;
     MessageProto* msg_proto_;

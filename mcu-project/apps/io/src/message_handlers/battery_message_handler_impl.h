@@ -11,10 +11,11 @@ public:
                               MessageManager& msg_manager);
 
 private:
-    bool HandleBatteryInfo(MessageProto& msg, MessageBuffer& buffer) override;
-    bool HandleRequestBatteryInfo(MessageProto& msg, MessageBuffer& buffer) override;
-    bool HandleRequestBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
-    bool HandleResponseBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleBatteryChargingInfo(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleReqBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleReqBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleRespBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
 
     Logger& logger_;
     BatteryManager& battery_manager_;

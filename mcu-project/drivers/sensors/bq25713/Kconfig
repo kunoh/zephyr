@@ -1,0 +1,5 @@
+config BATTERY_CHARGER_BQ25713
+	bool "bq25713 driver"
+	
+	help
+	  Enable support for BQ25713 Smart Battery Charger driver.

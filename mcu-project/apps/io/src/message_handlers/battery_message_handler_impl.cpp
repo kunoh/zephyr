@@ -9,40 +9,49 @@ BatteryMessageHandlerImpl::BatteryMessageHandlerImpl(Logger& logger,
     : logger_{logger}, battery_manager_{battery_manager}, msg_manager_{msg_manager}
 {}
 
-bool BatteryMessageHandlerImpl::HandleBatteryInfo(MessageProto& msg, MessageBuffer& buffer)
+bool BatteryMessageHandlerImpl::HandleBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer)
 {
-    BatteryInfo bi = BatteryInfo_init_zero;
-    if (!msg.DecodeInnerMessage(BatteryInfo_fields, &bi)) {
+    BatteryGeneralInfo bgi = BatteryGeneralInfo_init_zero;
+    if (!msg.DecodeInnerMessage(BatteryGeneralInfo_fields, &bgi)) {
         return false;
     }
     return true;
 }
 
-/// @brief Have the battery manager trigger a battery sampling, get the sample
-///        and encode it as a BatteryInfo response to the CPU.
-bool BatteryMessageHandlerImpl::HandleRequestBatteryInfo(MessageProto& msg, MessageBuffer& buffer)
+bool BatteryMessageHandlerImpl::HandleBatteryChargingInfo(MessageProto& msg, MessageBuffer& buffer)
+{
+    BatteryChargingInfo bci = BatteryChargingInfo_init_zero;
+    if (!msg.DecodeInnerMessage(BatteryChargingInfo_fields, &bci)) {
+        return false;
+    }
+    return true;
+}
+
+/// @brief Have the battery manager get the last general battery sample
+///        and encode it as a BatteryGeneralInfo response to the CPU.
+bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
+                                                            MessageBuffer& buffer)
 {
     int ret = 0;
-    bool valid = true;
-    RequestBatteryInfo bi = RequestBatteryInfo_init_zero;
-    if (!msg.DecodeInnerMessage(RequestBatteryInfo_fields, &bi)) {
+
+    ReqBatteryGeneralInfo bi = ReqBatteryGeneralInfo_init_zero;
+    if (!msg.DecodeInnerMessage(ReqBatteryGeneralInfo_fields, &bi)) {
         return false;
     }
 
-    BatteryData data;
-    ret = battery_manager_.TriggerAndGetSample(&data);
+    BatteryGeneralData data;
+    ret = battery_manager_.GetLastGeneralData(data);
     if (ret != 0) {
         logger_.wrn(
-            "Failed to trigger and get sample by polling. Responding with empty BatteryInfo.");
-        valid = false;
+            "Failed to get last general battery sample. Responding with empty BatteryGeneralInfo.");
     }
 
     // Encode response
-    ret = BatteryMessageEncoder::EncodeBatteryInfo(
-        buffer, valid, data.temp, data.volt, data.current, (int)data.remaining_capacity,
-        (int)data.status, (int)data.relative_charge_state, (int)data.cycle_count);
+    ret = BatteryMessageEncoder::EncodeBatteryGeneralInfo(
+        buffer, data.temp, data.volt, data.current, (int)data.remaining_capacity,
+        (int)data.relative_charge_state, (int)data.cycle_count);
     if (!ret) {
-        logger_.wrn("Failed to encode BatteryInfo.");
+        logger_.wrn("Failed to encode BatteryGeneralInfo.");
         return false;
     }
     buffer.msg_type = OUTGOING;
@@ -51,24 +60,25 @@ bool BatteryMessageHandlerImpl::HandleRequestBatteryInfo(MessageProto& msg, Mess
 }
 
 /// @brief Add CPU as receiver of periodic battery information and encode a response.
-bool BatteryMessageHandlerImpl::HandleRequestBatteryNotifications(MessageProto& msg,
-                                                                  MessageBuffer& buffer)
+bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
+                                                              MessageBuffer& buffer)
 {
-    RequestBatteryNotifications bn = RequestBatteryNotifications_init_zero;
-    if (!msg.DecodeInnerMessage(RequestBatteryNotifications_fields, &bn)) {
+    ReqBatteryNotifications bn = ReqBatteryNotifications_init_zero;
+    if (!msg.DecodeInnerMessage(ReqBatteryNotifications_fields, &bn)) {
         return false;
     }
 
     if (bn.enable) {
         if (!battery_manager_.GetCpuSubscribed()) {
-            battery_manager_.AddSubscriber(
-                [&](BatteryData sample_data) { msg_manager_.on_battery_data_cb(sample_data); });
+            battery_manager_.AddSubscriberGeneral([&](BatteryGeneralData sample_data) {
+                msg_manager_.on_battery_gen_data_cb(sample_data);
+            });
             battery_manager_.SetCpuSubscribed(true);
         }
 
         // Encode response
-        if (!BatteryMessageEncoder::EncodeResponseBatteryNotifications(buffer)) {
-            logger_.wrn("Failed to Encode ResponseBatteryNotifications");
+        if (!BatteryMessageEncoder::EncodeRespBatteryNotifications(buffer)) {
+            logger_.wrn("Failed to Encode RespBatteryNotifications");
             return false;
         }
         buffer.msg_type = OUTGOING;
@@ -78,11 +88,11 @@ bool BatteryMessageHandlerImpl::HandleRequestBatteryNotifications(MessageProto& 
 }
 
 // Read status field from ResponseBatteryNotifications message
-bool BatteryMessageHandlerImpl::HandleResponseBatteryNotifications(MessageProto& msg,
-                                                                   MessageBuffer& buffer)
+bool BatteryMessageHandlerImpl::HandleRespBatteryNotifications(MessageProto& msg,
+                                                               MessageBuffer& buffer)
 {
-    ResponseBatteryNotifications bn = ResponseBatteryNotifications_init_zero;
-    if (!msg.DecodeInnerMessage(ResponseBatteryNotifications_fields, &bn)) {
+    RespBatteryNotifications bn = RespBatteryNotifications_init_zero;
+    if (!msg.DecodeInnerMessage(RespBatteryNotifications_fields, &bn)) {
         return false;
     }
 

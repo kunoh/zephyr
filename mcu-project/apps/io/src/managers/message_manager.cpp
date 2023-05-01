@@ -1,5 +1,7 @@
 #include "message_manager.h"
 
+#include <stdio.h>
+
 #include "battery_message_encoder.h"
 
 MessageManager::MessageManager(Logger* logger, UsbHid* usb_hid, MessageProto* msg_proto,
@@ -14,13 +16,24 @@ MessageManager::MessageManager(Logger* logger, UsbHid* usb_hid, MessageProto* ms
     work_wrapper_.self = this;
 }
 
-void MessageManager::on_battery_data_cb(BatteryData data)
+void MessageManager::on_battery_chg_data_cb(BatteryChargingData data)
 {
     MessageBuffer buffer;
     buffer.msg_type = OUTGOING;
-    BatteryMessageEncoder::EncodeBatteryInfo(
-        buffer, true, data.temp, data.volt, data.current, (int)data.remaining_capacity,
-        (int)data.status, (int)data.relative_charge_state, (int)data.cycle_count);
+    BatteryMessageEncoder::EncodeBatteryChargingInfo(buffer, data.des_chg_current,
+                                                     data.des_chg_volt, data.status, data.charging);
+
+    k_msgq_put(msgq_, &buffer, K_NO_WAIT);
+    k_work_submit(&work_wrapper_.work);
+}
+
+void MessageManager::on_battery_gen_data_cb(BatteryGeneralData data)
+{
+    MessageBuffer buffer;
+    buffer.msg_type = OUTGOING;
+    BatteryMessageEncoder::EncodeBatteryGeneralInfo(buffer, data.temp, data.volt, data.current,
+                                                    data.remaining_capacity,
+                                                    data.relative_charge_state, data.cycle_count);
 
     k_msgq_put(msgq_, &buffer, K_NO_WAIT);
     k_work_submit(&work_wrapper_.work);

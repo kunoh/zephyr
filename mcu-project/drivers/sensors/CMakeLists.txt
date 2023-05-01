@@ -1,0 +1,5 @@
+zephyr_library_sources(sensor_util.c)
+zephyr_include_directories(.)
+
+add_subdirectory_ifdef(CONFIG_BATTERY_NH2054QE34 nh2054qe34)
+add_subdirectory_ifdef(CONFIG_BATTERY_CHARGER_BQ25713 bq25713)

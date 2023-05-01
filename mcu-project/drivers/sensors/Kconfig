@@ -1,1 +1,2 @@
 rsource "nh2054qe34/Kconfig"
+rsource "bq25713/Kconfig"

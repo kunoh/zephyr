@@ -1,0 +1,2 @@
+zephyr_library_sources(bq25713_driver.c)
+zephyr_include_directories(.)

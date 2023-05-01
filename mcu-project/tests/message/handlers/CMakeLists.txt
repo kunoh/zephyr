@@ -12,6 +12,7 @@ target_sources(app PRIVATE
                ${MCU_TEST_DIR}/mocks/logger/logger_mock.cpp
                ${IOC_DIR}/src/usb/usb_hid_mock.cpp
                ${IOC_DIR}/src/sensors/battery_mock.cpp
+               ${IOC_DIR}/src/sensors/battery_charger_mock.cpp
                ${IOC_DIR}/src/managers/battery_manager.cpp
                ${IOC_DIR}/src/managers/message_manager.cpp
                ${IOC_DIR}/src/message_handlers/battery_message_handler_impl.cpp

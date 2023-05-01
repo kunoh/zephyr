@@ -1,6 +1,10 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/usb/usb_device.h>
 
+#include <bitset>
+
+#include "battery_charger_bq25713.h"
+#include "battery_charger_mock.h"
 #include "battery_manager.h"
 #include "battery_message_handler_impl.h"
 #include "battery_mock.h"
@@ -79,6 +83,12 @@ int main(void)
     std::unique_ptr<Battery> battery = std::make_unique<BatteryMock>();
 #endif  // _CONFIG_BATTERY_NH2054QE34_
 
+#if defined(CONFIG_BATTERY_CHARGER_BQ25713)
+    std::unique_ptr<BatteryCharger> charger = std::make_unique<BatteryChargerBq25713>(logger);
+#else
+    std::unique_ptr<BatteryCharger> charger = std::make_unique<BatteryChargerMock>();
+#endif
+
     UsbHidZephyr usb_hid(logger);
     usb_hid.SetReceiveCallback(HandleReceiveCallback);
     DisplayCOM35 disp(logger);
@@ -98,7 +108,8 @@ int main(void)
     // Initialize Managers
     StateManagerSml state_manager(&logger);
     MessageManager msg_manager(&logger, &usb_hid, &msg_proto, &dispatcher, &usb_hid_msgq);
-    BatteryManager battery_manager(std::make_shared<LoggerZephyr>(logger), std::move(battery));
+    BatteryManager battery_manager(std::make_shared<LoggerZephyr>(logger), std::move(battery),
+                                   std::move(charger));
     ImuManager imu_manager(std::make_shared<LoggerZephyr>(logger), std::move(imu));
     DisplayManager disp_manager(&logger, &disp);
     usb_hid_work = msg_manager.GetWorkItem();
@@ -120,13 +131,20 @@ int main(void)
         logger.err("Failed to enable USB");
     }
 
-    battery_manager.StartSampling();
+    battery_manager.AddSubscriberCharging(
+        [&](BatteryChargingData sample_data) { msg_manager.on_battery_chg_data_cb(sample_data); });
+    battery_manager.AddSubscriberGeneral(
+        [&](BatteryGeneralData sample_data) { msg_manager.on_battery_gen_data_cb(sample_data); });
+    battery_manager.StartSampling(CHARGING, 50, 10000);
+    battery_manager.StartSampling(GENERAL, 50, 60000);
+
+    imu_manager.AddSubscriber(on_imu_data);
+
     state_manager.AddManager(disp_manager);
     state_manager.AddManager(msg_manager);
     state_manager.AddManager(imu_manager);
-    imu_manager.AddSubscriber(on_imu_data);
-
     state_manager.Run();
+
     imu_manager.StartSampling();
     disp_manager.SetBootLogo();
     disp_manager.StartSpinner();

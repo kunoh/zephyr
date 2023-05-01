@@ -1,0 +1,5 @@
+description: Texas Instruments BQ25713 Smart Battery Charger
+
+compatible: "ti,bq25713"
+
+include: i2c-device.yaml

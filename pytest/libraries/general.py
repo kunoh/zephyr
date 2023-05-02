@@ -1,6 +1,7 @@
 import subprocess, time
 import os, pathlib
-from libraries.serial import Serial
+from libraries.serial_if import SerialMcu
+import asyncio
 
 HASH_LEN = 64
 class General():
@@ -28,6 +29,10 @@ class General():
         return image_slots
 
     def firmware_upgrade(env:dict={}):
+        if env['dev_mode']['skip_flash']:
+            print(f"Skipped FW bupdate")
+            return True
+        
         print(f"Updating with fw {env['binary']['file']}")
         if not os.path.exists(env['binary']['file']):
             print(f"FW binary does not exist")
@@ -37,7 +42,11 @@ class General():
 
         exec_cmd_list_image = base_cmd + " image list"
         print(f"{exec_cmd_list_image}")
-        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+        try:
+            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print(f"{e}")
+            return False
         assert out.decode() is not None
         print(out.decode())
         image_slots = General.get_list_of_images_from_str(out.decode())
@@ -47,11 +56,19 @@ class General():
 
         exec_cmd_fw_upgrade = base_cmd + " image upload {}".format(env['binary']['file'])
         print(f"{exec_cmd_fw_upgrade}")
-        out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT)
+        try:
+            out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print(f"{e}")
+            return False
         assert out.decode() is not None
         print(out.decode())
         print(f"{exec_cmd_list_image}")
-        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+        try:
+            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print(f"{e}")
+            return False
         assert out.decode() is not None
         print(out.decode())
         image_slots = General.get_list_of_images_from_str(out.decode())
@@ -68,7 +85,11 @@ class General():
             return False
         exec_cmd_fw_test = base_cmd + " image test {}".format(new_fw_hash)
         print(f"{exec_cmd_fw_test}")
-        out = subprocess.check_output(exec_cmd_fw_test, shell=True, stderr=subprocess.STDOUT)
+        try:
+            out = subprocess.check_output(exec_cmd_fw_test, shell=True, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print(f"{e}")
+            return False
         assert out.decode() is not None
         print(out.decode())
            
@@ -78,18 +99,25 @@ class General():
 
         exec_cmd_reset = base_cmd + " reset"
         print(f"{exec_cmd_reset}")
-        out = subprocess.check_output(exec_cmd_reset, shell=True, stderr=subprocess.STDOUT)
+        try:
+            out = subprocess.check_output(exec_cmd_reset, shell=True, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print(f"{e}")
+            return False
         assert out.decode() is not None
         print(out.decode())
         assert out.decode().strip() == "Done"
 
-        timeout = 60
+        timeout = 120
         time_start = time.time()
         print(f"Validate new firmware hash (Wait for only ONE Image::Slot)...")
         while timeout > (time.time() - time_start):
-            if Serial.port_is_available(env['device']['mcu_serial_zephyr']):
-                try: 
-                    out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+            if SerialMcu(port=env['device']['mcu_serial_zephyr']).port_is_available():
+                try:
+                    try:
+                        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+                    except Exception as e:
+                        print(f"{e}")
                     assert out.decode() is not None
                     image_slots = General.get_list_of_images_from_str(out.decode())
                     if len(image_slots) == 1:
@@ -106,10 +134,10 @@ class General():
         print(f"FW update failed: Could not validate new firmware hash within {timeout} secs ")
         return False
 
-    def compose_decos(*decos):
-        def composition(func):
-            for deco in reversed(decos):
-                func = deco(func)
+    def get_all_markers(*markers_list):
+        def all_markers(func):
+            for mark in reversed(markers_list):
+                func = mark(func)
             return func
-        return composition
+        return all_markers
     

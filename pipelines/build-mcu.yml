@@ -288,6 +288,7 @@ stages:
       demands: TM_CAP_TM5_MCU -equals 1
     jobs:
     - job: smoke_test
+      timeoutInMinutes: 6
       displayName: Smoke-testing MCU TM5
       steps:
       - checkout: self
@@ -352,26 +353,44 @@ stages:
           source mcu_py_venev/bin/activate
           pip3 install -r $(pip_r_folder)/requirements.txt
       
+          echo "Generate environment file env-setup.json"
           jq -n '{
               "device": {
                   "mcu_serial_zephyr": "$(MCU_ZEPHYR_IO_DEVICE)",
-                  "mcu_serial_jlink": "$(MCU_SEGGER_JLINK)"
+                  "mcu_serial_jlink": "$(MCU_SEGGER_JLINK)",
+                  "mcu_communication_protocol": "usb",
+                  "mcu_interface": "io"
                   },
               "binary": {
                   "file": "$(file_name)",
-                  "path": "$(binaries_folder)"
+                  "path": "$(binaries_folder)",
+                  "version": "$(version)"
+                  },
+              "paths": {
+                  "root_path": "$(System.DefaultWorkingDirectory)",
+                  "test_path": "$(tests_folder)",
+                  "results_path": "$(results_folder)"
+                  },
+              "dev_mode": {
+                  "skip_flash": false
                   }
               }' > env-setup.json
-          cat env-setup.json| jq empty; echo "Validate env file OK: $?"
+          cat env-setup.json| jq empty; echo "Validate env file [ok==0 ; nok==1]: $?"
           if [ $? != 0 ]; then
               exit $?
           fi
           
-          pytest $(tests_folder) -v -s \
+          echo "Start collecting prints"
+          mkdir $(results_folder)
+
+          echo "Start testing $(version)"
+          pytest $(tests_folder) \
             --junitxml $(results_folder)/xunit.xml --html $(results_folder)/report.html \
-            --envfile env-setup.json
+            --envfile env-setup.json \
+            -s -v
           status=$?
           echo "Test status: ${status}"
+
           exit $status
 
         workingDirectory: '$(System.DefaultWorkingDirectory)/'
@@ -381,6 +400,6 @@ stages:
         displayName: 'Publish test Reports'
         inputs:
           targetPath: '$(results_folder)/'
-          artifact: 'mcu_tm5_test_reports'
+          artifact: 'IO MCU TEST REPORT'
         condition: always()
 

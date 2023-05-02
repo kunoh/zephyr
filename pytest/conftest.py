@@ -16,13 +16,11 @@ def test_init(variables):
     ##########################################
     # Test setup
     ##########################################
-    assert General.firmware_upgrade(env=variables)
+    if General.firmware_upgrade(env=variables) is False:
+        pytest.exit(f"Failed to upgrade with  {variables['binary']['version']}")
 
     yield
 
     ##########################################
     # Test Teardown
     ##########################################
-
-    
-

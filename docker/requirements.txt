@@ -107,6 +107,9 @@ PyGithub
 
 # used to connect to boards for console IO
 pyserial
+pyusb
+pyserial-asyncio
+hid
 
 # used to flash & debug various boards
 pyocd>=0.29.0
@@ -124,3 +127,4 @@ grpcio-tools
 
 # Pytest Plugins
 pytest-html
+pytest-asyncio

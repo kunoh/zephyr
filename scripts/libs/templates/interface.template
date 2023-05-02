@@ -27,7 +27,7 @@ class  {{ target[0]|upper }}{{ target[1:] }}():
         log.wrn("Input handler not implemented")
         return None
 
-    def handle_response(self, response):
+    def handle_response(self, response, ret_resp=False):
         type = self._dec.ParseOuterAndGetType(response)
 
         {% for message in messages -%}
@@ -39,7 +39,7 @@ class  {{ target[0]|upper }}{{ target[1:] }}():
             {%- for variable in function.variables %}
             log.inf(f'{{ variable.name }}: {res.{{ variable.name }}}')
             {%- endfor %}
-            return True
+            return res if ret_resp else True
         {% endfor %}
         {%- endfor %}
 

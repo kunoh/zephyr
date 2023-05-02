@@ -131,10 +131,6 @@ int main(void)
         logger.err("Failed to enable USB");
     }
 
-    battery_manager.AddSubscriberCharging(
-        [&](BatteryChargingData sample_data) { msg_manager.on_battery_chg_data_cb(sample_data); });
-    battery_manager.AddSubscriberGeneral(
-        [&](BatteryGeneralData sample_data) { msg_manager.on_battery_gen_data_cb(sample_data); });
     battery_manager.StartSampling(CHARGING, 50, 10000);
     battery_manager.StartSampling(GENERAL, 50, 60000);
 

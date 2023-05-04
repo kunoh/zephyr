@@ -288,7 +288,7 @@ stages:
       demands: TM_CAP_TM5_MCU -equals 1
     jobs:
     - job: smoke_test
-      timeoutInMinutes: 6
+      timeoutInMinutes: 10
       displayName: Smoke-testing MCU TM5
       steps:
       - checkout: self

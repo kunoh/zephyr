@@ -43,7 +43,7 @@ class General():
         exec_cmd_list_image = base_cmd + " image list"
         print(f"{exec_cmd_list_image}")
         try:
-            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
         except Exception as e:
             print(f"{e}")
             return False
@@ -57,7 +57,7 @@ class General():
         exec_cmd_fw_upgrade = base_cmd + " image upload {}".format(env['binary']['file'])
         print(f"{exec_cmd_fw_upgrade}")
         try:
-            out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT)
+            out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT, timeout=300)
         except Exception as e:
             print(f"{e}")
             return False
@@ -65,7 +65,7 @@ class General():
         print(out.decode())
         print(f"{exec_cmd_list_image}")
         try:
-            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+            out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
         except Exception as e:
             print(f"{e}")
             return False
@@ -86,7 +86,7 @@ class General():
         exec_cmd_fw_test = base_cmd + " image test {}".format(new_fw_hash)
         print(f"{exec_cmd_fw_test}")
         try:
-            out = subprocess.check_output(exec_cmd_fw_test, shell=True, stderr=subprocess.STDOUT)
+            out = subprocess.check_output(exec_cmd_fw_test, shell=True, stderr=subprocess.STDOUT, timeout=60)
         except Exception as e:
             print(f"{e}")
             return False
@@ -100,7 +100,7 @@ class General():
         exec_cmd_reset = base_cmd + " reset"
         print(f"{exec_cmd_reset}")
         try:
-            out = subprocess.check_output(exec_cmd_reset, shell=True, stderr=subprocess.STDOUT)
+            out = subprocess.check_output(exec_cmd_reset, shell=True, stderr=subprocess.STDOUT, timeout=60)
         except Exception as e:
             print(f"{e}")
             return False
@@ -115,7 +115,7 @@ class General():
             if SerialMcu(port=env['device']['mcu_serial_zephyr']).port_is_available():
                 try:
                     try:
-                        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT)
+                        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
                     except Exception as e:
                         print(f"{e}")
                     assert out.decode() is not None

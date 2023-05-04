@@ -6,7 +6,11 @@ bool Encode{{ function.name }}(MessageBuffer &buffer{% for variable in function.
     {{ function.name }} message = {{ function.name }}_init_zero;
 
     {% for variable in function.variables -%}
+    {% if 'char' in variable.type %}
+    strncpy(message.{{ variable.name }}, {{ variable.name }}, pb_arraysize({{ function.name }}, {{ variable.name }}));
+    {% else %}
     message.{{ variable.name }} = {{ variable.name }};
+    {% endif %}
     {% endfor %}
     return MessageEncoder::EncodeMessage(buffer, {{ function.name }}_fields, &message, "/{{ function.name }}");
 }

@@ -380,8 +380,9 @@ stages:
               exit $?
           fi
           
-          echo "Start collecting prints"
+          echo "Start serial tool to collect prints form segger port"
           mkdir $(results_folder)
+          python3 pytest/libraries/print_collector.py -s $(MCU_SEGGER_JLINK) -p $(results_folder) -f segger_serial.log &
 
           echo "Start testing $(version)"
           pytest $(tests_folder) \
@@ -389,7 +390,14 @@ stages:
             --envfile env-setup.json \
             -s -v
           status=$?
-          echo "Test status: ${status}"
+          echo "Test end status: ${status}"
+
+          echo "Send SIGINT signal to serial tool in 3 secs"
+          python3 -c "from time import sleep; sleep(3)"
+          kill -SIGINT `cat $(results_folder)/tmp_pid`
+          echo "Serial tool killed [ok==0 ; nok==1]: $?"
+          echo "Wait 5 sec serial tool to close all files"
+          python3 -c "from time import sleep; sleep(5)"
 
           exit $status
 

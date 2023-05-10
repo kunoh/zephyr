@@ -37,6 +37,9 @@ static int HandleReceiveCallback(const struct device *dev, struct usb_setup_pack
                                  int32_t *len, uint8_t **data)
 {
     MessageBuffer buffer;
+    if ((size_t)*len > sizeof(buffer.data)) {
+        return -1;
+    }
     memcpy(buffer.data, *data, (size_t)*len);
     buffer.length = *len;
     buffer.msg_type = INCOMING;

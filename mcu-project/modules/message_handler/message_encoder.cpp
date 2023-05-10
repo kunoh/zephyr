@@ -9,6 +9,9 @@ bool EncodeOuterMessage(MessageBuffer &outer_buffer, MessageBuffer &inner_buffer
 
     message.has_inner = true;
     strncpy(message.inner.type_url, type, sizeof(message.inner.type_url));
+    if (inner_buffer.length > sizeof(message.inner.value.bytes)) {
+        return false;
+    }
     memcpy(message.inner.value.bytes, inner_buffer.data, inner_buffer.length);
     message.inner.value.size = inner_buffer.length;
 

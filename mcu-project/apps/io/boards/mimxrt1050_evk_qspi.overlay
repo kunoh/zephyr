@@ -13,6 +13,20 @@
     maximum-speed = "high-speed";
 };
 
+&lpi2c1 {
+	smart_battery: nh2054qe34@b{
+		status = "okay";
+		compatible = "inspiredenergy,nh2054qe34";
+		reg = <0xb>;
+	};
+
+	smart_battery_charger: bq25713@6b{
+		status = "okay";
+		compatible = "ti,bq25713";
+		reg = <0x6b>;	// See Device Comparison Table in datasheet
+	};
+};
+
 &lcdif {
 	width = <320>;
 	height = <240>;

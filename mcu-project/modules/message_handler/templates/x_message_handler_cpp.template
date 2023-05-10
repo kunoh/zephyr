@@ -3,7 +3,7 @@
 bool {{ basename[0]|upper }}{{ basename[1:] }}MessageHandler::Handle(MessageProto& msg, MessageBuffer &buffer)
 {
     {% for function in functions %}
-    if (strcmp(msg.msg_outer.inner.type_url, "/{{ function.name }}") == 0) {
+    if (strncmp(msg.msg_outer.inner.type_url, "/{{ function.name }}", sizeof(msg.msg_outer.inner.type_url)) == 0) {
         return Handle{{ function.name }}(msg, buffer);
     }
     {% endfor -%}

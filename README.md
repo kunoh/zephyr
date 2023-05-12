@@ -6,7 +6,7 @@ Initialization (one time only, executed from zephyrproject dir):
 * Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/3.3.0/develop/getting_started/index.html) except from west init. Instead of west init/update, run:
 
   ``` bash
-    $ ./build.py update
+    $ ./build.py --update
   ```
   This will place Zephyr in a folder called `zephyrproject` (Installation can also be seen in the pipelines).
 

@@ -1,22 +1,22 @@
 # Introduction
-MCU something
+MCU project for IO and BLE firmware.
 # Initialization
 Initialization (one time only, executed from zephyrproject dir):
 
-* Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/3.1.0/develop/getting_started/index.html) except from west init. Instalation can also be seen in the pipelines.
-* Update zephyr
+* Install Zephyr, toolchain and tools based on [Zephyr intstallation](https://docs.zephyrproject.org/3.3.0/develop/getting_started/index.html) except from west init. Instead of west init/update, run:
 
-
-
-``` bash
-  $ ./build.py update
-```
+  ``` bash
+    $ ./build.py --update
+  ```
+  This will place Zephyr in a folder called `zephyrproject` (Installation can also be seen in the pipelines).
 
 * You might need to install the following apt packages manually:
   * protobuf-compiler
 
 * It is recommended to setup a python virtual environment for the repo, and install the python packages from requirements into it. Because som of the required version might confilct with the ones install on your system.
-
+* Requirements are found in:
+  * docker/requirements.txt
+  * zephyrproject/zephyr/scripts/requirements.txt 
 * If you areworking with a 1060 board you will need to change the debugger firmware to J-Link.
   * https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1060-EVKB/ta-p/1452717
   * https://www.nxp.com/docs/en/application-note/AN13206.pdf
@@ -27,20 +27,23 @@ Initialization (one time only, executed from zephyrproject dir):
       * DFU jumper is J12.
       * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.
 
-* For IO build and flash bootloader:
+# Building and flashing
+Using the MIMXRT1060 boards there are two ways of running the IO application firmware on the board:
+* Build the application and flash as standalone.
+* Build the application and Zephyr project bootloader (MCUBoot) and flash them together in separate partitions.
 
+To use the standalone:
 ``` bash
-  $ ./build.py -t io -b
-  $ ./build.py -t io -b flash
+  $ ./build.py -t io1060 -wb -f
 ```
 
-
-# Build and Test
-Build and flash using ./build.py
-Run ./build.py --help to get options
-
-West commands work as well in the project directories
-
+To use the Zephyr bootloader with the IO application, first build and flash the bootloader and then the application:
+``` bash
+  $ ./build.py -t io1060 -l
+  $ west flash -d build/io1060/bootloader/
+  $ ./build.py -t io1060 -f
+```
+West commands work as well in the project directories. You can also run `build.py --help` for more info.
 
 # Debug
 * Install VSCode extension "Cortex-Debug"
@@ -77,6 +80,26 @@ West commands work as well in the project directories
   Modify the zephyr-sdk, device, and JLink versions and paths to match your system.
   * MIMXRT1062xxx6B boards require zephyr-sdk >= 15.2.
 
+# Unit tests
+Zephyr's Ztest framework is used for the unit tests and run with Twister.  
+All tests should be placed in mcu-project/tests and can be run with:
+
+``` bash
+build.py --test
+```
+See existing tests for the general structure.
+
+
+* For GCC >= 11
+  Compiling the Zephyr library using cpp20 is currently causing some compilation issue.
+  In order to fix it copy the bits directory, placed in directory files;
+  ``` bash
+  cp -r files/bits zephyrproject/zephyr/boards/posix/native_posix
+  ```
+  * The IO project currently uses CPP14
+
+
+
 # Working with zephyr repository
 
 Zephyr repository can be found in zephyrproject/zephyr while all modules repositories are in zephyrproject
@@ -91,23 +114,6 @@ In order to checkout different zephyr branch:
 $ cd zephyrproject/zephyr
 $ git co [branch/SHA of interest]
 $ west update
-```
-
-# Unit tests
-Zephyr's ztest framework is used for the unit tests
-
-For GCC >= 11
-Compiling the Zephyr library using cpp20 is currently causing some compilation issue.
-In order to fix it copy the bits directory, placed in directory files;
-``` bash
-cp -r files/bits zephyrproject/zephyr/boards/posix/native_posix
-```
-
-All tests should be placed in mcu-project/tests
-Tests can be run as
-
-``` bash
-build.py --test
 ```
 
 # Run in Docker

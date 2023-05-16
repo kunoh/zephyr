@@ -14,7 +14,9 @@ Initialization (one time only, executed from zephyrproject dir):
   * protobuf-compiler
 
 * It is recommended to setup a python virtual environment for the repo, and install the python packages from requirements into it. Because som of the required version might confilct with the ones install on your system.
-
+* Requirements are found in:
+  * docker/requirements.txt
+  * zephyrproject/zephyr/scripts/requirements.txt 
 * If you areworking with a 1060 board you will need to change the debugger firmware to J-Link.
   * https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1060-EVKB/ta-p/1452717
   * https://www.nxp.com/docs/en/application-note/AN13206.pdf

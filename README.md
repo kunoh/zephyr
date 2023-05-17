@@ -1,5 +1,6 @@
 # Introduction
 MCU project for IO and BLE firmware.
+
 # Initialization
 Initialization (one time only, executed from zephyrproject dir):
 

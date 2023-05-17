@@ -1,4 +1,3 @@
-
 variables:
   major: 0
   minor: 1
@@ -413,3 +412,45 @@ stages:
           artifact: 'IO MCU TEST REPORT'
         condition: always()
 
+  - stage: gen_doxy_documentation
+    displayName: "Generating Doxygen documentation"
+    dependsOn: smoke_test_mcu_tm5
+    pool:
+      vmImage: 'ubuntu-20.04'
+    jobs:  
+    - job:
+      displayName: Doxygen
+      steps:
+      - checkout: self
+        clean: false
+        persistCredentials: true
+
+      - script: |
+          sudo apt install doxygen graphviz
+        displayName: Installing Doxygen prerequisites
+
+      - script: |
+          echo "Generating Doxygen documentation."
+          ./build.py -d io
+          if [ $? != 0 ]
+          then
+            echo "Couldn't generate docs"
+            exit 1
+          else
+            echo "Compressing html"
+            ls build/Doxygen_IO
+            zip -r build/Doxygen_IO/mcu_io_docs.zip build/Doxygen_IO/html
+          fi
+        displayName: Generating doxygen documentation
+
+      - task: CopyFiles@2
+        displayName: 'Copying build files to Artifacts'
+        inputs:
+          contents: |
+            build/Doxygen_IO/mcu_io_docs.zip
+            build/Doxygen_IO/DoxygenWarningLog_IO.txt
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+      - publish: '$(Build.ArtifactStagingDirectory)'
+        displayName: Publishing documentation artifacts
+        artifact: drop

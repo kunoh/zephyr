@@ -51,7 +51,7 @@ public:
     /// Returns the current being supplied (or accepted) through the battery's terminals.
     ///   Unit: Amperes (A). Positive for charge, negative for discharge.
     ///
-    /// @param[out] volt Pointer to write current sample to.
+    /// @param[out] current Pointer to write current sample to.
     ///
     /// @retval 0 on success. Non-zero otherwise.
     ///
@@ -108,7 +108,7 @@ public:
     ///
     /// Unit: mV.
     ///
-    /// @param charging_voltage Pointer to write desired charging voltage to.
+    /// @param charging_volt Pointer to write desired charging voltage to.
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///

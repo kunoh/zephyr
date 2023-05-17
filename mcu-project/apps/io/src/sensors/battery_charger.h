@@ -17,7 +17,7 @@ public:
     /// @param[in] chg_current The charging current to set.
     /// @param[in] chg_volt The max charging voltage to set.
     /// @param[out] current_set_success Boolean status whether setting the current succeeded.
-    /// @param[out] current_set_volt Boolean status whether setting the max voltage succeeded.
+    /// @param[out] volt_set_success Boolean status whether setting the max voltage succeeded.
     ///
     /// @return 0 on success, non-zero otherwise. Additionally, if current_set_success or
     /// volt_set_success are false,

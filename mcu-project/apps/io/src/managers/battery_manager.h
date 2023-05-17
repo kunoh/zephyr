@@ -39,7 +39,8 @@ public:
     ///
     /// \note It is permitted to call StartSampling() while already started.
     ///       This will restart the sampling timers with the new specified parameters.
-    ///
+    /// @param[in] type The category of battery properties to start sampling. Can be general or
+    /// charging related.
     /// @param[in] init_delay_msec The initial delay (in milliseconds) from calling sampling start
     /// to the first sample is fetched.
     /// @param[in] period_msec The sampling period (in milliseconds).

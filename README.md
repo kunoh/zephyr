@@ -17,8 +17,11 @@ Initialization (one time only, executed from zephyrproject dir):
 * It is recommended to setup a python virtual environment for the repo, and install the python packages from requirements into it. Because som of the required version might confilct with the ones install on your system.
 * Requirements are found in:
   * docker/requirements.txt
-  * zephyrproject/zephyr/scripts/requirements.txt 
-* If you areworking with a 1060 board you will need to change the debugger firmware to J-Link.
+  * zephyrproject/zephyr/scripts/requirements.txt
+
+# Choice of debugger
+If you are working with a 1060 board you will need to change the debugger firmware to J-Link for flashing and debugging. It is possible to use either the onboard debugger or an external MCU-Link Pro.  
+## Onboard debugger
   * https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1060-EVKB/ta-p/1452717
   * https://www.nxp.com/docs/en/application-note/AN13206.pdf
     * you might need LPCScrypt:
@@ -26,7 +29,28 @@ Initialization (one time only, executed from zephyrproject dir):
       * https://www.nxp.com/docs/en/user-guide/LPCScrypt_User_Guide.pdf
     * There is a number of mismatched names in the application note when applied to the evkb:
       * DFU jumper is J12.
-      * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.
+      * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.  
+
+## External debugger (MCU-Link Pro)
+  * You will need to follow the same steps as the onboard debugger regarding powering the rest of the board from J48 without the debug circuit. Remove the usb cable from the J1 usb-port to remove power from the debug circuit. To power the rest of the board from usb-port J48, move jumper J40 to the 3-4 configuration.
+
+  * Follow the following links for setup. You will be programming the debugger with the J-link Lite firmware, using the program_JLINK script:
+
+    * https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcu-link-pro-debug-probe:MCU-LINK-PRO
+
+    * https://www.nxp.com/document/guide/getting-started-with-the-mcu-link-pro:GS-MCU-LINK-PRO
+
+    After succesfully installing the J-link firmware the debugger should be appear as a __SEGGER J-Link__ usb device.
+
+  * Connect the rainbow-cable dongle to the dev board JTAG-connector and debugger J7 connector.
+
+  * On the dev board, remove jumpers J9, J10, J11, J13 (located near the JTAG connector). Then, for the large connector on the debugger:
+
+    * Connect __uart_in__ on the debugger (see backside) to __J13,pin-2__ on the dev board.
+
+    * Connect __uart_out__ on the debugger to __J11,pin-2__ on the dev board.
+
+
 
 # Building and flashing
 Using the MIMXRT1060 boards there are two ways of running the IO application firmware on the board:
@@ -46,7 +70,7 @@ To use the Zephyr bootloader with the IO application, first build and flash the 
 ```
 West commands work as well in the project directories. You can also run `build.py --help` for more info.
 
-# Debug
+# Debugging
 * Install VSCode extension "Cortex-Debug"
 * Add "launch.json" to `<ProjectRoot>/.vscode/` with:
   ``` json
@@ -78,8 +102,18 @@ West commands work as well in the project directories. You can also run `build.p
     ]
   }
   ```
-  Modify the zephyr-sdk, device, and JLink versions and paths to match your system.
+
+  Modify the zephyr-sdk, device, and JLink versions and paths to match your system.  
+  Notes:
   * MIMXRT1062xxx6B boards require zephyr-sdk >= 15.2.
+  * The `"request": "launch"` entry is only useful when flashing the application as standalone. When using the application with the bootloader, use `"request": "attach"`.
+  
+  
+* You will also need to update settings.json with the Zephyr arm toolchain prefix. In VSCode:
+  1. Go to `File->Preferences->Settings`.
+  2. Search "cortex-debug.armToolchainPrefix".  
+  3. Click on `"Edit in settings.json"`.
+  4. Add the entry `"cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",`
 
 # Unit tests
 Zephyr's Ztest framework is used for the unit tests and run with Twister.  

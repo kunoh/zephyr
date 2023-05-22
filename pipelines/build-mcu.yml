@@ -432,14 +432,17 @@ stages:
       - script: |
           echo "Generating Doxygen documentation."
           ./build.py -d io
+          ./build.py -d ble
+          ./build.py -d modules
           if [ $? != 0 ]
           then
             echo "Couldn't generate docs"
             exit 1
           else
             echo "Compressing html"
-            ls build/Doxygen_IO
             zip -r build/Doxygen_IO/mcu_io_docs.zip build/Doxygen_IO/html
+            zip -r build/Doxygen_BLE/mcu_ble_docs.zip build/Doxygen_BLE/html
+            zip -r build/Doxygen_Modules/mcu_modules_docs.zip build/Doxygen_Modules/html
           fi
         displayName: Generating doxygen documentation
 
@@ -449,6 +452,10 @@ stages:
           contents: |
             build/Doxygen_IO/mcu_io_docs.zip
             build/Doxygen_IO/DoxygenWarningLog_IO.txt
+            build/Doxygen_BLE/mcu_ble_docs.zip
+            build/Doxygen_BLE/DoxygenWarningLog_BLE.txt
+            build/Doxygen_Modules/mcu_modules_docs.zip
+            build/Doxygen_Modules/DoxygenWarningLog_Modules.txt
           targetFolder: '$(Build.ArtifactStagingDirectory)'
 
       - publish: '$(Build.ArtifactStagingDirectory)'

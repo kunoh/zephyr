@@ -135,6 +135,8 @@ def main():
                         help='Build/flash bootloader fw instead of app firmware')
     parser.add_argument('-f', '--flash', action='store_true',
                         help='Flash firmware')
+    parser.add_argument('-fo', '--flash-only', action='store_true',
+                        help='Just flash, no build.')
     parser.add_argument('--test', action='store_true',
                         help='Run unit tests')
     parser.add_argument('-wb', '--without-bootloader', action='store_true',
@@ -160,17 +162,18 @@ def main():
             sys.exit(1)
         sys.exit(0)
 
-    if not args.update and not args.type:
+    if not args.type:
         parser.error("build and flash requires --type (-t)")
 
-    board=BOARD.get(args.type)
-    if args.bootloader:
-        build_bootloader(args.type, board, args.clean)
-        sys.exit(0)
-
     mcu_type = args.type
-
-    build_app(mcu_type, board, args.clean, args.without_bootloader)
+    board=BOARD.get(mcu_type)
+    if not args.flash_only:
+        if args.bootloader:
+            build_bootloader(args.type, board, args.clean)
+        else:
+            build_app(mcu_type, board, args.clean, args.without_bootloader)
+    else:
+        args.flash = True
 
     if args.flash:
         flash(mcu_type, args.bootloader)

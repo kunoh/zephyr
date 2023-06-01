@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
-set(overlay_file ${CMAKE_CURRENT_SOURCE_DIR}/../../boards/${BOARD}.overlay)
-if(EXISTS ${overlay_file})
-    list(APPEND DTC_OVERLAY_FILE "${overlay_file}")
-endif()
+#set(overlay_file ${CMAKE_CURRENT_SOURCE_DIR}/../../boards/${BOARD}.overlay)
+#if(EXISTS ${overlay_file})
+#    list(APPEND DTC_OVERLAY_FILE "${overlay_file}")
+#endif()
 
 cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
@@ -48,3 +48,5 @@ target_sources_ifdef(CONFIG_DISPLAY_LCD_W_FRAMEDISK app PRIVATE src/display/disp
 target_sources_ifdef(CONFIG_FXOS8700 app PRIVATE src/sensors/imu_fxos8700.cpp)
 target_sources_ifdef(CONFIG_INCL_SCL3300 app PRIVATE src/sensors/inclinometer_scl3300.cpp)
 
+
+target_compile_options(app PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -Wno-ignored-qualifiers) # -Werror -Wpedantic

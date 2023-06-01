@@ -58,7 +58,7 @@ def build_bootloader(mcu_type, board, clean):
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board, clean, without_bootloader):
+def build_app(mcu_type, board, clean, release, without_bootloader):
 
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
@@ -70,6 +70,8 @@ def build_app(mcu_type, board, clean, without_bootloader):
     if "io" in mcu_type:
         mcu_type = "io"
         config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
+        if not release:
+            config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/debug.conf")
         if not without_bootloader:
             config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/bootloader.conf")
         dts_overlay = add_to_overlay(None, f"mcu-project/boards/{board}.overlay")
@@ -135,12 +137,14 @@ def main():
                         help='Build/flash bootloader fw instead of app firmware')
     parser.add_argument('-f', '--flash', action='store_true',
                         help='Flash firmware')
+    parser.add_argument('-r', '--release', action='store_true',
+                        help='Build firmware for release')
     parser.add_argument('-fo', '--flash-only', action='store_true',
                         help='Just flash, no build.')
-    parser.add_argument('--test', action='store_true',
-                        help='Run unit tests')
     parser.add_argument('-wb', '--without-bootloader', action='store_true',
                         help='Build app without the need of a bootloader')
+    parser.add_argument('--test', action='store_true',
+                        help='Run unit tests')
     parser.add_argument('--format', action='store_true',
                         help='Format code using clang')
 
@@ -171,7 +175,7 @@ def main():
         if args.bootloader:
             build_bootloader(args.type, board, args.clean)
         else:
-            build_app(mcu_type, board, args.clean, args.without_bootloader)
+            build_app(mcu_type, board, args.clean, args.release, args.without_bootloader)
     else:
         args.flash = True
 

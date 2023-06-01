@@ -98,6 +98,7 @@ def format():
     clang_format_bin = shutil.which('clang-format-12')
     if not clang_format_bin:
         clang_format_bin = shutil.which('clang-format-13')
+    
     if not clang_format_bin:
         logging.error('Cannot find clang-format. Run: sudo apt install clang-format')
         sys.exit(1)

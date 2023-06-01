@@ -1,0 +1,11 @@
+description: SCL3300 high precision inclinometer.
+
+compatible: "murata,scl3300"
+
+include: spi-device.yaml
+
+properties:
+  pcs-sck-delay:
+    type: int
+  sck-pcs-delay:
+    type: int

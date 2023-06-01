@@ -43,3 +43,27 @@
 		compatible = "zephyr,cdc-acm-uart";
 	};
 };
+
+// Remove the SD card bindings, as they use the same pins as SPI1.
+/{
+    aliases{    // Remove the alias, as it will refer to a node that does not exists.
+        /delete-property/ sdhc0;
+    };
+
+};
+// Remove the SD card pin bindings.
+/delete-node/ &usdhc1;
+
+// Add SPI and inclinometer.
+&lpspi1 {
+    pcs-sck-delay = <700>;      // Delay in nanoseconds from the chip select assert to the first clock edge. If not set, the minimum supported delay is used.
+    sck-pcs-delay = <7000>;      // Delay in nanoseconds from the last clock edge to the chip select deassert. If not set, the minimum supported delay is used.
+    transfer-delay = <12000>;   // Delay in nanoseconds from the chip select deassert to the next chip select assert. If not set, the minimum supported delay is used.
+	incl_scl3300: SCL3300@0 {
+		status = "okay";
+		compatible = "murata,scl3300";
+        spi-max-frequency = <1000000>;  // if this is changed remember to change pcs-sck-delay and sck-pcs-delay. They have to be min clk-period/2.
+		reg = <0x0>;
+	};
+};
+

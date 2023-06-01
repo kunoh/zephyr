@@ -15,8 +15,12 @@
 #include "imu_fxos8700.h"
 #include "imu_manager.h"
 #include "imu_mock.h"
-#include "inclinometer_impl.h"
+#include "inclinometer_manager.h"
 #include "inclinometer_message_handler_impl.h"
+#include "inclinometer_mock.h"
+#include "inclinometer_scl3300.h"
+#include "leg_control_impl.h"
+#include "leg_manager.h"
 #include "logger_zephyr.h"
 #include "message_dispatcher.h"
 #include "message_manager.h"
@@ -99,9 +103,14 @@ int main(void)
     std::unique_ptr<Imu> imu = std::make_unique<ImuMock>(logger);
 #endif  // !CONFIG_FXOS8700
 
-    InclinometerImpl incl;
+#if defined(CONFIG_INCL_SCL3300)
+    std::unique_ptr<Inclinometer> incl = std::make_unique<Inclinometer_scl3300>(logger);
+#else
+    std::unique_ptr<Inclinometer> incl = std::make_unique<InclinometerMock>(logger);
+#endif  // CONFIG_INCL_SCL3300
+    LegControlImpl leg_control;
 
-    // Initialize Message Dispatcher
+    // Initialize Message Handlers and Disptacher
     MessageProto msg_proto;
     MessageDispatcher dispatcher;
 
@@ -114,16 +123,20 @@ int main(void)
     DisplayManager disp_manager(&logger, &disp);
     usb_hid_work = msg_manager.GetWorkItem();
 
-    // Initialize Message Handlers
+    InclinometerManager inclino_manager(std::make_shared<LoggerZephyr>(logger), std::move(incl));
+    LegManager leg_manager(std::make_shared<LoggerZephyr>(logger), &leg_control);
+
+    /* Initialize Message Handlers*/
     SystemMessageHandlerImpl sys_impl(logger);
     BatteryMessageHandlerImpl battery_msg_handler(logger, battery_manager, msg_manager);
     DisplayMessageHandlerImpl disp_impl(logger, disp_manager);
-    InclinometerMessageHandlerImpl incl_impl(logger, incl);
 
     dispatcher.AddHandler(sys_impl);
     dispatcher.AddHandler(battery_msg_handler);
     dispatcher.AddHandler(disp_impl);
-    dispatcher.AddHandler(incl_impl);
+
+    /* Initialize manager subscribtions. */
+    leg_manager.InitSubscribtions(&inclino_manager);
 
     /* Playground */
 
@@ -144,6 +157,8 @@ int main(void)
     imu_manager.StartSampling();
     disp_manager.SetBootLogo();
     disp_manager.StartSpinner();
+
+    inclino_manager.StartInclinoTimer();
 
     while (1) {
         k_sleep(K_MSEC(1000));

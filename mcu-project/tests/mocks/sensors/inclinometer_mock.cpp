@@ -1,5 +1,5 @@
 #include "inclinometer_mock.h"
 
-bool InclinometerMock::write() {
+bool InclinometerMock::Write() {
     return true;
 }

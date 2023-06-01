@@ -1,0 +1,2 @@
+zephyr_library_sources(scl3300_driver.c)
+zephyr_include_directories(.)

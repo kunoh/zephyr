@@ -107,10 +107,10 @@ int main(void)
     std::unique_ptr<Inclinometer> incl = std::make_unique<Inclinometer_scl3300>(logger);
 #else
     std::unique_ptr<Inclinometer> incl = std::make_unique<InclinometerMock>(logger);
-#endif // CONFIG_INCL_SCL3300 
+#endif  // CONFIG_INCL_SCL3300
     LegControlImpl leg_control;
 
-    // Initialize Message Handlers and Disptacher 
+    // Initialize Message Handlers and Disptacher
     MessageProto msg_proto;
     MessageDispatcher dispatcher;
 

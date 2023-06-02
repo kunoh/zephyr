@@ -430,14 +430,29 @@ stages:
         displayName: Installing Doxygen prerequisites
 
       - script: |
+          RET_CODE=0
           echo "Generating Doxygen documentation."
           ./build.py -d io
+          if [ $? != 0 ]
+          then
+            echo "Couldn't generate IO docs"
+            RET_CODE=1
+
           ./build.py -d ble
+          if [ $? != 0 ]
+          then
+            echo "Couldn't generate BLE docs"
+            RET_CODE=1
+
           ./build.py -d modules
           if [ $? != 0 ]
           then
-            echo "Couldn't generate docs"
-            exit 1
+            echo "Couldn't generate Modules docs"
+            RET_CODE=1
+
+          if [ $RET_CODE != 0 ]
+          then
+            exit $RET_CODE
           else
             echo "Compressing html"
             zip -r build/Doxygen_IO/mcu_io_docs.zip build/Doxygen_IO/html

@@ -14,11 +14,21 @@ BUILD_DIR = "build"
 PATH = os.path.dirname(os.path.abspath(__file__))
 BOOT_DIR = "mcu-project/bootloaders"
 APP_DIR = "mcu-project/apps"
-BOARD= {
+BOARD = {
         "ble": "nrf52840dk_nrf52840",
         "io1050": "mimxrt1050_evk_qspi",
         "io1060": "mimxrt1060_evk"
         }
+PROJECT_PATH = { 
+            "io": "mcu-project/apps/io",
+            "ble": "mcu-project/apps/ble",
+            "modules": "mcu-project/modules"
+           }
+DOXYGEN_BUILD_DIRS = {
+                    "io": "Doxygen_IO",
+                    "ble": "Doxygen_BLE",
+                    "modules": "Doxygen_Modules"
+                    }
 
 def run_cmd(cmd):
     logging.info("Running: %s", cmd)
@@ -118,6 +128,26 @@ def format():
 
     logging.info('Done')
 
+
+def gen_doxygen(proj):
+    # Remove existing dirs
+    root_dir = Path(PATH)
+    dir_to_doc = root_dir / PROJECT_PATH.get(proj) / "Doxygen"
+    rel_output_dir = f"{BUILD_DIR}/{DOXYGEN_BUILD_DIRS.get(proj)}"
+    abs_output_dir = root_dir / rel_output_dir
+
+    if not os.path.exists(abs_output_dir):
+        if run_cmd(f"mkdir -p {rel_output_dir}").returncode != 0:
+            logging.error(f"Failed to create Doxygen output directory: {abs_output_dir}")
+            sys.exit(1)
+
+    if run_cmd(f"cd {dir_to_doc} && doxygen").returncode != 0:
+        logging.error(f"Failed to generate doxygen docs for {dir_to_doc}")
+        sys.exit(1)
+
+    logging.info(f"Ran doxygen for {dir_to_doc}")
+
+
 def main():
     logging.basicConfig(level=logging.INFO)
 
@@ -147,11 +177,17 @@ def main():
                         help='Run unit tests')
     parser.add_argument('--format', action='store_true',
                         help='Format code using clang')
+    parser.add_argument('-d', '--document', choices=['io', 'ble', 'modules'],
+                        help='Build Doxygen documentation')
 
     args = parser.parse_args()
 
     if args.format:
         format()
+        sys.exit(0)
+
+    if args.document:
+        gen_doxygen(args.document)
         sys.exit(0)
 
     if args.test:

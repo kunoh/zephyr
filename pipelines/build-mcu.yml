@@ -437,18 +437,21 @@ stages:
           then
             echo "Couldn't generate IO docs"
             RET_CODE=1
+          fi
 
           ./build.py -d ble
           if [ $? != 0 ]
           then
             echo "Couldn't generate BLE docs"
             RET_CODE=1
+          fi
 
           ./build.py -d modules
           if [ $? != 0 ]
           then
             echo "Couldn't generate Modules docs"
             RET_CODE=1
+          fi
 
           if [ $RET_CODE != 0 ]
           then

@@ -16,7 +16,10 @@ DisplayCOM35::DisplayCOM35(Logger& logger) : logger_{logger}
 int DisplayCOM35::DisplayWrite(const uint16_t x, const uint16_t y, const uint16_t width,
                                const uint16_t height, const uint16_t pitch, const void* buf)
 {
-    display_buffer_descriptor buf_desc = {.width = width, .height = height, .pitch = pitch};
+    display_buffer_descriptor buf_desc = {.buf_size = (uint32_t)(width * height * pitch),
+                                          .width = width,
+                                          .height = height,
+                                          .pitch = pitch};
     return display_write(display_dev_, x, y, &buf_desc, buf);
 }
 

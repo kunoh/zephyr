@@ -31,10 +31,10 @@
 
 LOG_MODULE_REGISTER(main);
 
-/* Message Queues */
+// Message Queues
 K_MSGQ_DEFINE(usb_hid_msgq, sizeof(MessageBuffer), 10, 1);
 
-/* Work Items */
+// Work Items
 static k_work *usb_hid_work;
 
 static int HandleReceiveCallback(const struct device *dev, struct usb_setup_packet *setup,
@@ -77,10 +77,10 @@ int main(void)
     LOG_INF("**  TM5 IO Controller v.%s", "0.13  **");
     LOG_INF("********************************");
 
-    /* Initialize Logger */
+    // Initialize Logger
     LoggerZephyr logger("");
 
-    /* Initialize External Devices */
+    // Initialize External Devices
 #if defined(CONFIG_BATTERY_NH2054QE34)
     std::unique_ptr<Battery> battery = std::make_unique<BatteryNh2054qe34>(logger);
 #else
@@ -138,7 +138,7 @@ int main(void)
     /* Initialize manager subscribtions. */
     leg_manager.InitSubscribtions(&inclino_manager);
 
-    /* Playground */
+    // Playground
 
     if (usb_enable(NULL) != 0) {
         logger.err("Failed to enable USB");

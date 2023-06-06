@@ -68,15 +68,15 @@ ZTEST(battery_manager_suite, test_adding_clearing_gen_subscribers)
     std::unique_ptr<Battery> test_battery = std::make_unique<BatteryMock>();
     std::unique_ptr<BatteryCharger> test_chg = std::make_unique<BatteryChargerMock>();
     BatteryManager battery_mngr(std::make_shared<LoggerZephyr>(logger), std::move(test_battery), std::move(test_chg));
-    zassert_false(battery_mngr.GetCpuSubscribed());
+    zassert_false(battery_mngr.CpuIsSubscribed());
     zassert_equal(battery_mngr.GetSubscriberCount(GENERAL), 0);
 
     battery_mngr.AddSubscriberGeneral(test_cb);
     battery_mngr.SetCpuSubscribed(true);
-    zassert_true(battery_mngr.GetCpuSubscribed());
+    zassert_true(battery_mngr.CpuIsSubscribed());
     zassert_equal(battery_mngr.GetSubscriberCount(GENERAL), 1);
 
     battery_mngr.ClearSubscribers(GENERAL);
-    zassert_false(battery_mngr.GetCpuSubscribed());
+    zassert_false(battery_mngr.CpuIsSubscribed());
     zassert_equal(battery_mngr.GetSubscriberCount(GENERAL), 0);
 }

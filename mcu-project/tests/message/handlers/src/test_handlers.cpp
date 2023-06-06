@@ -209,7 +209,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_true_gen_subcribe_request)
 	
 	zassert_true(fixture->bat_msg_handler->Handle(fixture->msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 	zassert_equal(fixture->bat_mngr->GetSubscriberCount(GENERAL), 1);	// This fails now??
-	zassert_true(fixture->bat_mngr->GetCpuSubscribed());
+	zassert_true(fixture->bat_mngr->CpuIsSubscribed());
 
 	// Check encoded Response message is as expected
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
@@ -252,7 +252,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_multiple_gen_subscribe_reques
 		zassert_true(fixture->msg_proto.DecodeInnerMessage(RespBatteryNotifications_fields, &resp_bn), "Could not decode RespBatteryNotifications message");
 	}
 	zassert_equal(fixture->bat_mngr->GetSubscriberCount(GENERAL), 1);
-	zassert_true(fixture->bat_mngr->GetCpuSubscribed());
+	zassert_true(fixture->bat_mngr->CpuIsSubscribed());
 }
 
 
@@ -264,7 +264,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_gen_resubscribe_request)
 	zassert_true(fixture->msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_true(fixture->bat_msg_handler->Handle(fixture->msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 	zassert_equal(fixture->bat_mngr->GetSubscriberCount(GENERAL), 1);
-	zassert_true(fixture->bat_mngr->GetCpuSubscribed());
+	zassert_true(fixture->bat_mngr->CpuIsSubscribed());
 	// Check encoded Response message is as expected
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
 	zassert_true(fixture->msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message");
@@ -273,13 +273,13 @@ ZTEST_F(battery_message_handler_suite, test_handle_gen_resubscribe_request)
 
 	fixture->bat_mngr->ClearSubscribers(GENERAL);
 	zassert_equal(fixture->bat_mngr->GetSubscriberCount(GENERAL), 0);
-	zassert_false(fixture->bat_mngr->GetCpuSubscribed());
+	zassert_false(fixture->bat_mngr->CpuIsSubscribed());
 	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, true), "Could not encode ReqBatteryNotifications message.");
 	message.msg_type = INCOMING;
 	zassert_true(fixture->msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_true(fixture->bat_msg_handler->Handle(fixture->msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 	zassert_equal(fixture->bat_mngr->GetSubscriberCount(GENERAL), 1);
-	zassert_true(fixture->bat_mngr->GetCpuSubscribed());
+	zassert_true(fixture->bat_mngr->CpuIsSubscribed());
 	// Check encoded Response message is as expected
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
 	zassert_true(fixture->msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message");

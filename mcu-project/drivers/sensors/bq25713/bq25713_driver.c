@@ -5,7 +5,6 @@
 
 #define DT_DRV_COMPAT ti_bq25713
     
-    
 // I2C
 static int i2c_charger_config(const struct i2c_dt_spec* i2c_spec)
 {
@@ -14,12 +13,12 @@ static int i2c_charger_config(const struct i2c_dt_spec* i2c_spec)
 
     if(i2c_configure(i2c_spec->bus, i2c_config) != 0)
     {
-        return -EINVAL;
+        return EINVAL;
     }
 
     if(!device_is_ready(i2c_spec->bus))
     {
-        return -EBUSY;
+        return EBUSY;
     }
 
 	return 0;
@@ -32,14 +31,14 @@ static int set_charging_current(const struct i2c_dt_spec* charger_i2c_spec, cons
 	uint16_t chg_current = ((uint16_t)val->val1) & BQ25713_CURRENT_REG_BIT_MASK;
 	if(chg_current > 0 && (chg_current < BQ25713_CURRENT_MIN || chg_current > BQ25713_CURRENT_MAX))
 	{
-		return -ERANGE;
+		return ERANGE;
 	} 
 
 	uint16_to_i2c_bytes(chg_current, tx_buf);
 	ret = i2c_burst_write(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_CURRENT, tx_buf, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		ret |= ERR_CHARGING_CURRENT_CODE;
+		ret = EIO;
 	}
 
 	return ret;
@@ -52,16 +51,15 @@ static int set_charging_voltage(const struct i2c_dt_spec* charger_i2c_spec, cons
 	uint16_t chg_volt = ((uint16_t)val->val1) & BQ25713_VOLTAGE_REG_BIT_MASK;
 	if(chg_volt > 0 && (chg_volt < BQ25713_VOLT_MIN || chg_volt > BQ25713_4_S_VOLT_MAX))
 	{
-		return -ERANGE;
+		return ERANGE;
 	}
 
 	uint16_to_i2c_bytes(chg_volt, tx_buf);
 	ret = i2c_burst_write(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_VOLTAGE, tx_buf, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		ret |= ERR_CHARGING_VOLTAGE_CODE;
+		ret = EIO;
 	}
-
 	return ret;
 }
 
@@ -71,7 +69,7 @@ static int get_charging_current(const struct i2c_dt_spec* charger_i2c_spec, stru
 	ret = i2c_burst_read(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_CURRENT, charger_data->chg_charging_current, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		return ret | ERR_CHARGING_CURRENT_CODE;
+		return ret = EIO;
 	}
 	i2c_bytes_to_sensor_value(charger_data->chg_charging_current, val);
 
@@ -84,7 +82,7 @@ static int get_charging_voltage(const struct i2c_dt_spec* charger_i2c_spec, stru
 	ret = i2c_burst_read(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_VOLTAGE, charger_data->chg_charging_volt, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		return ret | ERR_CHARGING_VOLTAGE_CODE;
+		return ret = EIO;
 	}
 	i2c_bytes_to_sensor_value(charger_data->chg_charging_volt, val);
 
@@ -136,7 +134,7 @@ static int bq25713_sample_fetch(const struct device* dev, enum sensor_channel ch
 	ret = i2c_charger_config(&charger_i2c_spec);
 	if(ret != 0)
 	{
-		return -EINVAL;
+		return ret;
 	}
 
 	switch(chan)
@@ -146,7 +144,7 @@ static int bq25713_sample_fetch(const struct device* dev, enum sensor_channel ch
 			break;
 
 		default:
-			ret = -EINVAL;
+			ret = EINVAL;
 			break;
 	}
 	return ret;
@@ -163,7 +161,7 @@ static int bq25713_chan_get(const struct device* dev, enum sensor_channel chan, 
 			i2c_bytes_to_sensor_value(charger_data->chg_status, val);
 			break;
 		default:
-			ret = -EINVAL;
+			ret = EINVAL;
 			break;
 	}
 
@@ -179,7 +177,7 @@ static int bq25713_attr_set(const struct device* dev, enum sensor_channel chan, 
 	ret = i2c_charger_config(&charger_i2c_spec);
 	if(ret != 0)
 	{
-		return -EINVAL;
+		return EINVAL;
 	}
 
 	switch(attr)
@@ -188,8 +186,20 @@ static int bq25713_attr_set(const struct device* dev, enum sensor_channel chan, 
 			switch (chan)
 			{
 				case SENSOR_CHAN_CHARGING_CONFIG:
-					ret |= set_charging_current(&charger_i2c_spec, val);
-					ret |= set_charging_voltage(&charger_i2c_spec, &val[1]);
+					// First attempt to change max charging voltage.
+					ret = set_charging_voltage(&charger_i2c_spec, val);
+					if(ret != 0)
+					{
+						ret |= ERR_CHARGING_VOLTAGE_CODE;
+						return ret; // Skip current if voltage configuration fails.
+					}
+
+					ret = set_charging_current(&charger_i2c_spec, &val[1]);
+					if(ret != 0)
+					{
+						ret |= ERR_CHARGING_CURRENT_CODE;
+						return ret;
+					}
 					break;
 
 				case SENSOR_CHAN_GAUGE_DESIRED_CHARGING_CURRENT:
@@ -201,13 +211,13 @@ static int bq25713_attr_set(const struct device* dev, enum sensor_channel chan, 
 					break;
 				
 				default: // chan
-					ret = -EINVAL;
+					ret = EINVAL;
 					break;
 			}
 			break;
 
 		default: // attr
-			ret = -EINVAL;
+			ret = EINVAL;
 			break;
 		}
 	return ret;
@@ -223,7 +233,7 @@ static int bq25713_attr_get(const struct device* dev, enum sensor_channel chan, 
 	ret = i2c_charger_config(&charger_i2c_spec);
 	if(ret != 0)
 	{
-		return -EINVAL;
+		return EINVAL;
 	}
 
 	switch(attr)
@@ -232,8 +242,17 @@ static int bq25713_attr_get(const struct device* dev, enum sensor_channel chan, 
 			switch (chan)
 			{
 				case SENSOR_CHAN_CHARGING_CONFIG:
-					ret |= get_charging_current(&charger_i2c_spec, charger_data, val);
-					ret |= get_charging_voltage(&charger_i2c_spec, charger_data, &val[1]);
+					ret = get_charging_voltage(&charger_i2c_spec, charger_data, val);
+					if(ret != 0)
+					{
+						ret |= ERR_CHARGING_VOLTAGE_CODE;
+					}
+					
+					ret |= get_charging_current(&charger_i2c_spec, charger_data, &val[1]);
+					if(ret != 0)
+					{
+						ret |= ERR_CHARGING_CURRENT_CODE;
+					}
 					break;
 
 				case SENSOR_CHAN_GAUGE_DESIRED_CHARGING_CURRENT:
@@ -245,18 +264,17 @@ static int bq25713_attr_get(const struct device* dev, enum sensor_channel chan, 
 					break;
 				
 				default:
-					ret = -EINVAL;
+					ret = EINVAL;
 					break;
 			}
 			break;
 
 		default:
-			ret = -EINVAL;
+			ret = EINVAL;
 		}
 
     return ret;
 }
-
 #pragma GCC diagnostic pop
 
 static const struct sensor_driver_api bq25713_driver_api = 

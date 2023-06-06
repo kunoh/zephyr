@@ -28,76 +28,81 @@ int BatteryMock::TriggerChargingSampling()
     return 0;
 }
 
-int BatteryMock::GetGeneralData(BatteryGeneralData *bat_gen_data)
+int BatteryMock::GetGeneralData(BatteryGeneralData &bat_gen_data)
 {
-    bat_gen_data->temp = gen_data_sampled.temp;
-    bat_gen_data->volt = gen_data_sampled.volt;
-    bat_gen_data->current = gen_data_sampled.current;
-    bat_gen_data->remaining_capacity = gen_data_sampled.remaining_capacity;
-    bat_gen_data->relative_charge_state = gen_data_sampled.relative_charge_state;
-    bat_gen_data->cycle_count = gen_data_sampled.cycle_count;
+    bat_gen_data.temp = gen_data_sampled.temp;
+    bat_gen_data.volt = gen_data_sampled.volt;
+    bat_gen_data.current = gen_data_sampled.current;
+    bat_gen_data.remaining_capacity = gen_data_sampled.remaining_capacity;
+    bat_gen_data.relative_charge_state = gen_data_sampled.relative_charge_state;
+    bat_gen_data.cycle_count = gen_data_sampled.cycle_count;
     return 0;
 }
-int BatteryMock::GetChargingData(BatteryChargingData *bat_chg_data)
+int BatteryMock::GetChargingData(BatteryChargingData &bat_chg_data)
 {
-    bat_chg_data->des_chg_current = chg_data_sampled.des_chg_current;
-    bat_chg_data->des_chg_volt = chg_data_sampled.des_chg_volt;
-    bat_chg_data->status = chg_data_sampled.status;
-    return 0;
-}
-
-int BatteryMock::GetTemperature(float *temp)
-{
-    *temp = gen_data_sampled.temp;
+    bat_chg_data.des_chg_current = chg_data_sampled.des_chg_current;
+    bat_chg_data.des_chg_volt = chg_data_sampled.des_chg_volt;
+    bat_chg_data.status = chg_data_sampled.status;
     return 0;
 }
 
-int BatteryMock::GetVoltage(float *volt)
+int BatteryMock::GetTemperature(float &temp)
 {
-    *volt = gen_data_sampled.volt;
+    temp = gen_data_sampled.temp;
     return 0;
 }
 
-int BatteryMock::GetCurrent(float *current)
+int BatteryMock::GetVoltage(float &volt)
 {
-    *current = gen_data_sampled.current;
+    volt = gen_data_sampled.volt;
     return 0;
 }
 
-int BatteryMock::GetRemCapacity(int32_t *rem_cap)
+int BatteryMock::GetCurrent(float &current)
 {
-    *rem_cap = gen_data_sampled.remaining_capacity;
+    current = gen_data_sampled.current;
     return 0;
 }
 
-int BatteryMock::GetRelativeStateOfCharge(int32_t *relative_charge_state)
+int BatteryMock::GetRemCapacity(int32_t &rem_cap)
 {
-    *relative_charge_state = gen_data_sampled.relative_charge_state;
+    rem_cap = gen_data_sampled.remaining_capacity;
     return 0;
 }
 
-int BatteryMock::GetCycleCount(int32_t *cycle_count)
+int BatteryMock::GetRelativeStateOfCharge(int32_t &relative_charge_state)
 {
-    *cycle_count = gen_data_sampled.cycle_count;
+    relative_charge_state = gen_data_sampled.relative_charge_state;
     return 0;
 }
 
-int BatteryMock::GetChargingCurrent(int32_t *charging_current)
+int BatteryMock::GetCycleCount(int32_t &cycle_count)
 {
-    *charging_current = chg_data_sampled.des_chg_current;
+    cycle_count = gen_data_sampled.cycle_count;
     return 0;
 }
 
-int BatteryMock::GetChargingVoltage(int32_t *charging_volt)
+int BatteryMock::GetChargingCurrent(int32_t &charging_current)
 {
-    *charging_volt = chg_data_sampled.des_chg_volt;
+    charging_current = chg_data_sampled.des_chg_current;
     return 0;
 }
 
-int BatteryMock::GetStatus(int32_t *status)
+int BatteryMock::GetChargingVoltage(int32_t &charging_volt)
 {
-    *status = chg_data_sampled.status;
+    charging_volt = chg_data_sampled.des_chg_volt;
     return 0;
+}
+
+int BatteryMock::GetStatus(int32_t &status)
+{
+    status = chg_data_sampled.status;
+    return 0;
+}
+
+bool BatteryMock::CanBeCharged(int32_t status_code)
+{
+    return false;
 }
 
 #ifdef CONFIG_UNIT_TEST_MOCKS

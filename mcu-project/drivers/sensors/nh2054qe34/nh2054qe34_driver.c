@@ -70,7 +70,14 @@ static int nh2054qe34_init(const struct device *dev)
         return -EIO;
     }
 
-    battery_data->mode[1] = (battery_data->mode[1] | BIT(6)) & BIT_MASK(7); // Set CAPACITY_MODE=0, CHARGER_MODE=1
+    // Set:
+    // CAPACITY_MODE = 0    (Report in Ah or mAh)
+    // CHARGER_MODE = 1     (Disable broadcasts of charging voltage and current)
+    // ALARM_MODE = 1       (Disable battery alarm broadcasts)
+    battery_data->mode[1] = (battery_data->mode[1] 
+                            | BIT(BATTERY_MODE_ALARM_BIT_POS)
+                            | BIT(BATTERY_MODE_CHARGER_BIT_POS))
+                            & BIT_MASK(BATTERY_MODE_CAPACITY_BIT_POS);
     ret = write_battery_property(&battery_i2c_spec, BATTERY_MODE, battery_data->mode);
     if(ret != 0)
     {
@@ -84,7 +91,6 @@ static int nh2054qe34_init(const struct device *dev)
 // When used in a switch or if statement on a value of type sensor_channel these extensions produce warnings which we suppress.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-
 static int nh2054qe34_sample_fetch(const struct device *dev, enum sensor_channel chan)
 {
     int ret = 0;

@@ -28,7 +28,7 @@ void BatteryManager::HandleBatteryGeneralData(struct k_work *work)
     if (self->battery_->TriggerGeneralSampling() != 0) {
         self->logger_->err("Failed sampling one or more general battery properties.");
     }
-    if (self->battery_->GetGeneralData(&self->last_bat_gen_data_) != 0) {
+    if (self->battery_->GetGeneralData(self->last_bat_gen_data_) != 0) {
         self->logger_->err("Failed fetching one or more general battery properties.");
     }
 
@@ -42,15 +42,58 @@ void BatteryManager::HandleBatteryChargingData(struct k_work *work)
 {
     BatteryManager *self = CONTAINER_OF(work, BatteryManager, timer_work_bat_chg_data_.second);
     bool inhibit_charging = false;
+    int ret = 0;
 
-    if (self->battery_->TriggerChargingSampling() != 0) {
-        self->logger_->err("Failed sampling one or more battery charging properties.");
+    // Get charging info from battery and determine whether or not it's in a condition to be
+    // charged. If we cannot sample battery reliably or battery alarm flags are set, charging is
+    // inhibited.
+    if ((self->battery_->TriggerChargingSampling() != 0) ||
+        (self->battery_->GetChargingData(self->last_bat_chg_data_) != 0)) {
+        self->logger_->wrn("Failed sampling one or more battery charging properties.");
+        inhibit_charging = true;
+    } else if (!self->battery_->CanBeCharged(self->last_bat_chg_data_.status)) {
+        self->logger_->inf("Battery cannot be charged.");
         inhibit_charging = true;
     }
 
-    if (self->battery_->GetChargingData(&self->last_bat_chg_data_) != 0) {
-        self->logger_->err("Failed fetching one or more charging properties from battery.");
-        inhibit_charging = true;
+    if (inhibit_charging) {
+        ret = self->charger_->SetChargingCurrent(0);
+        if (ret != 0) {
+            self->logger_->err("Couldn't inhibit charging!");
+        } else {
+            self->logger_->inf("Inhibited charging.");
+            self->is_charging_ = false;
+        }
+    } else {
+        // Attempt to configure charge controller with charging properties from battery.
+        ret = self->charger_->SetChargingConfig(self->last_bat_chg_data_.des_chg_current,
+                                                self->last_bat_chg_data_.des_chg_volt);
+
+        if (ret != 0) {
+            switch (ret) {
+                case ERRNO_CHARGER_VOLTAGE_EIO:
+                    self->logger_->err(
+                        "An IO-error occured while attempting to set max charging voltage.");
+                    break;
+                case ERRNO_CHARGER_VOLTAGE_ERANGE:
+                    self->logger_->err(
+                        "Attempting to set max charging voltage outside operable charger range.");
+                    break;
+                case ERRNO_CHARGER_CURRENT_EIO:
+                    self->logger_->err(
+                        "An IO-error occured while attempting to set max charging current.");
+                    break;
+                case ERRNO_CHARGER_CURRENT_ERANGE:
+                    self->logger_->err(
+                        "Attempting to set charging current outside operable charger range.");
+                    break;
+                default:
+                    self->logger_->err("SetChargingConfig() returned non-zero errno.");
+                    break;
+            }
+        } else {
+            self->is_charging_ = true;
+        }
     }
 
     // Send to subscribers
@@ -59,32 +102,18 @@ void BatteryManager::HandleBatteryChargingData(struct k_work *work)
     }
 }
 
-void BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec)
+int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec)
 {
     switch (type) {
         case GENERAL:
-            if (init_delay_msec < GENERAL_INIT_DELAY_LIMIT_MSEC) {
-                init_delay_msec = GENERAL_INIT_DELAY_LIMIT_MSEC;
-            }
-            if (period_msec < GENERAL_PERIOD_LOWER_LIMIT_MSEC) {
-                period_msec = GENERAL_PERIOD_LOWER_LIMIT_MSEC;
-            }
-
             k_timer_start(&timer_work_bat_gen_data_.first, K_MSEC(init_delay_msec),
                           K_MSEC(period_msec));
             break;
 
         case CHARGING:
-            if (init_delay_msec < CHARGING_INIT_DELAY_LOWER_LIMIT_MSEC) {
-                init_delay_msec = CHARGING_INIT_DELAY_LOWER_LIMIT_MSEC;
-            } else if (init_delay_msec > CHARGING_INIT_DELAY_UPPER_LIMIT_MSEC) {
-                init_delay_msec = CHARGING_INIT_DELAY_UPPER_LIMIT_MSEC;
-            }
-
-            if (period_msec < CHARGING_PERIOD_LOWER_LIMIT_MSEC) {
-                period_msec = CHARGING_PERIOD_LOWER_LIMIT_MSEC;
-            } else if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
-                period_msec = CHARGING_PERIOD_UPPER_LIMIT_MSEC;
+            if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
+                logger_->err("Tried to set too slow battery data charging sample rate.");
+                return ERANGE;
             }
 
             k_timer_start(&timer_work_bat_chg_data_.first, K_MSEC(init_delay_msec),
@@ -93,8 +122,11 @@ void BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, ui
 
         default:
             logger_->err("Trying to start non-existing bat sampling timer.");
+            return EINVAL;
             break;
     }
+
+    return 0;
 }
 
 void BatteryManager::StopSampling(bat_data_t type)
@@ -158,9 +190,14 @@ void BatteryManager::SetCpuSubscribed(bool val)
     cpu_subscribed_ = val;
 }
 
-bool BatteryManager::GetCpuSubscribed()
+bool BatteryManager::CpuIsSubscribed()
 {
     return cpu_subscribed_;
+}
+
+bool BatteryManager::IsCharging()
+{
+    return is_charging_;
 }
 
 int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)

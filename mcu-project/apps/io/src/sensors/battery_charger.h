@@ -2,12 +2,16 @@
 
 #include <stdint.h>
 
+#define ERRNO_CHARGER_CURRENT_EIO 69
+#define ERRNO_CHARGER_CURRENT_ERANGE 98
+#define ERRNO_CHARGER_VOLTAGE_EIO 133
+#define ERRNO_CHARGER_VOLTAGE_ERANGE 162
+
 class BatteryCharger {
 public:
     virtual ~BatteryCharger() = default;
 
     virtual int SetChargingCurrent(int32_t chg_current) = 0;
-
     virtual int SetChargingVoltage(int32_t chg_volt) = 0;
 
     ///
@@ -23,8 +27,6 @@ public:
     /// volt_set_success are false,
     ///         the corresponding bits will also be set in the return code.
     ///
-    virtual int SetChargingConfig(int32_t chg_current, int32_t chg_volt, bool &current_set_success,
-                                  bool &volt_set_success) = 0;
-
+    virtual int SetChargingConfig(int32_t chg_current, int32_t chg_volt) = 0;
     virtual int GetChargerStatus(int32_t &chgr_status) = 0;
 };

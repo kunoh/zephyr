@@ -11,8 +11,7 @@ public:
 
     int SetChargingVoltage(int32_t chg_volt) override;
 
-    int SetChargingConfig(int32_t chg_current, int32_t chg_volt, bool &current_set_success,
-                          bool &volt_set_success) override;
+    int SetChargingConfig(int32_t chg_current, int32_t chg_volt) override;
 
     int GetChargerStatus(int32_t &chgr_status) override;
 };

@@ -4,7 +4,7 @@
 #include <zephyr/kernel.h>
 
 #define DEFAULT_INVALID_BAT_INT INT32_MIN
-#define DEFAULT_INVALID_BAT_FLOAT FLT_MIN
+#define DEFAULT_INVALID_BAT_FLOAT -1000.0
 
 struct CbWrapper {
     void *user_data;

@@ -13,8 +13,7 @@ int BatteryChargerMock::SetChargingVoltage(int32_t chg_volt)
     return 0;
 }
 
-int BatteryChargerMock::SetChargingConfig(int32_t chg_current, int32_t chg_volt,
-                                          bool &current_set_success, bool &volt_set_success)
+int BatteryChargerMock::SetChargingConfig(int32_t chg_current, int32_t chg_volt)
 {
     return 0;
 }

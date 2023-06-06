@@ -11,19 +11,23 @@
 #define BIT_MASK_CURRENT_SCALING                0xf0 // Bit mask for current scaling (IPScale) in SpecificationInfo().
 #define BIT_MASK_VOLTAGE_SCALING                0x0f // Bit mask for voltage scaling (VScale) in SpecificationInfo().
 
+#define BATTERY_MODE_ALARM_BIT_POS              5
+#define BATTERY_MODE_CHARGER_BIT_POS            6
+#define BATTERY_MODE_CAPACITY_BIT_POS           7
+
 #define BATTERY_PROPERTY_BYTES                  2
 
-#define SMBUS_COMMAND_BATTERY_MODE                0x03
-#define SMBUS_COMMAND_TEMPERATURE                 0x08
-#define SMBUS_COMMAND_VOLTAGE                     0x09
-#define SMBUS_COMMAND_CURRENT                     0x10
-#define SMBUS_COMMAND_RELATIVE_STATE_OF_CHARGE    0x0d
-#define SMBUS_COMMAND_REM_CAPACITY                0x0f
-#define SMBUS_COMMAND_CHARGING_CURRENT            0x14
-#define SMBUS_COMMAND_CHARGING_VOLTAGE            0x15
-#define SMBUS_COMMAND_STATUS                      0x16
-#define SMBUS_COMMAND_CYCLE_COUNT                 0x17
-#define SMBUS_COMMAND_SPECIFICATION_INFO          0x1a
+#define SMBUS_COMMAND_BATTERY_MODE              0x03
+#define SMBUS_COMMAND_TEMPERATURE               0x08
+#define SMBUS_COMMAND_VOLTAGE                   0x09
+#define SMBUS_COMMAND_CURRENT                   0x10
+#define SMBUS_COMMAND_RELATIVE_STATE_OF_CHARGE  0x0d
+#define SMBUS_COMMAND_REM_CAPACITY              0x0f
+#define SMBUS_COMMAND_CHARGING_CURRENT          0x14
+#define SMBUS_COMMAND_CHARGING_VOLTAGE          0x15
+#define SMBUS_COMMAND_STATUS                    0x16
+#define SMBUS_COMMAND_CYCLE_COUNT               0x17
+#define SMBUS_COMMAND_SPECIFICATION_INFO        0x1a
 
 struct nh2054qe34_config
 {

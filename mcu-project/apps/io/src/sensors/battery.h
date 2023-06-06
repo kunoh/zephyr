@@ -19,9 +19,8 @@ public:
     /// @return 0 on success. Non-zero otherwise.
     ///
     virtual int TriggerChargingSampling() = 0;
-
-    virtual int GetGeneralData(BatteryGeneralData *data) = 0;
-    virtual int GetChargingData(BatteryChargingData *data) = 0;
+    virtual int GetGeneralData(BatteryGeneralData &data) = 0;
+    virtual int GetChargingData(BatteryChargingData &data) = 0;
 
     ///
     /// @brief Get last fetched battery temperature sample.
@@ -32,7 +31,7 @@ public:
     ///
     /// @retval 0 on success. Non-zero otherwise.
     ///
-    virtual int GetTemperature(float *temp) = 0;
+    virtual int GetTemperature(float &temp) = 0;
 
     ///
     /// @brief Get last fetched battery voltage sample.
@@ -43,7 +42,7 @@ public:
     ///
     /// @retval 0 on success. Non-zero otherwise.
     ///
-    virtual int GetVoltage(float *volt) = 0;
+    virtual int GetVoltage(float &volt) = 0;
 
     ///
     /// @brief Get last fetched battery current sample.
@@ -55,7 +54,7 @@ public:
     ///
     /// @retval 0 on success. Non-zero otherwise.
     ///
-    virtual int GetCurrent(float *current) = 0;
+    virtual int GetCurrent(float &current) = 0;
 
     ///
     /// @brief Get last fetched remaining battery capacity sample.
@@ -66,7 +65,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetRemCapacity(int32_t *rem_cap) = 0;
+    virtual int GetRemCapacity(int32_t &rem_cap) = 0;
 
     ///
     /// @brief Get last fetched sample of information on the battery relative state of charge.
@@ -78,7 +77,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetRelativeStateOfCharge(int32_t *relative_charge_state) = 0;
+    virtual int GetRelativeStateOfCharge(int32_t &relative_charge_state) = 0;
 
     ///
     /// @brief Get last fetched sample of the battery cycle count.
@@ -90,7 +89,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetCycleCount(int32_t *cycle_count) = 0;
+    virtual int GetCycleCount(int32_t &cycle_count) = 0;
 
     ///
     /// @brief Get the battery's desired charging current in.
@@ -101,7 +100,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetChargingCurrent(int32_t *charging_current) = 0;
+    virtual int GetChargingCurrent(int32_t &charging_current) = 0;
 
     ///
     /// @brief Get the battery's desired charging voltage.
@@ -112,7 +111,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetChargingVoltage(int32_t *charging_volt) = 0;
+    virtual int GetChargingVoltage(int32_t &charging_volt) = 0;
 
     ///
     /// @brief Get last fetched battery status sample.
@@ -123,5 +122,7 @@ public:
     ///
     /// @return 0 on success. Non-zero otherwise.
     ///
-    virtual int GetStatus(int32_t *status) = 0;
+    virtual int GetStatus(int32_t &status) = 0;
+
+    virtual bool CanBeCharged(int32_t status_code) = 0;
 };

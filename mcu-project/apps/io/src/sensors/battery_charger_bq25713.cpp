@@ -32,30 +32,33 @@ int BatteryChargerBq25713::SetChargingVoltage(int32_t chg_volt)
     return ret;
 }
 
-int BatteryChargerBq25713::SetChargingConfig(int32_t chg_current, int32_t chg_volt,
-                                             bool &current_set_success, bool &volt_set_success)
+int BatteryChargerBq25713::SetChargingConfig(int32_t chg_current, int32_t chg_volt)
 {
     int ret = 0;
-    struct sensor_value val[] = {{chg_current, 0}, {chg_volt, 0}};
+    struct sensor_value val[] = {{chg_volt, 0}, {chg_current, 0}};
 
     ret = sensor_attr_set(charger_dev, (sensor_channel)SENSOR_CHAN_CHARGING_CONFIG,
                           SENSOR_ATTR_CONFIGURATION, val);
 
+    // Interpreting return codes
     std::bitset<CHAR_BIT * sizeof(int)> code(ret);
-    if (code.test(ERR_CHARGING_CURRENT_BIT_POS)) {
-        logger_.wrn("Failed to set battery charge controller current!");
-        current_set_success = false;
-    } else {
-        current_set_success = true;
-    }
     if (code.test(ERR_CHARGING_VOLTAGE_BIT_POS)) {
-        logger_.wrn("Failed to set battery charge controller voltage!");
-        volt_set_success = false;
-    } else {
-        volt_set_success = true;
-    }
+        code.flip(ERR_CHARGING_VOLTAGE_BIT_POS);
+        if (code == ERANGE) {
+            return ERRNO_CHARGER_VOLTAGE_ERANGE;
+        }
+        return ERRNO_CHARGER_VOLTAGE_EIO;
 
-    return ret;
+    } else if (code.test(ERR_CHARGING_CURRENT_BIT_POS)) {
+        code.flip(ERR_CHARGING_CURRENT_BIT_POS);
+        if (code == ERANGE) {
+            return ERRNO_CHARGER_CURRENT_ERANGE;
+        }
+        return ERRNO_CHARGER_CURRENT_EIO;
+
+    } else {
+        return (int)code.to_ulong();
+    }
 }
 
 int BatteryChargerBq25713::GetChargerStatus(int32_t &chgr_status)
@@ -63,8 +66,14 @@ int BatteryChargerBq25713::GetChargerStatus(int32_t &chgr_status)
     int ret = 0;
     sensor_value val;
 
-    ret |= sensor_sample_fetch(charger_dev);
-    ret |= sensor_channel_get(charger_dev, (sensor_channel)SENSOR_CHAN_CHARGER_STATUS, &val);
+    ret = sensor_sample_fetch(charger_dev);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = sensor_channel_get(charger_dev, (sensor_channel)SENSOR_CHAN_CHARGER_STATUS, &val);
+    if (ret != 0) {
+        return ret;
+    }
 
     chgr_status = val.val1;
     return ret;

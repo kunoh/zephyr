@@ -69,7 +69,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
     }
 
     if (bn.enable) {
-        if (!battery_manager_.GetCpuSubscribed()) {
+        if (!battery_manager_.CpuIsSubscribed()) {
             battery_manager_.AddSubscriberGeneral([&](BatteryGeneralData sample_data) {
                 msg_manager_.on_battery_gen_data_cb(sample_data);
             });

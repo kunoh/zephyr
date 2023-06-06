@@ -11,17 +11,14 @@
 #include "logger.h"
 #include "util.h"
 
-#define GENERAL_INIT_DELAY_LIMIT_MSEC 20
-#define GENERAL_PERIOD_LOWER_LIMIT_MSEC 1000
-#define GENERAL_INIT_DELAY_MSEC 20
-#define GENERAL_PERIOD_MSEC 5000
+// clang-format off
+#define GENERAL_INIT_DELAY_MSEC             20
+#define GENERAL_PERIOD_MSEC                 60000
 
-#define CHARGING_INIT_DELAY_LOWER_LIMIT_MSEC 20
-#define CHARGING_INIT_DELAY_UPPER_LIMIT_MSEC 120000
-#define CHARGING_PERIOD_LOWER_LIMIT_MSEC 5000
-#define CHARGING_PERIOD_UPPER_LIMIT_MSEC 60000
-#define CHARGING_INIT_DELAY_MSEC 20
-#define CHARGING_PERIOD_MSEC 10000
+#define CHARGING_INIT_DELAY_MSEC                20
+// Sampling period for charging data needs to be less than 3.5 s to reset charger WDT.
+#define CHARGING_PERIOD_UPPER_LIMIT_MSEC        3000
+// clang-format on
 
 enum bat_data_t {
     GENERAL,
@@ -45,7 +42,7 @@ public:
     /// to the first sample is fetched.
     /// @param[in] period_msec The sampling period (in milliseconds).
     ///
-    void StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
+    int StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
     void StopSampling(bat_data_t type);
 
     ///
@@ -67,7 +64,8 @@ public:
     size_t GetSubscriberCount(bat_data_t type);
     void ClearSubscribers(bat_data_t type);
     void SetCpuSubscribed(bool val);
-    bool GetCpuSubscribed();
+    bool CpuIsSubscribed();
+    bool IsCharging();
 
     int GetLastGeneralData(BatteryGeneralData& bat_gen_data);
     int GetLastChargingData(BatteryChargingData& bat_chg_data);
@@ -77,10 +75,10 @@ private:
     static void HandleBatteryGeneralData(struct k_work* work);
     static void HandleBatteryChargingData(struct k_work* work);
 
+    bool is_charging_ = false;
     bool cpu_subscribed_ = false;
     BatteryGeneralData last_bat_gen_data_;
     BatteryChargingData last_bat_chg_data_;
-
     std::shared_ptr<Logger> logger_;
     std::unique_ptr<Battery> battery_;
     std::unique_ptr<BatteryCharger> charger_;

@@ -37,5 +37,4 @@ def test_init(variables):
     ##########################################
     # Test Teardown
     ##########################################
-    if General.recover_mcu(variables) is False:
-        pytest.exit(f"MCU recovry fails", 5)
+    

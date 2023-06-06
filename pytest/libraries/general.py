@@ -157,36 +157,47 @@ class General():
             print(f"Skipped MCU recovery")
             return True
         
+        print("Start MCU recovery")
+
         switch = SwitchboxIF(env['device']['raspi_serial_pico'])
         if switch.set_mcu_boot_mode("bootloader") is False:
             print("Failed to enter MCU BOOTLOADER mode")
             return False
+        
         sdk = SecProvSDK(tool_path=env['paths']['flashloader_path'])
 
         # Flash flashloader, config and update recovery fw
         if sdk.write_ivt_flashloader_to_internal_ram() is False:
             print("Failed to write ivt flashloader")
+            return False
         time.sleep(1)
         if sdk.boot_ivt_flashloader_image() is False:
             print("Failed to write ivt flashloader image")
+            return False
         time.sleep(1)
         if sdk.validate_blhost_connetcion() is False:
             print("Failed to validate blhost connection")
+            return False
         time.sleep(1)
         if sdk.write_optionblock_to_sram() is False:
             print("Failed to write option block to SRAM")
+            return False
         time.sleep(1)
         if sdk.config_qspi_using_optionblock() is False:
             print("Failed to configure QSPI option block")
+            return False
         time.sleep(1)
         if sdk.erase_all() is False:
             print("Failed to erase Flash all sector")
+            return False
         time.sleep(1)
         if sdk.flash_mcu_default_bootl(boot_file=env['binaries']['bootloader']['file']) is False:
             print(f"Failed to flash MCU default boot firmware: {env['binaries']['bootloader']['file']}")
+            return False
         time.sleep(1)
         if sdk.flash_mcu_default_app(firmware_file=env['binaries']['recovery']['file']) is False:
             print(f"Failed to flash MCU default app firmware: {env['binaries']['recovery']['file']}")
+            return False
         time.sleep(1)
 
         # bring MCU to normal mode

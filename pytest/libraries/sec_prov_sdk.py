@@ -15,7 +15,7 @@ class SecProvSDK():
             (1/1)0%Status (HAB mode) = 1450735702 (0x56787856) HAB disabled.
             Reponse Status = 2290649224 (0x88888888) Write File complete.
         '''
-        cmd = f'{self._tool_sdphost} -u 0x1fc9,0x0135 -t 5000 -- write-file 0x20000000 "{self._flashloader_tool_path}/mfgtools-rel/Profiles/MXRT106X/OS Firmware/ivt_flashloader.bin"'
+        cmd = f'sudo {self._tool_sdphost} -u 0x1fc9,0x0135 -t 5000 -- write-file 0x20000000 "{self._flashloader_tool_path}/mfgtools-rel/Profiles/MXRT106X/OS Firmware/ivt_flashloader.bin"'
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Write File complete" in str(out):
@@ -30,7 +30,7 @@ class SecProvSDK():
         sudo $(flashloader_tool_path)/Tools/sdphost/linux/amd64/sdphost -u 0x1fc9,0x0135 -t 5000 -- jump-address 0x20000400
             Status (HAB mode) = 1450735702 (0x56787856) HAB disabled.
         '''
-        cmd = f"{self._tool_sdphost} -u 0x1fc9,0x0135 -t 5000 -- jump-address 0x20000400"
+        cmd = f"sudo {self._tool_sdphost} -u 0x1fc9,0x0135 -t 5000 -- jump-address 0x20000400"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "HAB disabled" in str(out):
@@ -49,7 +49,7 @@ class SecProvSDK():
             Current Version = K2.1.0
 
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- get-property 1"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- get-property 1"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):
@@ -66,7 +66,7 @@ class SecProvSDK():
             Successful generic response to command 'fill-memory'
             Response status = 0 (0x0) Success.
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- fill-memory 0x2000 0x04 0xc0000006"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- fill-memory 0x2000 0x04 0xc0000006"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):
@@ -83,7 +83,7 @@ class SecProvSDK():
             Successful generic response to command 'configure-memory'
             Response status = 0 (0x0) Success.
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- configure-memory 0x09 0x2000"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- configure-memory 0x09 0x2000"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):
@@ -100,9 +100,9 @@ class SecProvSDK():
             Successful generic response to command 'flash-erase-all'
             Response status = 0 (0x0) Success.
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -t 20000 -- flash-erase-all 0x09"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -t 20000 -- flash-erase-all 0x09"
         try:
-            out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
+            out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=30)
             if "Response status = 0 (0x0) Success" in str(out):
                 return True
         except Exception as e:
@@ -114,7 +114,7 @@ class SecProvSDK():
         '''
         TODO
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- write-memory 0x60000000 {boot_file}"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- write-memory 0x60000000 {boot_file}"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):
@@ -136,7 +136,7 @@ class SecProvSDK():
             Wrote 262788 of 262788 bytes.
 
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- write-memory 0x60020000 {firmware_file}"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- write-memory 0x60020000 {firmware_file}"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):
@@ -154,7 +154,7 @@ class SecProvSDK():
             Successful generic response to command 'reset'
             Response status = 0 (0x0) Success.
         '''
-        cmd = f"{self._tool_blhost} -u 0x15a2,0x0073 -- reset"
+        cmd = f"sudo {self._tool_blhost} -u 0x15a2,0x0073 -- reset"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT, timeout=10)
             if "Response status = 0 (0x0) Success" in str(out):

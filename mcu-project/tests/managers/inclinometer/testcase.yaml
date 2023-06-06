@@ -1,0 +1,5 @@
+tests:
+  manager.inclino:
+    platform_allow: native_posix native_posix_64
+    extra_args: CONF_FILE="test_inclino.conf"
+    tags: testing

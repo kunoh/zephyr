@@ -16,4 +16,10 @@ public:
 
 private:
     Logger& logger_;
+    double acc_x_;
+    double acc_y_;
+    double acc_z_;
+    double angle_x_;
+    double angle_y_;
+    double angle_z_;
 };

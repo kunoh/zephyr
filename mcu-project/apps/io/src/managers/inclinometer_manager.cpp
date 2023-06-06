@@ -14,7 +14,9 @@ InclinometerManager::InclinometerManager(std::shared_ptr<Logger> logger,
                                          std::unique_ptr<Inclinometer> inclino)
     : logger_{logger}, inclino_{std::move(inclino)}
 {
-    last_known_x_value_ = 0;
+    last_known_x_angle_ = 0;
+    last_known_y_angle_ = 0;
+    last_known_z_angle_ = 0;
 
     // inclino->Init();
 
@@ -40,12 +42,14 @@ void InclinometerManager::ReadInclinoData(struct k_work *work)
     // Do inclinometer read here:
     self->inclino_->Read();
     self->inclino_->GetAngle(rx_buffer);
-    self->last_known_x_value_ = rx_buffer[0];
-    // printk("InclinometerManager::last_known_x_value_: %u \r\n",self->last_known_x_value_);
+    self->last_known_x_angle_ = rx_buffer[0];
+    self->last_known_y_angle_ = rx_buffer[1];
+    self->last_known_z_angle_ = rx_buffer[2];
+    // printk("InclinometerManager::last_known_x_value_: %u \r\n",self->last_known_x_angle_);
 
     // Hand latest data to subscribers:
     for (uint16_t i = 0; i < self->subscribers_.size(); i++) {
-        (self->subscribers_)[i](self->last_known_x_value_);
+        (self->subscribers_)[i](self->last_known_x_angle_);
     }
 }
 
@@ -59,9 +63,17 @@ void InclinometerManager::StopInclinoTimer()
     k_timer_stop(&timer_);
 }
 
-uint32_t InclinometerManager::GetLastValue()
+uint32_t InclinometerManager::GetLastXAngle()
 {
-    return last_known_x_value_;
+    return last_known_x_angle_;
+}
+uint32_t InclinometerManager::GetLastYAngle()
+{
+    return last_known_y_angle_;
+}
+uint32_t InclinometerManager::GetLastZAngle()
+{
+    return last_known_z_angle_;
 }
 
 bool InclinometerManager::ChangeTimer(uint32_t new_time_ms)
@@ -76,4 +88,9 @@ bool InclinometerManager::Subscribe(std::function<int(uint32_t)> new_sub)
     subscribers_.push_back(new_sub);
 
     return true;
+}
+
+uint32_t InclinometerManager::GetSubscribeCount(void)
+{
+    return (uint32_t)subscribers_.size();
 }

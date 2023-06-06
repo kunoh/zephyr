@@ -3,7 +3,7 @@ import serial
 import signal
 import os, sys, time
 
-TEST_TIME_OUT = 6000 # 10 minutes
+TEST_TIME_OUT = 12000 # 20 minutes
 g_cancel_all = False
 
 def handle_signal_ctrl_c(signum, frame):

@@ -1,7 +1,9 @@
 import subprocess, time
 import os, pathlib
+from typing import Optional
 from libraries.serial_if import SerialMcu
-import asyncio
+from libraries.sec_prov_sdk import SecProvSDK
+from libraries.switchbox_if import SwitchboxIF
 
 HASH_LEN = 64
 class General():
@@ -28,13 +30,17 @@ class General():
                     count_elem = -1
         return image_slots
 
-    def firmware_upgrade(env:dict={}):
+    def firmware_upgrade(env:dict={}, special_fw:Optional[dict]=None):
         if env['dev_mode']['skip_flash']:
             print(f"Skipped FW bupdate")
             return True
-        
-        print(f"Updating with fw {env['binary']['file']}")
-        if not os.path.exists(env['binary']['file']):
+        fw_file = ""
+        if special_fw:
+            fw_file = special_fw
+        else:
+            fw_file = env['binaries']['normal']['file']
+        print(f"Updating with fw {fw_file}")
+        if not os.path.exists(fw_file):
             print(f"FW binary does not exist")
             return False
     
@@ -53,16 +59,21 @@ class General():
         if len(image_slots) == 2 and image_slots[1]['hash'] == image_slots[0]['hash']:
             print(f"The last firmware update was skipped")
             # conitnue with new fw update
-
-        exec_cmd_fw_upgrade = base_cmd + " image upload {}".format(env['binary']['file'])
+        flash_progress_file = os.path.join(env['paths']['results_path'], "flash_progress.log")
+        exec_cmd_fw_upgrade = base_cmd + " image upload {} > {}".format(fw_file, flash_progress_file)
         print(f"{exec_cmd_fw_upgrade}")
         try:
             out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT, timeout=300)
         except Exception as e:
             print(f"{e}")
             return False
-        assert out.decode() is not None
-        print(out.decode())
+        with open(flash_progress_file, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if "Done" in line:
+                    print(str(line))
+            assert "100.00%" in str(lines)
+            assert "Done" in str(lines)
         print(f"{exec_cmd_list_image}")
         try:
             out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
@@ -77,7 +88,7 @@ class General():
         new_fw_hash = image_slots[1]['hash']
         old_fw_hash = image_slots[0]['hash']
         if new_fw_hash == old_fw_hash:
-            print(f"Firmware already installed: {env['binary']['file']}")
+            print(f"Firmware already installed: {fw_file}")
             return True
 
         if len(new_fw_hash) != HASH_LEN:
@@ -141,3 +152,57 @@ class General():
             return func
         return all_markers
     
+    def recover_mcu(env):
+        if env['dev_mode']['skip_recovery']:
+            print(f"Skipped MCU recovery")
+            return True
+        
+        switch = SwitchboxIF(env['device']['raspi_serial_pico'])
+        if switch.set_mcu_boot_mode("bootloader") is False:
+            print("Failed to enter MCU BOOTLOADER mode")
+            return False
+        sdk = SecProvSDK(tool_path=env['paths']['flashloader_path'])
+
+        # Flash flashloader, config and update recovery fw
+        if sdk.write_ivt_flashloader_to_internal_ram() is False:
+            print("Failed to write ivt flashloader")
+        time.sleep(1)
+        if sdk.boot_ivt_flashloader_image() is False:
+            print("Failed to write ivt flashloader image")
+        time.sleep(1)
+        if sdk.validate_blhost_connetcion() is False:
+            print("Failed to validate blhost connection")
+        time.sleep(1)
+        if sdk.write_optionblock_to_sram() is False:
+            print("Failed to write option block to SRAM")
+        time.sleep(1)
+        if sdk.config_qspi_using_optionblock() is False:
+            print("Failed to configure QSPI option block")
+        time.sleep(1)
+        if sdk.erase_all() is False:
+            print("Failed to erase Flash all sector")
+        time.sleep(1)
+        if sdk.flash_mcu_default_bootl(boot_file=env['binaries']['bootloader']['file']) is False:
+            print(f"Failed to flash MCU default boot firmware: {env['binaries']['bootloader']['file']}")
+        time.sleep(1)
+        if sdk.flash_mcu_default_app(firmware_file=env['binaries']['recovery']['file']) is False:
+            print(f"Failed to flash MCU default app firmware: {env['binaries']['recovery']['file']}")
+        time.sleep(1)
+
+        # bring MCU to normal mode
+        if switch.set_mcu_boot_mode("app") is False:
+            print("Failed to enter MCU APP mode")
+            return False
+
+        # Reset MCU
+        if sdk.reset_mcu() is False:
+            print(f"Failed to soft reset MCU: Try hard reset")
+            if switch.reset_hard_mcu() is False:
+                print("Also hard reset failed")
+                return False
+        else:
+            if switch.validate_usb("app") is False:
+                print(f"Failed to validate USB in mode APP / ZEPHYR")
+                return False
+
+        return True

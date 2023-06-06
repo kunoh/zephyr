@@ -289,7 +289,7 @@ stages:
       demands: TM_CAP_TM5_MCU -equals 1
     jobs:
     - job: smoke_test
-      timeoutInMinutes: 10
+      timeoutInMinutes: 45
       displayName: Smoke-testing MCU TM5
       steps:
       - checkout: self
@@ -359,21 +359,36 @@ stages:
               "device": {
                   "mcu_serial_zephyr": "$(MCU_ZEPHYR_IO_DEVICE)",
                   "mcu_serial_jlink": "$(MCU_SEGGER_JLINK)",
+                  "raspi_serial_pico": "$(RASPBERRY_PICO)",
                   "mcu_communication_protocol": "usb",
                   "mcu_interface": "io"
                   },
-              "binary": {
-                  "file": "$(file_name)",
-                  "path": "$(binaries_folder)",
-                  "version": "$(version)"
+              "binaries": {
+                  "normal": {
+                    "file": "$(file_name)",
+                    "path": "$(binaries_folder)",
+                    "version": "$(version)"
+                    },
+                  "recovery": {
+                    "file": "/home/tm/mcu_binaries/zephyr.signed.bin",
+                    "path": "/home/tm/mcu_binaries",
+                    "version": ""
+                    },
+                  "bootloader": {
+                    "file": "/home/tm/mcu_binaries/zephyr.bin",
+                    "path": "/home/tm/mcu_binaries",
+                    "version": ""
+                    }
                   },
               "paths": {
                   "root_path": "$(System.DefaultWorkingDirectory)",
                   "test_path": "$(tests_folder)",
-                  "results_path": "$(results_folder)"
+                  "results_path": "$(results_folder)",
+                  "flashloader_path": "$(TOOL_FLASHLOADER_PATH)"
                   },
               "dev_mode": {
-                  "skip_flash": false
+                  "skip_flash": false,
+                  "skip_recovery": false
                   }
               }' > env-setup.json
           cat env-setup.json| jq empty; echo "Validate env file [ok==0 ; nok==1]: $?"

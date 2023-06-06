@@ -128,3 +128,7 @@ grpcio-tools
 # Pytest Plugins
 pytest-html
 pytest-asyncio
+pytest-order
+
+# mcu tools
+spsdk>=1.10.0

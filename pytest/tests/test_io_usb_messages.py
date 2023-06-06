@@ -2,7 +2,7 @@
 import pytest
 from libraries.serial_if import MessageIF
 
-pytestmark =  pytest.mark.nightly
+pytestmark = pytest.mark.order(2)
 
 @pytest.fixture(scope="module")
 def msg_cli(variables):

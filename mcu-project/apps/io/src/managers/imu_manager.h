@@ -3,7 +3,6 @@
 #include <zephyr/kernel.h>
 
 #include <functional>
-#include <memory>
 #include <vector>
 
 #include "imu.h"
@@ -14,7 +13,7 @@
 
 class ImuManager : public Manager {
 public:
-    ImuManager(std::shared_ptr<Logger> logger, std::unique_ptr<Imu> imu);
+    ImuManager(Logger& logger, Imu& imu);
     ~ImuManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -23,14 +22,15 @@ public:
     void StopSampling();
 
 private:
+    void GetSample();
     static void SamplingTimerHandler(struct k_timer* timer);
-    static void GetSample(struct k_work* work);
+    static void GetSampleCallback(struct k_work* work);
 
 private:
-    std::shared_ptr<Logger> logger_;
-    std::unique_ptr<Imu> imu_;
+    Logger& logger_;
+    Imu& imu_;
     k_timer timer_;
     k_work_wrapper<ImuManager> work_wrapper_;
-    CbWrapper on_error_{.user_data = NULL, .cb = NULL};
+    CallbackWrapper on_error_;
     std::vector<std::function<void(ImuSampleData)> > subscribers_;
 };

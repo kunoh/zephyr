@@ -23,6 +23,7 @@ class BatteryNh2054qe34 : public Battery {
 public:
     BatteryNh2054qe34(Logger &logger);
     virtual ~BatteryNh2054qe34() = default;
+    int Init() override;
 
     int TriggerGeneralSampling() override;
     int TriggerChargingSampling() override;

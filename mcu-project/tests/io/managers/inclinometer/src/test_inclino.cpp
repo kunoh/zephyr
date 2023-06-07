@@ -10,7 +10,7 @@
 ZTEST_SUITE(inclino_manager_suite, NULL, NULL, NULL, NULL, NULL);
 
 
-// Test function to check subscribtions. 
+// Test function to check subscribtions.
 int testCallBack(uint32_t test){
     static int testVar = 0;
 
@@ -18,15 +18,15 @@ int testCallBack(uint32_t test){
     return testVar;
 }
 
-// 
+//
 //  Test adding subscribers to inclinometer manager.
-// 
+//
 ZTEST(inclino_manager_suite, test_subscriber)
 {
     // Setup
     LoggerZephyr logger("");
-    std::unique_ptr<Inclinometer> incl = std::make_unique<InclinometerMock>(logger);
-    InclinometerManager inclino_manager(std::make_shared<LoggerZephyr>(logger), std::move(incl));
+    InclinometerMock incl(logger);
+    InclinometerManager inclino_manager(logger, incl);
 
     zassert_equal(inclino_manager.GetSubscribeCount(), 0);
 
@@ -45,15 +45,15 @@ ZTEST(inclino_manager_suite, test_subscriber)
 };
 
 
-// 
+//
 // Test that manager data collection works.
-// 
+//
 ZTEST(inclino_manager_suite, test_collect_data)
 {
     // Setup
     LoggerZephyr logger("");
-    std::unique_ptr<Inclinometer> incl = std::make_unique<InclinometerMock>(logger);
-    InclinometerManager inclino_manager(std::make_shared<LoggerZephyr>(logger), std::move(incl));
+    InclinometerMock incl(logger);
+    InclinometerManager inclino_manager(logger, incl);
 
     double last_known_x_val;
     double last_known_y_val;
@@ -62,7 +62,7 @@ ZTEST(inclino_manager_suite, test_collect_data)
     double second_last_known_y_val;
     double second_last_known_z_val;
 
-    // Test 
+    // Test
     //
 
     // verify that internal vars are 0 at startup.
@@ -72,7 +72,7 @@ ZTEST(inclino_manager_suite, test_collect_data)
     zassert_equal(last_known_x_val, 0, "X angle NOT 0 at init!");
     zassert_equal(last_known_y_val, 0, "Y angle NOT 0 at init!");
     zassert_equal(last_known_z_val, 0, "Z angle NOT 0 at init!");
-    
+
     // Check internal vars change when new data is read.
     inclino_manager.StartInclinoTimer();
     k_sleep(K_MSEC(2200));

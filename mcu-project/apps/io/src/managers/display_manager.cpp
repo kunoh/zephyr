@@ -16,7 +16,7 @@ const uint8_t spinner[] = {
 #include "images/Circle8.h"
 };
 
-DisplayManager::DisplayManager(Logger *logger, Display *disp) : logger_{logger}, disp_{disp}
+DisplayManager::DisplayManager(Logger &logger, Display &disp) : logger_{logger}, disp_{disp}
 {
     logo_ = logo;
     spinner_ = spinner;
@@ -24,13 +24,15 @@ DisplayManager::DisplayManager(Logger *logger, Display *disp) : logger_{logger},
     k_timer_init(&timer_, SpinnerTimerHandler, NULL);
     k_timer_user_data_set(&timer_, this);
 
-    k_work_init(&work_wrapper_.work, DoSpin);
+    k_work_init(&work_wrapper_.work, &DisplayManager::DoSpinCallback);
     work_wrapper_.self = this;
 }
 
 int DisplayManager::Init()
 {
-    logger_->inf("Display Init");
+    logger_.inf("Display Init");
+    SetBootLogo();
+    StartSpinner();
     return 0;
 }
 
@@ -42,12 +44,12 @@ void DisplayManager::AddErrorCb(void (*cb)(void *), void *user_data)
 
 void DisplayManager::SetBootLogo()
 {
-    disp_->DisplayWrite((320 - 198) / 2, 10, 198, 16, 198, logo_);
+    disp_.DisplayWrite((320 - 198) / 2, 10, 198, 16, 198, logo_);
 }
 
 void DisplayManager::NextFrame()
 {
-    disp_->NextFrame();
+    disp_.NextFrame();
 }
 
 void DisplayManager::StartSpinner()
@@ -66,19 +68,24 @@ void DisplayManager::SpinnerTimerHandler(struct k_timer *timer)
     k_work_submit(&self->work_wrapper_.work);
 }
 
-void DisplayManager::DoSpin(struct k_work *work)
+void DisplayManager::DoSpin()
+{
+    static uint32_t spinner_idx = 0;
+    uint8_t *spin = (uint8_t *)spinner_ + spinner_idx % 8 * (64 * 64 * 3);
+    int ret = 0;
+    ret = disp_.DisplayWrite((320 - 64) / 2, 90, 64, 64, 64, spin);
+    if (ret != 0) {
+        Error();
+    }
+    spinner_idx++;
+}
+
+void DisplayManager::DoSpinCallback(struct k_work *work)
 {
     k_work_wrapper<DisplayManager> *wrapper =
         CONTAINER_OF(work, k_work_wrapper<DisplayManager>, work);
     DisplayManager *self = wrapper->self;
-    static uint32_t spinner_idx = 0;
-    uint8_t *spin = (uint8_t *)self->spinner_ + spinner_idx % 8 * (64 * 64 * 3);
-    int ret = 0;
-    ret = self->disp_->DisplayWrite((320 - 64) / 2, 90, 64, 64, 64, spin);
-    if (ret != 0) {
-        self->Error();
-    }
-    spinner_idx++;
+    self->DoSpin();
 }
 
 void DisplayManager::Error()

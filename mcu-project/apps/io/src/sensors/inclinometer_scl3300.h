@@ -10,10 +10,11 @@
 #include "inclinometer.h"
 #include "logger.h"
 
-class Inclinometer_scl3300 : public Inclinometer {
+class InclinometerScl3300 : public Inclinometer {
 public:
-    Inclinometer_scl3300(Logger& logger);
-    virtual ~Inclinometer_scl3300() = default;
+    InclinometerScl3300(Logger& logger);
+    virtual ~InclinometerScl3300() = default;
+    int Init() override;
     bool Write() override;
     bool Read() override;
     void GetAngle(double xyz_angle[]) override;

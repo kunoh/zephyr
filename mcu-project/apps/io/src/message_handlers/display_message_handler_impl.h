@@ -1,8 +1,8 @@
 #pragma once
-#include <display_manager.h>
-#include <logger.h>
 
+#include "display_manager.h"
 #include "display_message_handler.h"
+#include "logger.h"
 
 class DisplayMessageHandlerImpl : public DisplayMessageHandler {
 public:

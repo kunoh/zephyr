@@ -5,12 +5,18 @@
 #include <bitset>
 
 BatteryNh2054qe34::BatteryNh2054qe34(Logger &logger) : logger_{logger}
+{}
+
+int BatteryNh2054qe34::Init()
 {
-    if (!device_is_ready(battery_dev_)) {
+    logger_.inf("Battery Nh2054qe34 Init");
+
+    if (!device_is_ready(battery_dev)) {
         logger_.err("NH2054QE34 battery not found. Aborting...");
+        return 1;
     }
 
-    return;
+    return 0;
 }
 
 int BatteryNh2054qe34::TriggerGeneralSampling()

@@ -15,7 +15,7 @@ static void test_cb(BatteryGeneralData data)
 
 ZTEST_SUITE(battery_manager_suite, NULL, NULL, NULL, NULL, NULL);
 
-// Test that BatteryManager.TriggerAndGetSample(...) triggers a battery sampling 
+// Test that BatteryManager.TriggerAndGetSample(...) triggers a battery sampling
 // and then fetches the individual battery properties using the Battery interface.
 ZTEST(battery_manager_suite, test_get_last_general_data)
 {
@@ -29,17 +29,16 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     test_data_exp.cycle_count = 120;
 
     LoggerZephyr logger("");
-    std::unique_ptr<BatteryMock> test_bat_mock = std::make_unique<BatteryMock>();
-    std::unique_ptr<BatteryCharger> test_chg = std::make_unique<BatteryChargerMock>();
-    test_bat_mock->SetTestTemp(test_data_exp.temp);
-    test_bat_mock->SetTestVolt(test_data_exp.volt);
-    test_bat_mock->SetTestCurrent(test_data_exp.current);
-    test_bat_mock->SetTestRemCap(test_data_exp.remaining_capacity);
-    test_bat_mock->SetTestRelChargeState(test_data_exp.relative_charge_state);
-    test_bat_mock->SetTestCycleCount(test_data_exp.cycle_count);
+    BatteryMock test_bat_mock;
+    BatteryChargerMock test_chg;
+    test_bat_mock.SetTestTemp(test_data_exp.temp);
+    test_bat_mock.SetTestVolt(test_data_exp.volt);
+    test_bat_mock.SetTestCurrent(test_data_exp.current);
+    test_bat_mock.SetTestRemCap(test_data_exp.remaining_capacity);
+    test_bat_mock.SetTestRelChargeState(test_data_exp.relative_charge_state);
+    test_bat_mock.SetTestCycleCount(test_data_exp.cycle_count);
 
-    std::unique_ptr<Battery> test_battery(std::move(test_bat_mock));
-    BatteryManager battery_mngr(std::make_shared<LoggerZephyr>(logger), std::move(test_battery), std::move(test_chg));
+    BatteryManager battery_mngr(logger, test_bat_mock, test_chg);
     BatteryGeneralData test_data_res;
     zassert_not_equal(battery_mngr.GetLastGeneralData(test_data_res), 0);
     zassert_equal(test_data_res.temp, DEFAULT_INVALID_BAT_FLOAT);
@@ -51,7 +50,7 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
 
     battery_mngr.StartSampling(GENERAL, 20, 60000);
     k_msleep(30);
-    
+
     zassert_ok(battery_mngr.GetLastGeneralData(test_data_res));
     battery_mngr.StopSampling(GENERAL);
     zassert_equal(test_data_res.temp, test_data_exp.temp);
@@ -65,9 +64,10 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
 ZTEST(battery_manager_suite, test_adding_clearing_gen_subscribers)
 {
     LoggerZephyr logger("");
-    std::unique_ptr<Battery> test_battery = std::make_unique<BatteryMock>();
-    std::unique_ptr<BatteryCharger> test_chg = std::make_unique<BatteryChargerMock>();
-    BatteryManager battery_mngr(std::make_shared<LoggerZephyr>(logger), std::move(test_battery), std::move(test_chg));
+
+    BatteryMock test_battery;
+    BatteryChargerMock test_chg;
+    BatteryManager battery_mngr(logger, test_battery, test_chg);
     zassert_false(battery_mngr.CpuIsSubscribed());
     zassert_equal(battery_mngr.GetSubscriberCount(GENERAL), 0);
 

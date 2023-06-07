@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(tests_battery_manager)
+project(tests_inclino_manager)
 
-include(${CMAKE_SOURCE_DIR}/../../CMakeLists.txt)
+include(${CMAKE_SOURCE_DIR}/../../../CMakeLists.txt)
 
 target_sources(app PRIVATE
-                ${CMAKE_SOURCE_DIR}/src/test_battery.cpp
+                ${CMAKE_SOURCE_DIR}/src/test_inclino.cpp
                 ${IOC_DIR}/src/logger/logger_zephyr.cpp
-                ${IOC_DIR}/src/managers/battery_manager.cpp
-                ${IOC_DIR}/src/sensors/battery_mock.cpp
-                ${IOC_DIR}/src/sensors/battery_charger_mock.cpp
+                ${IOC_DIR}/src/managers/inclinometer_manager.cpp
+                ${IOC_DIR}/src/sensors/inclinometer_mock.cpp
               )
 
 target_include_directories(app PRIVATE

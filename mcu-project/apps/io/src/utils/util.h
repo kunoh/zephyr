@@ -6,9 +6,9 @@
 #define DEFAULT_INVALID_BAT_INT INT32_MIN
 #define DEFAULT_INVALID_BAT_FLOAT -1000.0
 
-struct CbWrapper {
-    void *user_data;
-    void (*cb)(void *);
+struct CallbackWrapper {
+    void *user_data = NULL;
+    void (*cb)(void *) = NULL;
 };
 
 struct SensorSampleData {

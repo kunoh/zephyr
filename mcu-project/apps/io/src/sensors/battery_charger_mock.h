@@ -6,6 +6,7 @@ class BatteryChargerMock : public BatteryCharger {
 public:
     BatteryChargerMock();
     virtual ~BatteryChargerMock() = default;
+    int Init() override;
 
     int SetChargingCurrent(int32_t chg_current) override;
 

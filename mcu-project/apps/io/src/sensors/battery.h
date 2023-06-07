@@ -7,6 +7,7 @@
 class Battery {
 public:
     virtual ~Battery() = default;
+    virtual int Init() = 0;
 
     ///
     /// @brief Trigger a sampling of general battery properties.

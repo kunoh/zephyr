@@ -6,31 +6,35 @@
 #include "inclinometer_manager.h"
 #include "leg_control.h"
 
-LegManager::LegManager(std::shared_ptr<Logger> logger, LegControl *leg_control)
-    : logger_{logger}, leg_control_{leg_control}
+LegManager::LegManager(Logger &logger, LegControl &leg_control, InclinometerManager &incl_mgr)
+    : logger_{logger}, leg_control_{leg_control}, incl_mgr_{incl_mgr}
 {
     last_known_value_ = 0;
 
-    leg_control->Init();
-
-    k_timer_init(&timer_, LegTimerHandler, NULL);
+    k_timer_init(&timer_, &LegManager::LegTimerHandler, NULL);
     k_timer_user_data_set(&timer_, this);
 
-    k_work_init(&work_, DoLegWork);
+    k_work_init(&work_wrapper_.work, &LegManager::DoLegWorkCallback);
+    work_wrapper_.self = this;
 }
 
-void LegManager::LegTimerHandler(struct k_timer *timer)
+int LegManager::Init()
 {
-    LegManager *self = reinterpret_cast<LegManager *>(k_timer_user_data_get(timer));
-    k_work_submit(&self->work_);
+    if (!leg_control_.Init()) {
+        logger_.err("Failed to initialize legs");
+        return 1;
+    }
+    if (!incl_mgr_.Subscribe(&LegManager::SubscribeCallback)) {
+        logger_.err("Could not subscribe to Inclinometer");
+        return 1;
+    }
+    return 0;
 }
 
-void LegManager::DoLegWork(struct k_work *work)
+void LegManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
-    LegManager *self = CONTAINER_OF(work, LegManager, work_);
-
-    // Do leg_object stuff here:
-    // printk("LegManager::last_known_value_: %u \r\n", self->last_known_value_);
+    on_error_.cb = cb;
+    on_error_.user_data = user_data;
 }
 
 void LegManager::StartLegTimer()
@@ -61,8 +65,20 @@ int LegManager::SubscribeCallback(uint32_t data)
     return 0;
 }
 
-bool LegManager::InitSubscribtions(InclinometerManager *inclino_man)
+void LegManager::DoLegWork()
 {
-    inclino_man->Subscribe((LegManager::SubscribeCallback));
-    return true;
+    return;
+}
+
+void LegManager::LegTimerHandler(struct k_timer *timer)
+{
+    LegManager *self = reinterpret_cast<LegManager *>(k_timer_user_data_get(timer));
+    k_work_submit(&self->work_wrapper_.work);
+}
+
+void LegManager::DoLegWorkCallback(struct k_work *work)
+{
+    k_work_wrapper<LegManager> *wrapper = CONTAINER_OF(work, k_work_wrapper<LegManager>, work);
+    LegManager *self = wrapper->self;
+    self->DoLegWork();
 }

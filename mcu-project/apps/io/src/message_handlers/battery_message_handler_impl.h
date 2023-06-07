@@ -1,8 +1,8 @@
 #pragma once
-#include <logger.h>
 
 #include "battery_manager.h"
 #include "battery_message_handler.h"
+#include "logger.h"
 #include "message_manager.h"
 
 class BatteryMessageHandlerImpl : public BatteryMessageHandler {

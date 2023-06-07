@@ -11,7 +11,7 @@ int ImuFxos8700::Init()
 
     if (!device_is_ready(imu_dev_)) {
         logger_.err("ImuFxos8700 not found. Aborting...");
-        return -1;
+        return 1;
     }
 
     return SetSamplesPerSecond(6, 250000);

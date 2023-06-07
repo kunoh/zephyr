@@ -10,6 +10,7 @@
 class BatteryCharger {
 public:
     virtual ~BatteryCharger() = default;
+    virtual int Init() = 0;
 
     virtual int SetChargingCurrent(int32_t chg_current) = 0;
     virtual int SetChargingVoltage(int32_t chg_volt) = 0;

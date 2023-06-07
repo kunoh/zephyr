@@ -7,15 +7,20 @@
 
 #include "inclinometer.h"
 #include "logger.h"
+#include "manager.h"
 #include "util.h"
+#include "wrappers_zephyr.h"
 
-class InclinometerManager {
+class InclinometerManager : public Manager {
 public:
-    InclinometerManager(std::shared_ptr<Logger> logger, std::unique_ptr<Inclinometer> inclino);
+    InclinometerManager(Logger& logger, Inclinometer& inclino);
     ~InclinometerManager() = default;
+    int Init() override;
+    void AddErrorCb(void (*cb)(void*), void* user_data) override;
     uint32_t GetLastXAngle();
     uint32_t GetLastYAngle();
     uint32_t GetLastZAngle();
+    uint32_t GetLastValue();
     bool ChangeTimer(uint32_t new_time_ms);
     void StartInclinoTimer();
     void StopInclinoTimer();
@@ -23,16 +28,18 @@ public:
     uint32_t GetSubscribeCount(void);
 
 private:
-    static void InclinoTimerHandler(struct k_timer *timer);
-    static void ReadInclinoData(struct k_work *work);
+    void ReadInclinoData();
+    static void InclinoTimerHandler(struct k_timer* timer);
+    static void ReadInclinoDataCallback(struct k_work* work);
 
 private:
-    std::shared_ptr<Logger> logger_;
-    std::unique_ptr<Inclinometer> inclino_;
-    k_timer timer_;
-    k_work work_;
+    Logger& logger_;
+    Inclinometer& inclino_;
     double last_known_x_angle_;
     double last_known_y_angle_;
     double last_known_z_angle_;
+    k_timer timer_;
+    k_work_wrapper<InclinometerManager> work_wrapper_;
+    CallbackWrapper on_error_;
     std::vector<std::function<int(uint32_t)>> subscribers_;
 };

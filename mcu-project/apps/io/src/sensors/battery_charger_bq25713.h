@@ -19,6 +19,7 @@ class BatteryChargerBq25713 : public BatteryCharger {
 public:
     BatteryChargerBq25713(Logger &logger);
     virtual ~BatteryChargerBq25713() = default;
+    int Init() override;
 
     int SetChargingCurrent(int32_t chg_current) override;
     int SetChargingVoltage(int32_t chg_volt) override;

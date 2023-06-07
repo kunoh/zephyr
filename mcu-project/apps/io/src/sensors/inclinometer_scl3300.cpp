@@ -2,12 +2,28 @@
 
 #include "scl3300_driver.h"
 
-bool Inclinometer_scl3300::Write()
+InclinometerScl3300::InclinometerScl3300(Logger& logger) : logger_{logger}
+{}
+
+int InclinometerScl3300::Init()
 {
+    logger_.inf("Inclinometer Scl3300 Init");
+
+    if (!device_is_ready(incl_dev_)) {
+        logger_.err("Inclinometer not found. Aborting...\r\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+bool InclinometerScl3300::Write()
+{
+    logger_.wrn("InclinometerScl3300::Write() Not yet implemented");
     return true;
 }
 
-bool Inclinometer_scl3300::Read()
+bool InclinometerScl3300::Read()
 {
     int status = 0;
     struct sensor_value temp_buffer_array[3];
@@ -31,18 +47,9 @@ bool Inclinometer_scl3300::Read()
     return true;
 }
 
-void Inclinometer_scl3300::GetAngle(double xyz_angle[])
+void InclinometerScl3300::GetAngle(double xyz_angle[])
 {
     xyz_angle[0] = angle_x_;
     xyz_angle[1] = angle_y_;
     xyz_angle[2] = angle_z_;
-}
-
-Inclinometer_scl3300::Inclinometer_scl3300(Logger& logger) : logger_{logger}
-{
-    printf("Inclinometer_scl3300::Inclinometer_scl3300\r\n");
-
-    if (!device_is_ready(incl_dev_)) {
-        printk("Inclinometer not found. Aborting...\r\n");
-    }
 }

@@ -3,6 +3,11 @@
 BatteryChargerMock::BatteryChargerMock()
 {}
 
+int BatteryChargerMock::Init()
+{
+    return 0;
+}
+
 int BatteryChargerMock::SetChargingCurrent(int32_t chg_current)
 {
     return 0;

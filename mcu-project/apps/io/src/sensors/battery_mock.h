@@ -6,6 +6,7 @@ class BatteryMock : public Battery {
 public:
     BatteryMock();
     virtual ~BatteryMock() = default;
+    int Init() override;
 
     int TriggerGeneralSampling() override;
     int TriggerChargingSampling() override;

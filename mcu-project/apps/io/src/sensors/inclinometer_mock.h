@@ -10,6 +10,7 @@ class InclinometerMock : public Inclinometer {
 public:
     InclinometerMock(Logger& logger);
     virtual ~InclinometerMock() = default;
+    int Init() override;
     bool Write() override;
     bool Read() override;
     void GetAngle(double xyz_angle[]) override;

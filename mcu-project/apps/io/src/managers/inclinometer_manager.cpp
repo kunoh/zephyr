@@ -10,57 +10,35 @@
 
 #include "util.h"
 
-InclinometerManager::InclinometerManager(std::shared_ptr<Logger> logger,
-                                         std::unique_ptr<Inclinometer> inclino)
-    : logger_{logger}, inclino_{std::move(inclino)}
+InclinometerManager::InclinometerManager(Logger &logger, Inclinometer &inclino)
+    : logger_{logger}, inclino_{inclino}
 {
     last_known_x_angle_ = 0;
     last_known_y_angle_ = 0;
     last_known_z_angle_ = 0;
 
-    // inclino->Init();
-
-    k_timer_init(&timer_, InclinoTimerHandler, NULL);
+    k_timer_init(&timer_, &InclinometerManager::InclinoTimerHandler, NULL);
     k_timer_user_data_set(&timer_, this);
 
-    k_work_init(&work_, ReadInclinoData);
+    k_work_init(&work_wrapper_.work, &InclinometerManager::ReadInclinoDataCallback);
+    work_wrapper_.self = this;
 }
 
-void InclinometerManager::InclinoTimerHandler(struct k_timer *timer)
+int InclinometerManager::Init()
 {
-    InclinometerManager *self =
-        reinterpret_cast<InclinometerManager *>(k_timer_user_data_get(timer));
-    k_work_submit(&self->work_);
-}
-
-void InclinometerManager::ReadInclinoData(struct k_work *work)
-{
-    InclinometerManager *self = CONTAINER_OF(work, InclinometerManager, work_);
-
-    double rx_buffer[3];
-
-    // Do inclinometer read here:
-    self->inclino_->Read();
-    self->inclino_->GetAngle(rx_buffer);
-    self->last_known_x_angle_ = rx_buffer[0];
-    self->last_known_y_angle_ = rx_buffer[1];
-    self->last_known_z_angle_ = rx_buffer[2];
-    // printk("InclinometerManager::last_known_x_value_: %u \r\n",self->last_known_x_angle_);
-
-    // Hand latest data to subscribers:
-    for (uint16_t i = 0; i < self->subscribers_.size(); i++) {
-        (self->subscribers_)[i](self->last_known_x_angle_);
+    int ret = 0;
+    ret = inclino_.Init();
+    if (ret != 0) {
+        return ret;
     }
+    StartInclinoTimer();
+    return 0;
 }
 
-void InclinometerManager::StartInclinoTimer()
+void InclinometerManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
-    k_timer_start(&timer_, K_MSEC(2000), K_MSEC(2000));
-}
-
-void InclinometerManager::StopInclinoTimer()
-{
-    k_timer_stop(&timer_);
+    on_error_.cb = cb;
+    on_error_.user_data = user_data;
 }
 
 uint32_t InclinometerManager::GetLastXAngle()
@@ -80,7 +58,17 @@ bool InclinometerManager::ChangeTimer(uint32_t new_time_ms)
 {
     // Set timer to new time
     k_timer_start(&timer_, K_MSEC(500), K_MSEC(new_time_ms));
-    return 0;
+    return true;
+}
+
+void InclinometerManager::StartInclinoTimer()
+{
+    k_timer_start(&timer_, K_MSEC(2000), K_MSEC(2000));
+}
+
+void InclinometerManager::StopInclinoTimer()
+{
+    k_timer_stop(&timer_);
 }
 
 bool InclinometerManager::Subscribe(std::function<int(uint32_t)> new_sub)
@@ -93,4 +81,36 @@ bool InclinometerManager::Subscribe(std::function<int(uint32_t)> new_sub)
 uint32_t InclinometerManager::GetSubscribeCount(void)
 {
     return (uint32_t)subscribers_.size();
+}
+
+void InclinometerManager::ReadInclinoData()
+{
+    double rx_buffer[3];
+
+    // Do inclinometer read here:
+    inclino_.Read();
+    inclino_.GetAngle(rx_buffer);
+    last_known_x_angle_ = rx_buffer[0];
+    last_known_y_angle_ = rx_buffer[1];
+    last_known_z_angle_ = rx_buffer[2];
+
+    // Hand latest data to subscribers:
+    for (auto &cb : subscribers_) {
+        cb(last_known_x_angle_);
+    }
+}
+
+void InclinometerManager::InclinoTimerHandler(struct k_timer *timer)
+{
+    InclinometerManager *self =
+        reinterpret_cast<InclinometerManager *>(k_timer_user_data_get(timer));
+    k_work_submit(&self->work_wrapper_.work);
+}
+
+void InclinometerManager::ReadInclinoDataCallback(struct k_work *work)
+{
+    k_work_wrapper<InclinometerManager> *wrapper =
+        CONTAINER_OF(work, k_work_wrapper<InclinometerManager>, work);
+    InclinometerManager *self = wrapper->self;
+    self->ReadInclinoData();
 }

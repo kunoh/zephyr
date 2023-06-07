@@ -3,6 +3,11 @@
 BatteryMock::BatteryMock()
 {}
 
+int BatteryMock::Init()
+{
+    return 0;
+}
+
 int BatteryMock::TriggerGeneralSampling()
 {
 #ifdef CONFIG_UNIT_TEST_MOCKS

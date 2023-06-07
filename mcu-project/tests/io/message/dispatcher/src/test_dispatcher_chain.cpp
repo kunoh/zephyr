@@ -2,18 +2,16 @@
 
 #include "message_dispatcher.h"
 
-#include "system_message_handler_mock.h"
-#include "display_message_handler_mock.h"
-#include "inclinometer_message_handler_mock.h"
+#include "system_message_handler_impl.h"
+#include "display_message_handler_impl.h"
 
 #include "system_message_encoder.h"
 #include "display_message_encoder.h"
-#include "inclinometer_message_encoder.h"
 
 #include "display_mock.h"
-#include "inclinometer_mock.h"
-
 #include "logger_mock.h"
+
+#include "display_manager.h"
 
 ZTEST_SUITE(system_message_dispatching_suite, NULL, NULL, NULL, NULL, NULL);
 ZTEST_SUITE(display_message_dispatching_suite, NULL, NULL, NULL, NULL, NULL);
@@ -24,9 +22,9 @@ ZTEST(system_message_dispatching_suite, test_message_version)
 	MessageProto msg_proto;
 
 	// Initialize message dispatcher and add handler
-	SystemMessageHandlerMock sys_mock(logger);
+	SystemMessageHandlerImpl sys_msg_hdlr(logger);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(sys_mock);
+	dispatcher.AddHandler(sys_msg_hdlr);
 
 	// Encode a request version message
 	MessageBuffer message;
@@ -49,10 +47,11 @@ ZTEST(display_message_dispatching_suite, test_message_stop_spinner)
 	MessageProto msg_proto;
 
 	// Initialize message dispatcher and add handler
-	DisplayMock disp(logger);
-	DisplayMessageHandlerMock disp_mock(logger, disp);
+    DisplayMock disp(logger);
+	DisplayManager disp_mgr(logger, disp);
+	DisplayMessageHandlerImpl disp_msg_hdlr(logger, disp_mgr);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(disp_mock);
+	dispatcher.AddHandler(disp_msg_hdlr);
 
 	// Encode a request StopSpinner message
 	MessageBuffer message;
@@ -76,9 +75,10 @@ ZTEST(display_message_dispatching_suite, test_message_new_frame)
 
 	// Initialize message dispatcher and add handler
 	DisplayMock disp(logger);
-	DisplayMessageHandlerMock disp_mock(logger, disp);
+	DisplayManager disp_mgr(logger, disp);
+	DisplayMessageHandlerImpl disp_msg_hdlr(logger, disp_mgr);
 	MessageDispatcher dispatcher;
-	dispatcher.AddHandler(disp_mock);
+	dispatcher.AddHandler(disp_msg_hdlr);
 
 	// Encode a request NewFrame message
 	MessageBuffer message;

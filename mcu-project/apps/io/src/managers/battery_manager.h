@@ -3,13 +3,14 @@
 #include <zephyr/kernel.h>
 
 #include <functional>
-#include <memory>
 #include <vector>
 
 #include "battery.h"
 #include "battery_charger.h"
 #include "logger.h"
+#include "manager.h"
 #include "util.h"
+#include "wrappers_zephyr.h"
 
 // clang-format off
 #define GENERAL_INIT_DELAY_MSEC             20
@@ -25,11 +26,12 @@ enum bat_data_t {
     CHARGING,
 };
 
-class BatteryManager {
+class BatteryManager : public Manager {
 public:
-    BatteryManager(std::shared_ptr<Logger> logger, std::unique_ptr<Battery> battery,
-                   std::unique_ptr<BatteryCharger> charger);
+    BatteryManager(Logger& logger, Battery& battery, BatteryCharger& charger);
     ~BatteryManager() = default;
+    int Init() override;
+    void AddErrorCb(void (*cb)(void*), void* user_data) override;
 
     ///
     /// @brief Start battery sampling.
@@ -71,19 +73,24 @@ public:
     int GetLastChargingData(BatteryChargingData& bat_chg_data);
 
 private:
+    void HandleBatteryGeneralData();
+    void HandleBatteryChargingData();
     static void TimerQueueWork(struct k_timer* timer);
-    static void HandleBatteryGeneralData(struct k_work* work);
-    static void HandleBatteryChargingData(struct k_work* work);
+    static void HandleBatteryGeneralDataCallback(struct k_work* work);
+    static void HandleBatteryChargingDataCallback(struct k_work* work);
 
+private:
     bool is_charging_ = false;
     bool cpu_subscribed_ = false;
     BatteryGeneralData last_bat_gen_data_;
     BatteryChargingData last_bat_chg_data_;
-    std::shared_ptr<Logger> logger_;
-    std::unique_ptr<Battery> battery_;
-    std::unique_ptr<BatteryCharger> charger_;
-    std::pair<k_timer, k_work> timer_work_bat_gen_data_;
-    std::pair<k_timer, k_work> timer_work_bat_chg_data_;
+
+    Logger& logger_;
+    Battery& battery_;
+    BatteryCharger& charger_;
+    CallbackWrapper on_error_;
+    std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_gen_data_;
+    std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_chg_data_;
     std::vector<std::function<void(BatteryGeneralData)>> subscriber_cbs_gen_;
     std::vector<std::function<void(BatteryChargingData)>> subscriber_cbs_chg_;
 };

@@ -3,6 +3,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/usb/usb_device.h>
 
+#include "message_handler.h"
+
 K_SEM_DEFINE(usb_hid_sem_, 0, 1);
 
 static const uint8_t hid_report_desc[] = {
@@ -27,33 +29,43 @@ static const uint8_t hid_report_desc[] = {
 };
 
 UsbHidZephyr::UsbHidZephyr(Logger &logger) : logger_{logger}
+{}
+
+int UsbHidZephyr::Init(void *message_queue, void *work_queue)
 {
-    hdev_ = device_get_binding("HID_0");
-    if (hdev_ == NULL) {
+    int ret = 0;
+    const device *hdev = device_get_binding("HID_0");
+    if (hdev == NULL) {
         logger_.err("Cannot get USB HID Device");
-        init_status_ = -ENODEV;
-        return;
+        return -ENODEV;
     }
+    hdev_.p = *(hdev);
 
     ops_.get_report = NULL;
-    ops_.set_report = HandleSetReport;
-    ops_.protocol_change = HandleProtocolChange;
-    ops_.on_idle = HandleOnIdle;
-    ops_.int_in_ready = HandleIntInReady;
+    ops_.set_report = &UsbHidZephyr::HandleReceiveMessageCallback;
+    ops_.protocol_change = &UsbHidZephyr::HandleProtocolChange;
+    ops_.on_idle = &UsbHidZephyr::HandleOnIdle;
+    ops_.int_in_ready = &UsbHidZephyr::HandleIntInReady;
 
-    usb_hid_register_device(hdev_, hid_report_desc, sizeof(hid_report_desc), &ops_);
+    usb_hid_register_device(&hdev_.p, hid_report_desc, sizeof(hid_report_desc), &ops_);
 
-    init_status_ = usb_hid_set_proto_code(hdev_, HID_BOOT_IFACE_CODE_NONE);
-    if (init_status_ != 0) {
+    ret = usb_hid_set_proto_code(&hdev_.p, HID_BOOT_IFACE_CODE_NONE);
+    if (ret != 0) {
         logger_.err("Failed to set Protocol Code");
-        return;
+        return ret;
     }
 
-    init_status_ = usb_hid_init(hdev_);
-    if (init_status_ != 0) {
+    ret = usb_hid_init(&hdev_.p);
+    if (ret != 0) {
         logger_.err("Failed to initialize HID device");
-        return;
+        return ret;
     }
+
+    hdev_.self = this;
+    rx_msgq_ = reinterpret_cast<k_msgq *>(message_queue);
+    rx_work_ = reinterpret_cast<k_work *>(work_queue);
+    k_work_submit(rx_work_);
+    return 0;
 }
 
 void UsbHidZephyr::Send(uint8_t *buffer, uint8_t message_length)
@@ -62,7 +74,7 @@ void UsbHidZephyr::Send(uint8_t *buffer, uint8_t message_length)
     uint32_t wrote;
 
     k_sem_take(&usb_hid_sem_, K_MSEC(30));
-    ret = hid_int_ep_write(hdev_, buffer, message_length, &wrote);
+    ret = hid_int_ep_write(&hdev_.p, buffer, message_length, &wrote);
     if (ret != 0) {
         /*
          * Do nothing and wait until host has reset the device
@@ -75,18 +87,40 @@ void UsbHidZephyr::Send(uint8_t *buffer, uint8_t message_length)
     }
 }
 
-void UsbHidZephyr::SetReceiveCallback(int (*hid_cb_t)(const struct device *dev,
-                                                      struct usb_setup_packet *setup, int32_t *len,
-                                                      uint8_t **data))
+int UsbHidZephyr::HandleReceivedMessage(int32_t *len, uint8_t **data)
 {
-    ops_.set_report = hid_cb_t;
+    MessageBuffer buffer;
+    memcpy(buffer.data, *data, (size_t)*len);
+    buffer.length = *len;
+    buffer.msg_type = INCOMING;
+
+    // For testing, to be deleted later
+    if (0) {
+        printk("Received bytes: \n");
+        size_t i;
+        for (i = 0; i < buffer.length; i++) {
+            if (i > 0) printk(":");
+            printk("%02X", buffer.data[i]);
+        }
+        printk("\n");
+    }
+    //
+
+    while (k_msgq_put(rx_msgq_, &buffer, K_NO_WAIT) != 0) {
+        // message queue is full: purge old data & try again
+        k_msgq_purge(rx_msgq_);
+    }
+
+    return k_work_submit(rx_work_);
 }
 
-int UsbHidZephyr::HandleSetReport(const struct device *dev, struct usb_setup_packet *setup,
-                                  int32_t *len, uint8_t **data)
+int UsbHidZephyr::HandleReceiveMessageCallback(const device *dev, usb_setup_packet *setup,
+                                               int32_t *len, uint8_t **data)
 {
-    printk("Please set 'set_report' callback\n");
-    return 0;
+    typedef self_wrapper<UsbHidZephyr, device> wrapper_template;
+    wrapper_template *wrapper = CONTAINER_OF(dev, wrapper_template, p);
+    UsbHidZephyr *self = wrapper->self;
+    return self->HandleReceivedMessage(len, data);
 }
 
 void UsbHidZephyr::HandleProtocolChange(const struct device *dev, uint8_t protocol)

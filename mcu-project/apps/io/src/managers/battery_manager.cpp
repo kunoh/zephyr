@@ -1,5 +1,7 @@
 #include "battery_manager.h"
 
+#include <cstdio>
+
 BatteryManager::BatteryManager(Logger &logger, Battery &battery, BatteryCharger &charger)
     : logger_{logger}, battery_{battery}, charger_{charger}
 {
@@ -62,7 +64,6 @@ void BatteryManager::HandleBatteryChargingData()
 {
     bool inhibit_charging = false;
     int ret = 0;
-
     // Get charging info from battery and determine whether or not it's in a condition to be
     // charged. If we cannot sample battery reliably or battery alarm flags are set, charging is
     // inhibited.
@@ -71,7 +72,12 @@ void BatteryManager::HandleBatteryChargingData()
         logger_.wrn("Failed sampling one or more battery charging properties.");
         inhibit_charging = true;
     } else if (!battery_.CanBeCharged(last_bat_chg_data_.status)) {
-        logger_.inf("Battery cannot be charged.");
+        if (is_charging_) {
+            char str[60];
+            sprintf(str, "Battery cannot be charged. Battery status: 0x%X",
+                    last_bat_chg_data_.status);
+            logger_.inf(str);
+        }
         inhibit_charging = true;
     }
 
@@ -79,11 +85,14 @@ void BatteryManager::HandleBatteryChargingData()
         ret = charger_.SetChargingCurrent(0);
         if (ret != 0) {
             logger_.err("Couldn't inhibit charging!");
-        } else {
+        } else if (is_charging_) {
             logger_.inf("Inhibited charging.");
             is_charging_ = false;
         }
     } else {
+        if (!is_charging_) {
+            logger_.inf("Configuring battery charging.");
+        }
         // Attempt to configure charge controller with charging properties from battery.
         ret = charger_.SetChargingConfig(last_bat_chg_data_.des_chg_current,
                                          last_bat_chg_data_.des_chg_volt);

@@ -11,7 +11,7 @@ int BatteryNh2054qe34::Init()
 {
     logger_.inf("Battery Nh2054qe34 Init");
 
-    if (!device_is_ready(battery_dev)) {
+    if (!device_is_ready(battery_dev_)) {
         logger_.err("NH2054QE34 battery not found. Aborting...");
         return 1;
     }

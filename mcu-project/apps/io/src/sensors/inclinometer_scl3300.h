@@ -21,8 +21,9 @@ public:
 
 private:
     Logger& logger_;
-    const struct device* spi_dev_ = DEVICE_DT_GET(DT_NODELABEL(lpspi1));
-    const struct device* incl_dev_ = DEVICE_DT_GET(DT_NODELABEL(incl_scl3300));
+    const struct device* spi_dev_ = DEVICE_DT_GET(DT_NODELABEL(lpspi1));  /// SPI device struct.
+    const struct device* incl_dev_ =
+        DEVICE_DT_GET(DT_NODELABEL(incl_scl3300));  /// Inclinometer device struct.
     double acc_x_;
     double acc_y_;
     double acc_z_;

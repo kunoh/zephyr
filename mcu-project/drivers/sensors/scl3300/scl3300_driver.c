@@ -32,8 +32,7 @@
 
 
 
-// Conversion from raw measurements to standard units.
-
+/// Conversion constants for raw measurements to standard units.
 #define MODE_1_ACC_CONVERSION_CONST 6000            // LSB/g = 6000
 #define MODE_1_ANG_CONVERSION_CONST 182  			// LSB/deg = 105
 #define MODE_2_ACC_CONVERSION_CONST 3000            // LSB/g = 3000
@@ -43,8 +42,8 @@
 #define MODE_4_ACC_CONVERSION_CONST 12000           // LSB/g = 12000
 #define MODE_4_ANG_CONVERSION_CONST 182 			// LSB/deg = 182
 
-// Calculate CRC for 24 MSB's of the 32 bit dword
-// (8 LSB's are the CRC field and are not included in CRC calculation)
+
+// 8 bit CRC, used when calculting SPI frame CRC byte.
 static uint8_t crc8(uint8_t bit_value, uint8_t crc)
 {
     uint8_t temp;
@@ -58,6 +57,15 @@ static uint8_t crc8(uint8_t bit_value, uint8_t crc)
     }
     return crc;
 }
+
+/// 
+/// @brief Calculate CRC byte for a SPI frame.
+/// 
+/// Calculate CRC for 24 MSB's of the 32 bit dword
+/// (8 LSB's are the CRC field and are not included in CRC calculation)
+/// @param SPI frame
+/// @return CRC byte.
+/// 
 uint8_t calculate_crc(uint32_t data)
 {
     uint8_t bit_index;
@@ -72,13 +80,13 @@ uint8_t calculate_crc(uint32_t data)
     return crc;
 }
 
-/**
- * @brief Helper function for converting raw acc data to struct sensor_value.
- * 
- * @param val A pointer to a sensor_value struct.
- * @param inp The raw swnsor value.
- * @return 0 if successful, negative errno code if failure.
- */
+/// 
+/// @brief Helper function for converting raw acc data to struct sensor_value.
+/// 
+/// @param val A pointer to a sensor_value struct.
+/// @param inp The raw swnsor value.
+/// @return 0 if successful, error status codes otherwise.
+/// 
 static inline int acc_value_from_raw(struct sensor_value *val, int32_t inp, enum InclMode mode)
 {
     int64_t converted = inp;
@@ -114,13 +122,13 @@ static inline int acc_value_from_raw(struct sensor_value *val, int32_t inp, enum
     return 0;
 }
 
-/**
- * @brief Helper function for converting raw angle data to struct sensor_value.
- *	
- * @param val A pointer to a sensor_value struct.
- * @param inp The raw swnsor value.
- * @return 0 if successful, negative errno code if failure.
- */
+/// 
+/// @brief Helper function for converting raw angle data to struct sensor_value.
+/// 
+/// @param val A pointer to a sensor_value struct.
+/// @param inp The raw swnsor value.
+/// @return 0 if successful, negative errno code if failure.
+/// 
 static inline int angle_value_from_raw(struct sensor_value *val, int32_t inp, enum InclMode mode)
 {
     int64_t converted = inp;
@@ -156,14 +164,14 @@ static inline int angle_value_from_raw(struct sensor_value *val, int32_t inp, en
     return 0;
 }
 
-/**
- *	@brief Send/recieve one frame (32bit)
- *
- *	@param spi_inst Devicetree identifier for the SPI instance.
- *	@param txData Data to send. 4bytes.
- *	@param rxData pointer to min 4byte array for holding recieved data.
- *	@return 0 if succesfull, error code otherwise.
- */
+/// 
+/// @brief Send/recieve one frame (32bit)
+/// 
+/// @param spi_inst Devicetree identifier for the SPI instance.
+/// @param txData Data to send. 4bytes.
+/// @param rxData pointer to min 4byte array for holding recieved data.
+/// @return 0 if succesfull, error code otherwise.
+/// 
 int trancieve_oneframe(const struct spi_dt_spec spi_inst, uint32_t txData, uint8_t *rxData)
 {
     int status = 0;
@@ -217,9 +225,9 @@ int trancieve_oneframe(const struct spi_dt_spec spi_inst, uint32_t txData, uint8
     return status;
 }
 
-/*
- *	Set mode on SCL3300. The mode affect all channels.
- */
+/// 
+/// Set mode on SCL3300. The mode affect all channels.
+/// 
 int scl3300_attr_set_mode(const struct device *dev, enum sensor_attribute attr,
                           const struct sensor_value *val)
 {
@@ -264,6 +272,9 @@ int scl3300_attr_set_mode(const struct device *dev, enum sensor_attribute attr,
     return status;
 }
 
+/// 
+/// @brief Sensor API specified attribute set function.
+/// 
 static int scl3300_attr_set(const struct device *dev, enum sensor_channel chan,
                             enum sensor_attribute attr, const struct sensor_value *val)
 {
@@ -281,6 +292,9 @@ static int scl3300_attr_set(const struct device *dev, enum sensor_channel chan,
     return status;
 }
 
+/// 
+/// @brief Sensor API specified attribute get function.
+///
 static int scl3300_attr_get(const struct device *dev, enum sensor_channel chan,
                             enum sensor_attribute attr, struct sensor_value *val)
 {
@@ -304,6 +318,14 @@ static int scl3300_attr_get(const struct device *dev, enum sensor_channel chan,
     return status;
 }
 
+/// 
+/// @brief Sensor API specified function. Triggers a collection of samples from sensor into driver data-structs.
+/// 
+/// @param dev Inclinometer device struct.
+/// @param chan Channel or channels to fetch.
+/// 
+/// @return Status code. 0=Success.
+/// 
 static int scl3300_sample_fetch(const struct device *dev, enum sensor_channel chan)
 {
     const struct scl3300_config *config = dev->config;
@@ -423,6 +445,11 @@ static int scl3300_channel_get(const struct device *dev, enum sensor_channel cha
     return 0;
 }
 
+///
+/// @brief API init function.
+/// @param dev Inclinometer device struct.
+/// @return Status code. 0=Success.
+/// 
 int scl3300_init(const struct device *dev)
 {
     const struct scl3300_config *config = dev->config;

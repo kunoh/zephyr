@@ -5,14 +5,15 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 
-#define INCL_STATUS_OK					0
-#define INCL_ERR_INVALID_ARGUMENT		1
-#define INCL_ERR_INCORRECT_CRC			2
-#define INCL_ERR_DEVICE_REPORTS_ERR		3
-#define INCL_ERR_SPI_ERR				4
-#define INCL_ERR_SPI_NOT_RDY			5
+/// Inclinometer driver status codes
+#define INCL_STATUS_OK					0		///	General OK
+#define INCL_ERR_INVALID_ARGUMENT		1		/// Invalid argument passed to function.
+#define INCL_ERR_INCORRECT_CRC			2		/// Incorrect CRC value return from device.
+#define INCL_ERR_DEVICE_REPORTS_ERR		3		/// Inclinometer reports error.
+#define INCL_ERR_SPI_ERR				4		/// General SPI error.
+#define INCL_ERR_SPI_NOT_RDY			5		/// SPI not ready for use.
 
-#define INCL_ERR_DEVICE_IN_PWR_DOWN		8
+#define INCL_ERR_DEVICE_IN_PWR_DOWN		8		/// Inclinometer is in power down mode.
 
 enum InclMode {
 	// Attributes the user can set/get

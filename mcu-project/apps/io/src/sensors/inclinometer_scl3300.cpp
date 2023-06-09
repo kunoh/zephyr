@@ -44,7 +44,7 @@ bool InclinometerScl3300::Read()
     angle_y_ = sensor_value_to_double(&temp_buffer_array[1]);
     angle_z_ = sensor_value_to_double(&temp_buffer_array[2]);
 
-    return true;
+    return status;
 }
 
 void InclinometerScl3300::GetAngle(double xyz_angle[])

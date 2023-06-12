@@ -1,6 +1,5 @@
 #include "battery_message_handler_impl.h"
 
-#include "stdio.h"  // For testing
 #include "util.h"
 
 BatteryMessageHandlerImpl::BatteryMessageHandlerImpl(Logger& logger,
@@ -47,15 +46,14 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
     }
 
     // Encode response
-    ret = BatteryMessageEncoder::EncodeBatteryGeneralInfo(
-        buffer, data.temp, data.volt, data.current, (int)data.remaining_capacity,
-        (int)data.relative_charge_state, (int)data.cycle_count);
-    if (!ret) {
+    if (!BatteryMessageEncoder::EncodeBatteryGeneralInfo(buffer, data.temp, data.volt, data.current,
+                                                         (int)data.remaining_capacity,
+                                                         (int)data.cycle_count)) {
         logger_.wrn("Failed to encode BatteryGeneralInfo.");
         return false;
     }
-    buffer.msg_type = OUTGOING;
 
+    buffer.msg_type = OUTGOING;
     return true;
 }
 
@@ -93,6 +91,74 @@ bool BatteryMessageHandlerImpl::HandleRespBatteryNotifications(MessageProto& msg
 {
     RespBatteryNotifications bn = RespBatteryNotifications_init_zero;
     if (!msg.DecodeInnerMessage(RespBatteryNotifications_fields, &bn)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleSetInstallationMode(MessageProto& msg, MessageBuffer& buffer)
+{
+    SetInstallationMode sim = SetInstallationMode_init_zero;
+    if (!msg.DecodeInnerMessage(SetInstallationMode_fields, &sim)) {
+        return false;
+    } else if (!battery_manager_.ModeIsKnown(sim.mode)) {
+        logger_.wrn("Tried to set non-existing installation mode.");
+        return false;
+    }
+
+    battery_manager_.SetInstallationMode((installation_mode_t)sim.mode);
+    // Encode response
+    if (!BatteryMessageEncoder::EncodeRespInstallationMode(buffer)) {
+        logger_.wrn("Failed to Encode RespInstallationMode");
+        return false;
+    }
+
+    buffer.msg_type = OUTGOING;
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleRespInstallationMode(MessageProto& msg, MessageBuffer& buffer)
+{
+    RespInstallationMode rim = RespInstallationMode_init_zero;
+    if (!msg.DecodeInnerMessage(RespInstallationMode_fields, &rim)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleSetModeChargingLimit(MessageProto& msg, MessageBuffer& buffer)
+{
+    SetModeChargingLimit smcl = SetModeChargingLimit_init_zero;
+    if (!msg.DecodeInnerMessage(SetModeChargingLimit_fields, &smcl)) {
+        return false;
+    } else if (!battery_manager_.ModeIsKnown(smcl.mode)) {
+        logger_.wrn("Tried to set non-existing installation mode.");
+        return false;
+    }
+
+    if (battery_manager_.SetModeChargingLimit((installation_mode_t)smcl.mode, smcl.chg_limit) !=
+        0) {
+        logger_.wrn("Failed to set charging limit. Limit outside permissible range.");
+        return false;
+    }
+
+    if (!BatteryMessageEncoder::EncodeRespModeChargingLimit(buffer))  // Encode response
+    {
+        logger_.wrn("Failed to Encode RespModeChargingLimit");
+        return false;
+    }
+
+    buffer.msg_type = OUTGOING;
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleRespModeChargingLimit(MessageProto& msg,
+                                                            MessageBuffer& buffer)
+{
+    RespModeChargingLimit rmcl = RespModeChargingLimit_init_zero;
+    if (!msg.DecodeInnerMessage(RespModeChargingLimit_fields, &rmcl)) {
         return false;
     }
 

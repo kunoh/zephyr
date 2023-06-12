@@ -116,19 +116,21 @@ static int nh2054qe34_sample_fetch(const struct device *dev, enum sensor_channel
         case SENSOR_CHAN_BATTERY_GENERAL:
             // Some ordering is important.
             // spec_info is needed first needed to possibly scale voltage, current and capacity samples according to VScale and IPScale.
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_SPECIFICATION_INFO, battery_data->spec_info);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_TEMPERATURE, battery_data->temp);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_VOLTAGE, battery_data->volt);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_CURRENT, battery_data->current);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_REM_CAPACITY, battery_data->rem_cap);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_RELATIVE_STATE_OF_CHARGE, battery_data->relative_charge_state);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_CYCLE_COUNT, battery_data->cycle_count);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_SPECIFICATION_INFO, battery_data->spec_info);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_TEMPERATURE, battery_data->temp);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_VOLTAGE, battery_data->volt);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_CURRENT, battery_data->current);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_REM_CAPACITY, battery_data->rem_cap);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_CYCLE_COUNT, battery_data->cycle_count);
             break;
+
         case SENSOR_CHAN_BATTERY_CHARGING:
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_CHARGING_CURRENT, battery_data->charging_current);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_CHARGING_VOLTAGE, battery_data->charging_volt);
-            ret = read_battery_property(&battery_i2c_spec, BATTERY_STATUS, battery_data->status);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_CHARGING_CURRENT, battery_data->charging_current);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_CHARGING_VOLTAGE, battery_data->charging_volt);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_STATUS, battery_data->status);
+            ret |= read_battery_property(&battery_i2c_spec, BATTERY_RELATIVE_STATE_OF_CHARGE, battery_data->relative_charge_state);
             break;
+
         default:
             return -EINVAL;
             break;
@@ -150,8 +152,7 @@ static int nh2054qe34_channel_get(const struct device* dev, enum sensor_channel 
             conv_current(battery_data->current, &val[1], battery_data->spec_info);
             conv_volt(battery_data->volt, &val[2], battery_data->spec_info);
             conv_rem_charge_cap(battery_data->rem_cap, &val[3], battery_data->spec_info);
-            i2c_bytes_to_sensor_value(battery_data->relative_charge_state, &val[4]);
-            i2c_bytes_to_sensor_value(battery_data->cycle_count, &val[5]);
+            i2c_bytes_to_sensor_value(battery_data->cycle_count, &val[4]);
             break;
 
         case SENSOR_CHAN_BATTERY_CHARGING:
@@ -160,6 +161,7 @@ static int nh2054qe34_channel_get(const struct device* dev, enum sensor_channel 
             // mVolts both ways. NOT scaled by VScale.
             i2c_bytes_to_sensor_value(battery_data->charging_volt, &val[1]);
             i2c_bytes_to_sensor_value(battery_data->status, &val[2]);
+            i2c_bytes_to_sensor_value(battery_data->relative_charge_state, &val[3]);
             break;
 
         case SENSOR_CHAN_GAUGE_TEMP:;

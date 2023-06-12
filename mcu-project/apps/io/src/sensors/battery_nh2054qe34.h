@@ -16,8 +16,8 @@
 #define BATTERY_STATUS_FULLY_DISCHARGED_BIT_POS 4
 
 #define KELVIN_CELSIUS_DIFF 273.15
-#define NUM_GENERAL_DATA 6
-#define NUM_CHARGING_DATA 3
+#define NUM_GENERAL_DATA 5
+#define NUM_CHARGING_DATA 4
 
 class BatteryNh2054qe34 : public Battery {
 public:

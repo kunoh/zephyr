@@ -69,7 +69,7 @@ static int get_charging_current(const struct i2c_dt_spec* charger_i2c_spec, stru
 	ret = i2c_burst_read(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_CURRENT, charger_data->chg_charging_current, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		return ret = EIO;
+		return EIO;
 	}
 	i2c_bytes_to_sensor_value(charger_data->chg_charging_current, val);
 
@@ -82,7 +82,7 @@ static int get_charging_voltage(const struct i2c_dt_spec* charger_i2c_spec, stru
 	ret = i2c_burst_read(charger_i2c_spec->bus, charger_i2c_spec->addr, CHARGER_CHARGING_VOLTAGE, charger_data->chg_charging_volt, CHARGER_PROPERTY_BYTES);
 	if(ret != 0)
 	{
-		return ret = EIO;
+		return EIO;
 	}
 	i2c_bytes_to_sensor_value(charger_data->chg_charging_volt, val);
 
@@ -123,7 +123,6 @@ static int bq25713_init(const struct device* dev)
 // When used in a switch or if statement on a value of type sensor_channel these extensions produce warnings which we suppress.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
-
 static int bq25713_sample_fetch(const struct device* dev, enum sensor_channel chan)
 {
 	int ret = 0;

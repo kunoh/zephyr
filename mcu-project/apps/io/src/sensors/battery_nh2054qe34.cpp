@@ -41,8 +41,7 @@ int BatteryNh2054qe34::GetGeneralData(BatteryGeneralData &data)
     data.current = sensor_value_to_double(&bat_gen_data[1]);
     data.volt = sensor_value_to_double(&bat_gen_data[2]);
     data.remaining_capacity = bat_gen_data[3].val1;
-    data.relative_charge_state = bat_gen_data[4].val1;
-    data.cycle_count = bat_gen_data[5].val1;
+    data.cycle_count = bat_gen_data[4].val1;
     return ret;
 }
 
@@ -57,6 +56,7 @@ int BatteryNh2054qe34::GetChargingData(BatteryChargingData &data)
     data.des_chg_current = bat_chg_data->val1;
     data.des_chg_volt = bat_chg_data[1].val1;
     data.status = bat_chg_data[2].val1;
+    data.relative_charge_state = bat_chg_data[3].val1;
 
     return ret;
 }

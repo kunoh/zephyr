@@ -17,6 +17,11 @@ private:
     bool HandleReqBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleRespBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
 
+    bool HandleSetInstallationMode(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleRespInstallationMode(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleSetModeChargingLimit(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleRespModeChargingLimit(MessageProto& msg, MessageBuffer& buffer) override;
+
     Logger& logger_;
     BatteryManager& battery_manager_;
     MessageManager& msg_manager_;

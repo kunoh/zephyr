@@ -25,7 +25,6 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     test_data_exp.volt = 16.0;
     test_data_exp.current = 5.5;
     test_data_exp.remaining_capacity = 5000;
-    test_data_exp.relative_charge_state = 90;
     test_data_exp.cycle_count = 120;
 
     LoggerZephyr logger("");
@@ -35,7 +34,6 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     test_bat_mock.SetTestVolt(test_data_exp.volt);
     test_bat_mock.SetTestCurrent(test_data_exp.current);
     test_bat_mock.SetTestRemCap(test_data_exp.remaining_capacity);
-    test_bat_mock.SetTestRelChargeState(test_data_exp.relative_charge_state);
     test_bat_mock.SetTestCycleCount(test_data_exp.cycle_count);
 
     BatteryManager battery_mngr(logger, test_bat_mock, test_chg);
@@ -45,7 +43,6 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     zassert_equal(test_data_res.volt, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.current, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.remaining_capacity, DEFAULT_INVALID_BAT_INT);
-    zassert_equal(test_data_res.relative_charge_state, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.cycle_count, DEFAULT_INVALID_BAT_INT);
 
     battery_mngr.StartSampling(GENERAL, 20, 60000);
@@ -57,7 +54,6 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     zassert_equal(test_data_res.volt, test_data_exp.volt);
     zassert_equal(test_data_res.current, test_data_exp.current);
     zassert_equal(test_data_res.remaining_capacity, test_data_exp.remaining_capacity);
-    zassert_equal(test_data_res.relative_charge_state, test_data_exp.relative_charge_state);
     zassert_equal(test_data_res.cycle_count, test_data_exp.cycle_count);
 };
 

@@ -69,7 +69,6 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
     test_data_exp.volt = 16.0;
     test_data_exp.current = 5.5;
     test_data_exp.remaining_capacity = 5000;
-    test_data_exp.relative_charge_state = 90;
     test_data_exp.cycle_count = 120;
 
     BatteryMock test_battery_mock;
@@ -77,7 +76,6 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
     test_battery_mock.SetTestVolt(test_data_exp.volt);
     test_battery_mock.SetTestCurrent(test_data_exp.current);
     test_battery_mock.SetTestRemCap(test_data_exp.remaining_capacity);
-    test_battery_mock.SetTestRelChargeState(test_data_exp.relative_charge_state);
     test_battery_mock.SetTestCycleCount(test_data_exp.cycle_count);
 
 	BatteryChargerMock test_charger_mock;
@@ -103,7 +101,6 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
 	zassert_equal(bgi.voltage, DEFAULT_INVALID_BAT_FLOAT);
 	zassert_equal(bgi.current, DEFAULT_INVALID_BAT_FLOAT);
 	zassert_equal(bgi.rem_capacity, DEFAULT_INVALID_BAT_INT);
-	zassert_equal(bgi.relative_state_of_charge, DEFAULT_INVALID_BAT_INT);
 	zassert_equal(bgi.cycle_count, DEFAULT_INVALID_BAT_INT);
 
 	bat_mngr.StartSampling(GENERAL, 20, 60000);
@@ -127,7 +124,6 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
 	zassert_equal(bgi.voltage, test_data_exp.volt);
 	zassert_equal(bgi.current, test_data_exp.current);
 	zassert_equal(bgi.rem_capacity, test_data_exp.remaining_capacity);
-	zassert_equal(bgi.relative_state_of_charge, test_data_exp.relative_charge_state);
 	zassert_equal(bgi.cycle_count, test_data_exp.cycle_count);
 
 	// If the sampling timer is stopped we expect request-responses with invalid data.
@@ -150,7 +146,6 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
 	zassert_equal(bgi.voltage, DEFAULT_INVALID_BAT_FLOAT);
 	zassert_equal(bgi.current, DEFAULT_INVALID_BAT_FLOAT);
 	zassert_equal(bgi.rem_capacity, DEFAULT_INVALID_BAT_INT);
-	zassert_equal(bgi.relative_state_of_charge, DEFAULT_INVALID_BAT_INT);
 	zassert_equal(bgi.cycle_count, DEFAULT_INVALID_BAT_INT);
 }
 
@@ -173,10 +168,9 @@ ZTEST_F(battery_message_handler_suite, test_handler_battery_info)
     test_data_exp.volt = 16.0;
     test_data_exp.current = 5.5;
     test_data_exp.remaining_capacity = 5000;
-    test_data_exp.relative_charge_state = 90;
     test_data_exp.cycle_count = 120;
 	zassert_true(BatteryMessageEncoder::EncodeBatteryGeneralInfo(message, test_data_exp.temp, test_data_exp.volt, test_data_exp.current,
-																   test_data_exp.remaining_capacity, test_data_exp.relative_charge_state,
+																   test_data_exp.remaining_capacity,
 																   test_data_exp.cycle_count), "Could not encode BatteryGeneralInfo message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryGeneralInfo Outer message.");

@@ -24,17 +24,21 @@ int BatteryManager::Init()
 {
     int ret = 0;
 
+    for (int i = MOBILE; i != SENTINEL; i++) {
+        chg_limits_.insert({static_cast<installation_mode_t>(i), CHARGING_REL_CHG_STATE_DEFAULT});
+    }
+
     ret = battery_.Init();
     if (ret != 0) {
         return ret;
     }
-    StartSampling(GENERAL, 50, 60000);
+    StartSampling(GENERAL, GENERAL_INIT_DELAY_MSEC, GENERAL_PERIOD_MSEC);
 
     ret = charger_.Init();
     if (ret != 0) {
         return ret;
     }
-    StartSampling(CHARGING, 50, 2500);
+    StartSampling(CHARGING, CHARGING_INIT_DELAY_MSEC, CHARGING_PERIOD_MSEC);
 
     return 0;
 }
@@ -71,7 +75,7 @@ void BatteryManager::HandleBatteryChargingData()
         (battery_.GetChargingData(last_bat_chg_data_) != 0)) {
         logger_.wrn("Failed sampling one or more battery charging properties.");
         inhibit_charging = true;
-    } else if (!battery_.CanBeCharged(last_bat_chg_data_.status)) {
+    } else if (!ChargingAllowed()) {
         if (is_charging_) {
             char str[60];
             sprintf(str, "Battery cannot be charged. Battery status: 0x%X",
@@ -125,6 +129,7 @@ void BatteryManager::HandleBatteryChargingData()
     }
 
     // Send to subscribers
+    last_bat_chg_data_.charging = is_charging_;
     for (auto &cb : subscriber_cbs_chg_) {
         cb(last_bat_chg_data_);
     }
@@ -214,7 +219,7 @@ size_t BatteryManager::GetSubscriberCount(bat_data_t type)
         case CHARGING:
             return subscriber_cbs_chg_.size();
         default:
-            logger_.err("Trying to clear non-existing type of subscribers.");
+            logger_.err("Trying to get number of non-existing type of subscribers.");
             return 0;
     }
 }
@@ -250,6 +255,53 @@ bool BatteryManager::IsCharging()
     return is_charging_;
 }
 
+bool BatteryManager::ModeIsKnown(int32_t mode)
+{
+    if (chg_limits_.count((installation_mode_t)mode) < 1) {
+        return false;
+    }
+    return true;
+}
+
+void BatteryManager::SetInstallationMode(installation_mode_t mode)
+{
+    installation_mode_ = mode;
+}
+
+installation_mode_t BatteryManager::GetInstallationMode()
+{
+    return installation_mode_;
+}
+
+/* SANITY CHECK BEGIN */
+int BatteryManager::SetModeChargingLimit(installation_mode_t mode, int32_t limit)
+{
+    if (limit < CHARGING_REL_CHG_STATE_MIN || limit > CHARGING_REL_CHG_STATE_MAX) {
+        return ERANGE;
+    }
+
+    chg_limits_[mode] = limit;
+    return 0;
+}
+
+int BatteryManager::GetModeChargingLimit(installation_mode_t mode, int32_t &limit)
+{
+    // if()
+    limit = chg_limits_[mode];
+    return 0;
+}
+/* SANITY CHECK END */
+
+bool BatteryManager::ChargingAllowed()
+{
+    bool chg_rules_passed = last_bat_chg_data_.relative_charge_state <
+                            chg_limits_[installation_mode_];  // Manager specific rule
+    bool bat_can_be_charged =
+        battery_.CanBeCharged(last_bat_chg_data_.status);  // Battery specific requirements
+
+    return bat_can_be_charged && chg_rules_passed;
+}
+
 int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)
 {
     // If sampling timer is stopped, data might be old.
@@ -258,16 +310,14 @@ int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)
         bat_gen_data.current = last_bat_gen_data_.current;
         bat_gen_data.volt = last_bat_gen_data_.volt;
         bat_gen_data.remaining_capacity = last_bat_gen_data_.remaining_capacity;
-        bat_gen_data.relative_charge_state = last_bat_gen_data_.relative_charge_state;
         bat_gen_data.cycle_count = last_bat_gen_data_.cycle_count;
     } else {
         bat_gen_data.temp = DEFAULT_INVALID_BAT_FLOAT;
         bat_gen_data.current = DEFAULT_INVALID_BAT_FLOAT;
         bat_gen_data.volt = DEFAULT_INVALID_BAT_FLOAT;
         bat_gen_data.remaining_capacity = DEFAULT_INVALID_BAT_INT;
-        bat_gen_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
         bat_gen_data.cycle_count = DEFAULT_INVALID_BAT_INT;
-        return -EIO;
+        return EIO;
     }
 
     return 0;
@@ -280,12 +330,15 @@ int BatteryManager::GetLastChargingData(BatteryChargingData &bat_chg_data)
         bat_chg_data.des_chg_current = last_bat_chg_data_.des_chg_current;
         bat_chg_data.des_chg_volt = last_bat_chg_data_.des_chg_volt;
         bat_chg_data.status = last_bat_chg_data_.status;
+        bat_chg_data.relative_charge_state = last_bat_chg_data_.relative_charge_state;
         bat_chg_data.charging = last_bat_chg_data_.charging;
     } else {
         bat_chg_data.des_chg_current = DEFAULT_INVALID_BAT_INT;
         bat_chg_data.des_chg_volt = DEFAULT_INVALID_BAT_INT;
         bat_chg_data.status = DEFAULT_INVALID_BAT_INT;
+        bat_chg_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
         bat_chg_data.charging = false;
+        return EIO;
     }
 
     return 0;

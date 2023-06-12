@@ -5,15 +5,15 @@ message BatteryGeneralInfo {
     float voltage = 2;
     float current = 3;
     int32 rem_capacity = 4;
-    int32 relative_state_of_charge = 5;
-    int32 cycle_count = 6;
+    int32 cycle_count = 5;
 }
 
 message BatteryChargingInfo {
     int32 status = 1;
     int32 desired_charging_current = 2;
     int32 desired_charging_voltage = 3;
-    bool charging = 4;
+    int32 relative_state_of_charge = 4;
+    bool charging = 5;
 }
 
 // Poll BatteryManager for a BatteryInfo reading
@@ -27,5 +27,22 @@ message ReqBatteryNotifications {
 }
 
 message RespBatteryNotifications {
+    //
+}
+
+message SetInstallationMode {
+    int32 mode = 1;
+}
+
+message RespInstallationMode {
+    //
+}
+
+message SetModeChargingLimit {
+    int32 mode = 1;
+    int32 chg_limit = 2;
+}
+
+message RespModeChargingLimit {
     //
 }

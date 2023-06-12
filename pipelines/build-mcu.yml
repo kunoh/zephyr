@@ -33,7 +33,7 @@ stages:
 
         steps:
         - checkout: self
-          clean: true
+          clean: false
           persistCredentials: true
 
         - script: |
@@ -313,7 +313,7 @@ stages:
           echo "Binaries folder: ${pip_r_folder}"
           echo "##vso[task.setvariable variable=pip_r_folder]$pip_r_folder"
         displayName: Set Folders Struct
-    
+
       - script: |
           rm -rf $(results_folder)/*
         displayName: Remove old Test reports
@@ -337,11 +337,11 @@ stages:
             runBranch: 'refs/heads/master'
           ${{ if eq('smoke', 'smoke') }}:
             source: 'current'
-      
+
       - script: |
           echo "Current Branch: $(Build.SourceBranch)"
         displayName: Current Branch
-      
+
       - script: |
           file_name=$(ls $(binaries_folder)/*.bin)
           echo "FW binary file: ${file_name}"
@@ -353,7 +353,7 @@ stages:
           python3 -m venv mcu_py_venev
           source mcu_py_venev/bin/activate
           pip3 install -r $(pip_r_folder)/requirements.txt
-      
+
           echo "Generate environment file env-setup.json"
           jq -n '{
               "device": {
@@ -395,7 +395,7 @@ stages:
           if [ $? != 0 ]; then
               exit $?
           fi
-          
+
           echo "Start serial tool to collect prints form segger port"
           mkdir $(results_folder)
           python3 pytest/libraries/print_collector.py -s $(MCU_SEGGER_JLINK) -p $(results_folder) -f segger_serial.log &
@@ -432,7 +432,7 @@ stages:
     dependsOn: smoke_test_mcu_tm5
     pool:
       vmImage: 'ubuntu-20.04'
-    jobs:  
+    jobs:
     - job:
       displayName: Doxygen
       steps:

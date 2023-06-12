@@ -1,5 +1,5 @@
 #pragma once
-#include <leg_control.h>
+#include "leg_control.h"
 
 class LegControlImpl : public LegControl {
 public:

@@ -1,7 +1,8 @@
 #include "inclinometer_message_handler_impl.h"
 
-InclinometerMessageHandlerImpl::InclinometerMessageHandlerImpl(Logger& logger, Inclinometer& incl)
-    : logger_{logger}, incl_{incl}
+LOG_MODULE_REGISTER(incl_msg_hdlr, CONFIG_INCLINOMETER_MSG_HDLR_LOG_LEVEL);
+
+InclinometerMessageHandlerImpl::InclinometerMessageHandlerImpl(Inclinometer& incl) : incl_{incl}
 {}
 
 bool InclinometerMessageHandlerImpl::HandleSetSampleRate(MessageProto& msg, MessageBuffer& buffer)

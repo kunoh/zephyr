@@ -2,10 +2,11 @@
 
 #include "util.h"
 
-BatteryMessageHandlerImpl::BatteryMessageHandlerImpl(Logger& logger,
-                                                     BatteryManager& battery_manager,
+LOG_MODULE_REGISTER(bat_msg_hdlr, CONFIG_BATTERY_MSG_HDLR_LOG_LEVEL);
+
+BatteryMessageHandlerImpl::BatteryMessageHandlerImpl(BatteryManager& battery_manager,
                                                      MessageManager& msg_manager)
-    : logger_{logger}, battery_manager_{battery_manager}, msg_manager_{msg_manager}
+    : battery_manager_{battery_manager}, msg_manager_{msg_manager}
 {}
 
 bool BatteryMessageHandlerImpl::HandleBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer)
@@ -41,7 +42,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
     BatteryGeneralData data;
     ret = battery_manager_.GetLastGeneralData(data);
     if (ret != 0) {
-        logger_.wrn(
+        LOG_WRN(
             "Failed to get last general battery sample. Responding with empty BatteryGeneralInfo.");
     }
 
@@ -49,7 +50,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
     if (!BatteryMessageEncoder::EncodeBatteryGeneralInfo(buffer, data.temp, data.volt, data.current,
                                                          (int)data.remaining_capacity,
                                                          (int)data.cycle_count)) {
-        logger_.wrn("Failed to encode BatteryGeneralInfo.");
+        LOG_WRN("Failed to encode BatteryGeneralInfo.");
         return false;
     }
 
@@ -76,7 +77,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
 
         // Encode response
         if (!BatteryMessageEncoder::EncodeRespBatteryNotifications(buffer)) {
-            logger_.wrn("Failed to Encode RespBatteryNotifications");
+            LOG_WRN("Failed to Encode RespBatteryNotifications");
             return false;
         }
         buffer.msg_type = OUTGOING;
@@ -103,14 +104,14 @@ bool BatteryMessageHandlerImpl::HandleSetInstallationMode(MessageProto& msg, Mes
     if (!msg.DecodeInnerMessage(SetInstallationMode_fields, &sim)) {
         return false;
     } else if (!battery_manager_.ModeIsKnown(sim.mode)) {
-        logger_.wrn("Tried to set non-existing installation mode.");
+        LOG_WRN("Tried to set non-existing installation mode.");
         return false;
     }
 
     battery_manager_.SetInstallationMode((installation_mode_t)sim.mode);
     // Encode response
     if (!BatteryMessageEncoder::EncodeRespInstallationMode(buffer)) {
-        logger_.wrn("Failed to Encode RespInstallationMode");
+        LOG_WRN("Failed to Encode RespInstallationMode");
         return false;
     }
 
@@ -134,19 +135,19 @@ bool BatteryMessageHandlerImpl::HandleSetModeChargingLimit(MessageProto& msg, Me
     if (!msg.DecodeInnerMessage(SetModeChargingLimit_fields, &smcl)) {
         return false;
     } else if (!battery_manager_.ModeIsKnown(smcl.mode)) {
-        logger_.wrn("Tried to set non-existing installation mode.");
+        LOG_WRN("Tried to set non-existing installation mode.");
         return false;
     }
 
     if (battery_manager_.SetModeChargingLimit((installation_mode_t)smcl.mode, smcl.chg_limit) !=
         0) {
-        logger_.wrn("Failed to set charging limit. Limit outside permissible range.");
+        LOG_WRN("Failed to set charging limit. Limit outside permissible range.");
         return false;
     }
 
     if (!BatteryMessageEncoder::EncodeRespModeChargingLimit(buffer))  // Encode response
     {
-        logger_.wrn("Failed to Encode RespModeChargingLimit");
+        LOG_WRN("Failed to Encode RespModeChargingLimit");
         return false;
     }
 

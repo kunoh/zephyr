@@ -4,11 +4,10 @@
 #include <cstdlib>
 
 #include "inclinometer.h"
-#include "logger.h"
 
 class InclinometerMock : public Inclinometer {
 public:
-    InclinometerMock(Logger& logger);
+    InclinometerMock();
     virtual ~InclinometerMock() = default;
     int Init() override;
     bool Write() override;
@@ -16,7 +15,6 @@ public:
     void GetAngle(double xyz_angle[]) override;
 
 private:
-    Logger& logger_;
     double acc_x_;
     double acc_y_;
     double acc_z_;

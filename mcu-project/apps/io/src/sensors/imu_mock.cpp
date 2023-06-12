@@ -1,11 +1,15 @@
 #include "imu_mock.h"
 
-ImuMock::ImuMock(Logger& logger) : logger_{logger}
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(imu_mock, CONFIG_IMU_LOG_LEVEL);
+
+ImuMock::ImuMock()
 {}
 
 int ImuMock::Init()
 {
-    logger_.inf("IMU Mock Init");
+    LOG_INF("IMU Mock Init");
     return 0;
 }
 

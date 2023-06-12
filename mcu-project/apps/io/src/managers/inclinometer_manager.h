@@ -1,19 +1,18 @@
 #pragma once
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include <functional>
-#include <memory>
 #include <vector>
 
 #include "inclinometer.h"
-#include "logger.h"
 #include "manager.h"
 #include "util.h"
 #include "wrappers_zephyr.h"
 
 class InclinometerManager : public Manager {
 public:
-    InclinometerManager(Logger& logger, Inclinometer& inclino);
+    InclinometerManager(Inclinometer& inclino);
     ~InclinometerManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -33,7 +32,6 @@ private:
     static void ReadInclinoDataCallback(struct k_work* work);
 
 private:
-    Logger& logger_;
     Inclinometer& inclino_;
     double last_known_x_angle_;
     double last_known_y_angle_;

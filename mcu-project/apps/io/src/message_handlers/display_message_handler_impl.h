@@ -1,12 +1,13 @@
 #pragma once
 
+#include <zephyr/logging/log.h>
+
 #include "display_manager.h"
 #include "display_message_handler.h"
-#include "logger.h"
 
 class DisplayMessageHandlerImpl : public DisplayMessageHandler {
 public:
-    DisplayMessageHandlerImpl(Logger& logger, DisplayManager& disp_mgr);
+    DisplayMessageHandlerImpl(DisplayManager& disp_mgr);
 
 private:
     bool HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer) override;
@@ -15,6 +16,5 @@ private:
     bool HandleResponseNewFrame(MessageProto& msg, MessageBuffer& buffer) override;
 
 private:
-    Logger& logger_;
     DisplayManager& disp_mgr_;
 };

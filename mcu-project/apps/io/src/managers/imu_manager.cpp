@@ -1,6 +1,10 @@
 #include "imu_manager.h"
 
-ImuManager::ImuManager(Logger &logger, Imu &imu) : logger_{logger}, imu_{imu}
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(imu_mgr, CONFIG_IMU_MANAGER_LOG_LEVEL);
+
+ImuManager::ImuManager(Imu &imu) : imu_{imu}
 {
     k_timer_init(&timer_, &ImuManager::SamplingTimerHandler, NULL);
     k_timer_user_data_set(&timer_, this);

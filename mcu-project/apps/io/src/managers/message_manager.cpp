@@ -1,12 +1,15 @@
 #include "message_manager.h"
 
 #include <stdio.h>
+#include <zephyr/logging/log.h>
 
 #include "battery_message_encoder.h"
 
-MessageManager::MessageManager(Logger& logger, UsbHid& usb_hid, MessageProto& msg_proto,
+LOG_MODULE_REGISTER(msg_mgr, CONFIG_MESSAGE_MANAGER_LOG_LEVEL);
+
+MessageManager::MessageManager(UsbHid& usb_hid, MessageProto& msg_proto,
                                MessageDispatcher& dispatcher)
-    : logger_{logger}, usb_hid_{usb_hid}, msg_proto_{msg_proto}, dispatcher_{dispatcher}
+    : usb_hid_{usb_hid}, msg_proto_{msg_proto}, dispatcher_{dispatcher}
 {
     k_work_init(&work_wrapper_.work, &MessageManager::HandleQueuedMessageCallback);
     work_wrapper_.self = this;
@@ -14,7 +17,7 @@ MessageManager::MessageManager(Logger& logger, UsbHid& usb_hid, MessageProto& ms
 
 int MessageManager::Init()
 {
-    logger_.inf("Message Init");
+    LOG_INF("Message Init");
     k_msgq_init(&msgq_, msgq_buffer_, sizeof(MessageBuffer), 10);
     usb_hid_.Init(&msgq_, &work_wrapper_.work);
     return 0;
@@ -58,7 +61,7 @@ void MessageManager::HandleQueuedMessage()
             // Decode, act, and encode response
             msg_proto_.DecodeOuterMessage(buffer);
             if (!dispatcher_.Handle(msg_proto_, buffer)) {
-                logger_.wrn("Failed to Decode");
+                LOG_WRN("Failed to Decode");
             }
 
             // For testing, to be deleted later

@@ -1,19 +1,19 @@
 #pragma once
 
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include <functional>
 #include <vector>
 
 #include "imu.h"
-#include "logger.h"
 #include "manager.h"
 #include "util.h"
 #include "wrappers_zephyr.h"
 
 class ImuManager : public Manager {
 public:
-    ImuManager(Logger& logger, Imu& imu);
+    ImuManager(Imu& imu);
     ~ImuManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -27,7 +27,6 @@ private:
     static void GetSampleCallback(struct k_work* work);
 
 private:
-    Logger& logger_;
     Imu& imu_;
     k_timer timer_;
     k_work_wrapper<ImuManager> work_wrapper_;

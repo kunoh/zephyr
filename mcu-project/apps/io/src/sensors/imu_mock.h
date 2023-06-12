@@ -1,11 +1,11 @@
 #pragma once
-#include <imu.h>
+#include <zephyr/logging/log.h>
 
-#include "logger.h"
+#include "imu.h"
 
 class ImuMock : public Imu {
 public:
-    ImuMock(Logger& logger);
+    ImuMock();
     virtual ~ImuMock() = default;
     int Init() override;
     int FetchSampleData() override;
@@ -15,5 +15,4 @@ public:
     void GetTempData(double& temp) override;
 
 private:
-    Logger& logger_;
 };

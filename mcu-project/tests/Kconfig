@@ -3,3 +3,84 @@ config UNIT_TEST_MOCKS
 	default false
 	help
 	  Configures whether device mocks should contain dummy code for higher layer unit testing.
+
+# 	  # Config options for logger sample app
+
+# # Copyright (c) 2018 Nordic Semiconductor ASA
+# # SPDX-License-Identifier: Apache-2.0
+
+# mainmenu "IO Controller"
+
+# menu "Logging configuration"
+# menu "Managers"
+
+# module = INCLINOMETER_MANAGER
+# module-str = Inclinometer Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = MESSAGE_MANAGER
+# module-str = Message Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = BATTERY_MANAGER
+# module-str = Battery Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = DISPLAY_MANAGER
+# module-str = Display Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = LEG_MANAGER
+# module-str = Leg Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = IMU_MANAGER
+# module-str = Imu Manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = SML_MANAGER
+# module-str = Sml manager
+# source "subsys/logging/Kconfig.template.log_config"
+
+# endmenu
+# menu "Message Handlers"
+
+# module = SYSTEM_MSG_HDLR
+# module-str = System Message Handler
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = BATTERY_MSG_HDLR
+# module-str = Battery Message Handler
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = DISPLAY_MSG_HDLR
+# module-str = Display Message Handler
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = INCLINOMETER_MSG_HDLR
+# module-str = Inclinometer Message Handler
+# source "subsys/logging/Kconfig.template.log_config"
+
+# endmenu
+# menu "Sensors"
+
+# module = IMU
+# module-str = Imu
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = BATTERY
+# module-str = Battery
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = BATTERY_CHARGER
+# module-str = Battery Charger
+# source "subsys/logging/Kconfig.template.log_config"
+
+# module = INCLINOMETER
+# module-str = Inclinometer
+# source "subsys/logging/Kconfig.template.log_config"
+
+# endmenu
+# endmenu
+
+# source "Kconfig.zephyr"

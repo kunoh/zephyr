@@ -5,16 +5,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "logger.h"
 #include "usb_hid.h"
 
 class UsbHidMock : public UsbHid {
 public:
-    UsbHidMock(Logger &logger);
+    UsbHidMock();
     virtual ~UsbHidMock() = default;
     int Init(void *message_queue, void *work_queue) override;
     void Send(uint8_t *buffer, uint8_t message_length) override;
 
 private:
-    Logger &logger_;
 };

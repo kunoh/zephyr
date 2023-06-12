@@ -2,18 +2,21 @@
 
 #include <bq25713_driver.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/logging/log.h>
 
 #include <bitset>
 
-BatteryChargerBq25713::BatteryChargerBq25713(Logger &logger) : logger_{logger}
+LOG_MODULE_REGISTER(bat_chgr_bq25713, CONFIG_BATTERY_CHARGER_LOG_LEVEL);
+
+BatteryChargerBq25713::BatteryChargerBq25713()
 {}
 
 int BatteryChargerBq25713::Init()
 {
-    logger_.inf("Battery Charger Bq25713 Init");
+    LOG_INF("Battery Charger Bq25713 Init");
 
     if (!device_is_ready(charger_dev)) {
-        logger_.err("BQ25713 battery charger not found. Aborting...");
+        LOG_ERR("BQ25713 battery charger not found. Aborting...");
         return 1;
     }
 

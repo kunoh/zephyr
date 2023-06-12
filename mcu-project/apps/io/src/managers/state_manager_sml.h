@@ -1,10 +1,8 @@
 #include <zephyr/kernel.h>
 
-#include <memory>
 #include <vector>
 
 #include "boost/sml.hpp"
-#include "logger.h"
 #include "manager.h"
 #include "wrappers_zephyr.h"
 
@@ -60,7 +58,7 @@ struct Fsm {
 
 class StateManagerSml : public FsmOps {
 public:
-    StateManagerSml(Logger& logger);
+    StateManagerSml();
     ~StateManagerSml() = default;
     void AddManager(Manager& m);
     void Run();
@@ -76,7 +74,6 @@ private:
     static void ProcessStartEvent(k_work* work);
 
 private:
-    Logger& logger_;
     k_work_wrapper<StateManagerSml> work_wrapper_;
     std::vector<Manager*> managers_;
     boost::sml::sm<Fsm> sm_;

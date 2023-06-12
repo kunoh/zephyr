@@ -1,9 +1,11 @@
 #include "battery_manager.h"
 
-#include <cstdio>
+#include <zephyr/logging/log.h>
 
-BatteryManager::BatteryManager(Logger &logger, Battery &battery, BatteryCharger &charger)
-    : logger_{logger}, battery_{battery}, charger_{charger}
+LOG_MODULE_REGISTER(bat_mgr, CONFIG_BATTERY_MANAGER_LOG_LEVEL);
+
+BatteryManager::BatteryManager(Battery &battery, BatteryCharger &charger)
+    : battery_{battery}, charger_{charger}
 {
     // Periodic charging information
     k_timer_init(&timer_work_bat_chg_data_.first, TimerQueueWork, NULL);
@@ -52,10 +54,10 @@ void BatteryManager::AddErrorCb(void (*cb)(void *), void *user_data)
 void BatteryManager::HandleBatteryGeneralData()
 {
     if (battery_.TriggerGeneralSampling() != 0) {
-        logger_.err("Failed sampling one or more general battery properties.");
+        LOG_ERR("Failed sampling one or more general battery properties.");
     }
     if (battery_.GetGeneralData(last_bat_gen_data_) != 0) {
-        logger_.err("Failed fetching one or more general battery properties.");
+        LOG_ERR("Failed fetching one or more general battery properties.");
     }
 
     // Send to subscribers
@@ -73,14 +75,11 @@ void BatteryManager::HandleBatteryChargingData()
     // inhibited.
     if ((battery_.TriggerChargingSampling() != 0) ||
         (battery_.GetChargingData(last_bat_chg_data_) != 0)) {
-        logger_.wrn("Failed sampling one or more battery charging properties.");
+        LOG_WRN("Failed sampling one or more battery charging properties.");
         inhibit_charging = true;
     } else if (!ChargingAllowed()) {
         if (is_charging_) {
-            char str[60];
-            sprintf(str, "Battery cannot be charged. Battery status: 0x%X",
-                    last_bat_chg_data_.status);
-            logger_.inf(str);
+            LOG_INF("Battery cannot be charged. Battery status: 0x%X", last_bat_chg_data_.status);
         }
         inhibit_charging = true;
     }
@@ -88,14 +87,14 @@ void BatteryManager::HandleBatteryChargingData()
     if (inhibit_charging) {
         ret = charger_.SetChargingCurrent(0);
         if (ret != 0) {
-            logger_.err("Couldn't inhibit charging!");
+            LOG_ERR("Couldn't inhibit charging!");
         } else if (is_charging_) {
-            logger_.inf("Inhibited charging.");
+            LOG_INF("Inhibited charging.");
             is_charging_ = false;
         }
     } else {
         if (!is_charging_) {
-            logger_.inf("Configuring battery charging.");
+            LOG_INF("Configuring battery charging.");
         }
         // Attempt to configure charge controller with charging properties from battery.
         ret = charger_.SetChargingConfig(last_bat_chg_data_.des_chg_current,
@@ -104,23 +103,20 @@ void BatteryManager::HandleBatteryChargingData()
         if (ret != 0) {
             switch (ret) {
                 case ERRNO_CHARGER_VOLTAGE_EIO:
-                    logger_.err(
-                        "An IO-error occured while attempting to set max charging voltage.");
+                    LOG_ERR("An IO-error occured while attempting to set max charging voltage.");
                     break;
                 case ERRNO_CHARGER_VOLTAGE_ERANGE:
-                    logger_.err(
+                    LOG_ERR(
                         "Attempting to set max charging voltage outside operable charger range.");
                     break;
                 case ERRNO_CHARGER_CURRENT_EIO:
-                    logger_.err(
-                        "An IO-error occured while attempting to set max charging current.");
+                    LOG_ERR("An IO-error occured while attempting to set max charging current.");
                     break;
                 case ERRNO_CHARGER_CURRENT_ERANGE:
-                    logger_.err(
-                        "Attempting to set charging current outside operable charger range.");
+                    LOG_ERR("Attempting to set charging current outside operable charger range.");
                     break;
                 default:
-                    logger_.err("SetChargingConfig() returned non-zero errno.");
+                    LOG_ERR("SetChargingConfig() returned non-zero errno.");
                     break;
             }
         } else {
@@ -167,7 +163,7 @@ int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uin
 
         case CHARGING:
             if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
-                logger_.err("Tried to set too slow battery data charging sample rate.");
+                LOG_ERR("Tried to set too slow battery data charging sample rate.");
                 return ERANGE;
             }
 
@@ -176,7 +172,7 @@ int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uin
             break;
 
         default:
-            logger_.err("Trying to start non-existing bat sampling timer.");
+            LOG_ERR("Trying to start non-existing bat sampling timer.");
             return EINVAL;
             break;
     }
@@ -196,7 +192,7 @@ void BatteryManager::StopSampling(bat_data_t type)
             break;
 
         default:
-            logger_.err("Trying to stop non-existing bat sampling timer.");
+            LOG_ERR("Trying to stop non-existing bat sampling timer.");
             break;
     }
 }
@@ -219,7 +215,7 @@ size_t BatteryManager::GetSubscriberCount(bat_data_t type)
         case CHARGING:
             return subscriber_cbs_chg_.size();
         default:
-            logger_.err("Trying to get number of non-existing type of subscribers.");
+            LOG_ERR("Trying to clear non-existing type of subscribers.");
             return 0;
     }
 }
@@ -235,7 +231,7 @@ void BatteryManager::ClearSubscribers(bat_data_t type)
             subscriber_cbs_chg_.clear();
             break;
         default:
-            logger_.err("Trying to clear non-existing type of subscribers.");
+            LOG_ERR("Trying to clear non-existing type of subscribers.");
             break;
     }
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
-#include "logger.h"
 #include "manager.h"
 #include "message_dispatcher.h"
 #include "message_handler.h"
@@ -12,8 +12,7 @@
 
 class MessageManager : public Manager {
 public:
-    MessageManager(Logger& logger, UsbHid& usb_hid, MessageProto& msg_proto,
-                   MessageDispatcher& dispatcher);
+    MessageManager(UsbHid& usb_hid, MessageProto& msg_proto, MessageDispatcher& dispatcher);
     ~MessageManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -25,7 +24,6 @@ private:
     static void HandleQueuedMessageCallback(k_work* work);
 
 private:
-    Logger& logger_;
     UsbHid& usb_hid_;
     MessageProto& msg_proto_;
     MessageDispatcher& dispatcher_;

@@ -1,15 +1,18 @@
-#include "display_com35.h"
+#include "display_com35h3.h"
 
 #include <zephyr/drivers/display.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include "display_lcd.h"
 
-DisplayCom35h3::DisplayCom35h3(Logger& logger) : logger_{logger}
+LOG_MODULE_REGISTER(disp_com35h3, CONFIG_DISPLAY_LOG_LEVEL);
+
+DisplayCom35h3::DisplayCom35h3()
 {
     display_dev_ = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     if (!device_is_ready(display_dev_)) {
-        logger_.err("Display not found. Aborting...");
+        LOG_ERR("Display not found. Aborting...");
     }
 }
 

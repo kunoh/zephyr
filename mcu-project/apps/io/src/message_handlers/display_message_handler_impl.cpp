@@ -1,7 +1,8 @@
 #include "display_message_handler_impl.h"
 
-DisplayMessageHandlerImpl::DisplayMessageHandlerImpl(Logger& logger, DisplayManager& disp_mgr)
-    : logger_{logger}, disp_mgr_{disp_mgr}
+LOG_MODULE_REGISTER(disp_msg_hdlr, CONFIG_DISPLAY_MSG_HDLR_LOG_LEVEL);
+
+DisplayMessageHandlerImpl::DisplayMessageHandlerImpl(DisplayManager& disp_mgr) : disp_mgr_{disp_mgr}
 {}
 
 bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, MessageBuffer& buffer)
@@ -13,7 +14,7 @@ bool DisplayMessageHandlerImpl::HandleRequestStopSpinner(MessageProto& msg, Mess
     }
     disp_mgr_.StopSpinner();
     if (!DisplayMessageEncoder::EncodeResponseStopSpinner(buffer, status)) {
-        logger_.wrn("Failed to Encode ResponseStopSpinner");
+        LOG_WRN("Failed to Encode ResponseStopSpinner");
         return false;
     }
     buffer.msg_type = OUTGOING;
@@ -39,7 +40,7 @@ bool DisplayMessageHandlerImpl::HandleRequestNewFrame(MessageProto& msg, Message
     }
     disp_mgr_.NextFrame();
     if (!DisplayMessageEncoder::EncodeResponseNewFrame(buffer, status)) {
-        logger_.wrn("Failed to Encode ResponseNewFrame");
+        LOG_WRN("Failed to Encode ResponseNewFrame");
         return false;
     }
     buffer.msg_type = OUTGOING;

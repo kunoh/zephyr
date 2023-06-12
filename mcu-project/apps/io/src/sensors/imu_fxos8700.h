@@ -1,11 +1,12 @@
-#include <imu.h>
-#include <logger.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/logging/log.h>
+
+#include "imu.h"
 
 class ImuFxos8700 : public Imu {
 public:
-    ImuFxos8700(Logger& logger);
+    ImuFxos8700();
     virtual ~ImuFxos8700() = default;
     int Init() override;
     int FetchSampleData() override;
@@ -19,7 +20,6 @@ public:
     int SetTriggerOnMotion(sensor_trigger_handler_t handler);
 
 private:
-    Logger& logger_;
     const device* imu_dev_;
     sensor_value accel_[3];
     sensor_value magn_[3];

@@ -1,11 +1,13 @@
 #include "system_message_handler_impl.h"
 
-SystemMessageHandlerImpl::SystemMessageHandlerImpl(Logger& logger) : logger_{logger}
+LOG_MODULE_REGISTER(sys_msg_hdlr, CONFIG_SYSTEM_MSG_HDLR_LOG_LEVEL);
+
+SystemMessageHandlerImpl::SystemMessageHandlerImpl()
 {}
 
 bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBuffer& buffer)
 {
-    logger_.inf("ResponseVersion Received");
+    LOG_INF("ResponseVersion Received");
 
     RequestVersion rv = RequestVersion_init_zero;
     if (!msg.DecodeInnerMessage(RequestVersion_fields, &rv)) {
@@ -14,7 +16,7 @@ bool SystemMessageHandlerImpl::HandleRequestVersion(MessageProto& msg, MessageBu
     // TODO: Get Version
     int version = 2;
     if (!SystemMessageEncoder::EncodeResponseVersion(buffer, version)) {
-        logger_.wrn("Failed to Encode ResponseVersion");
+        LOG_WRN("Failed to Encode ResponseVersion");
     }
     buffer.msg_type = OUTGOING;
 

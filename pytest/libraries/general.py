@@ -43,7 +43,7 @@ class General():
         if not os.path.exists(fw_file):
             print(f"FW binary does not exist")
             return False
-    
+
         base_cmd = '{}/go/bin/mcumgr --conntype serial --connstring "{},baud=115200"'.format(pathlib.Path.home() ,env['device']['mcu_serial_zephyr'])
 
         exec_cmd_list_image = base_cmd + " image list"
@@ -103,7 +103,7 @@ class General():
             return False
         assert out.decode() is not None
         print(out.decode())
-           
+
         image_slots = General.get_list_of_images_from_str(out.decode())
         assert len(image_slots) == 2
         assert image_slots[1]['flags'] == "pending"
@@ -125,23 +125,22 @@ class General():
         while timeout > (time.time() - time_start):
             if SerialMcu(port=env['device']['mcu_serial_zephyr']).port_is_available():
                 try:
-                    try:
-                        out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
-                    except Exception as e:
-                        print(f"{e}")
+                    out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)
                     assert out.decode() is not None
                     image_slots = General.get_list_of_images_from_str(out.decode())
+                    print(image_slots)
                     if len(image_slots) == 1:
                         print(out.decode())
                         assert len(image_slots[0]['hash']) == HASH_LEN and image_slots[0]['hash'] == new_fw_hash
                         return True
                 except Exception as e:
                     print(f"{e}")
-                    print(f"Try again in 20 seconds...")
+                finally:
+                    print(f"Try again in 5 seconds...")
                     time.sleep(5)
-            else: 
+            else:
                 time.sleep(5)
-        
+
         print(f"FW update failed: Could not validate new firmware hash within {timeout} secs ")
         return False
 
@@ -151,19 +150,19 @@ class General():
                 func = mark(func)
             return func
         return all_markers
-    
+
     def recover_mcu(env):
         if env['dev_mode']['skip_recovery']:
             print(f"Skipped MCU recovery")
             return True
-        
+
         print("Start MCU recovery")
 
         switch = SwitchboxIF(env['device']['raspi_serial_pico'])
         if switch.set_mcu_boot_mode("bootloader") is False:
             print("Failed to enter MCU BOOTLOADER mode")
             return False
-        
+
         sdk = SecProvSDK(tool_path=env['paths']['flashloader_path'])
 
         # Flash flashloader, config and update recovery fw

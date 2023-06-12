@@ -19,7 +19,7 @@ BOARD = {
         "io1050": "mimxrt1050_evk_qspi",
         "io1060": "mimxrt1060_evk"
         }
-PROJECT_PATH = { 
+PROJECT_PATH = {
             "io": "mcu-project/apps/io",
             "ble": "mcu-project/apps/ble",
             "modules": "mcu-project/modules"
@@ -80,6 +80,7 @@ def build_app(mcu_type, board, clean, release, without_bootloader):
     if "io" in mcu_type:
         mcu_type = "io"
         config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
+        config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/logging.conf")
         if not release:
             config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/debug.conf")
         if not without_bootloader:
@@ -110,7 +111,7 @@ def format():
     clang_format_bin = shutil.which('clang-format-12')
     if not clang_format_bin:
         clang_format_bin = shutil.which('clang-format-13')
-    
+
     if not clang_format_bin:
         logging.error('Cannot find clang-format. Run: sudo apt install clang-format')
         sys.exit(1)

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "logger.h"
+#include <zephyr/logging/log.h>
+
 #include "system_message_handler.h"
 
 class SystemMessageHandlerImpl : public SystemMessageHandler {
 public:
-    SystemMessageHandlerImpl(Logger& logger);
+    SystemMessageHandlerImpl();
     virtual ~SystemMessageHandlerImpl() = default;
 
 private:
@@ -13,5 +14,4 @@ private:
     bool HandleResponseVersion(MessageProto& msg, MessageBuffer& buffer) override;
 
 private:
-    Logger& logger_;
 };

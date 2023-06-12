@@ -9,7 +9,6 @@ add_subdirectory(${IOC_DIR}/src/message_handlers ${CMAKE_CURRENT_BINARY_DIR}/mes
 
 target_include_directories(app PRIVATE
             ${IOC_DIR}/src/utils
-            ${IOC_DIR}/src/logger
             ${IOC_DIR}/src/display
             ${IOC_DIR}/src/managers
             ${IOC_DIR}/src/message_handlers
@@ -17,7 +16,6 @@ target_include_directories(app PRIVATE
 
 target_sources(app PRIVATE
             src/test_dispatcher_chain.cpp
-            ${IOC_DIR}/src/logger/logger_mock.cpp
             ${IOC_DIR}/src/display/display_mock.cpp
             ${IOC_DIR}/src/managers/display_manager.cpp
             ${IOC_DIR}/src/message_handlers/system_message_handler_impl.cpp

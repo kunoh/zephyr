@@ -6,7 +6,6 @@
 #include "battery_mock.h"
 #include "battery_charger_mock.h"
 #include "util.h"
-#include "logger_zephyr.h"
 
 static void test_cb(BatteryGeneralData data)
 {
@@ -27,7 +26,6 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     test_data_exp.remaining_capacity = 5000;
     test_data_exp.cycle_count = 120;
 
-    LoggerZephyr logger("");
     BatteryMock test_bat_mock;
     BatteryChargerMock test_chg;
     test_bat_mock.SetTestTemp(test_data_exp.temp);
@@ -36,7 +34,7 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
     test_bat_mock.SetTestRemCap(test_data_exp.remaining_capacity);
     test_bat_mock.SetTestCycleCount(test_data_exp.cycle_count);
 
-    BatteryManager battery_mngr(logger, test_bat_mock, test_chg);
+    BatteryManager battery_mngr(test_bat_mock, test_chg);
     BatteryGeneralData test_data_res;
     zassert_not_equal(battery_mngr.GetLastGeneralData(test_data_res), 0);
     zassert_equal(test_data_res.temp, DEFAULT_INVALID_BAT_FLOAT);
@@ -59,11 +57,9 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
 
 ZTEST(battery_manager_suite, test_adding_clearing_gen_subscribers)
 {
-    LoggerZephyr logger("");
-
     BatteryMock test_battery;
     BatteryChargerMock test_chg;
-    BatteryManager battery_mngr(logger, test_battery, test_chg);
+    BatteryManager battery_mngr(test_battery, test_chg);
     zassert_false(battery_mngr.CpuIsSubscribed());
     zassert_equal(battery_mngr.GetSubscriberCount(GENERAL), 0);
 

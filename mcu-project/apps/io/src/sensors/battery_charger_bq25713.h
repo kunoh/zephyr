@@ -3,7 +3,6 @@
 #include <zephyr/device.h>
 
 #include "battery_charger.h"
-#include "logger.h"
 #include "util.h"
 
 #define BATTERY_STATUS_OVER_CHARGED_BIT_POS 15
@@ -17,7 +16,7 @@
 
 class BatteryChargerBq25713 : public BatteryCharger {
 public:
-    BatteryChargerBq25713(Logger &logger);
+    BatteryChargerBq25713();
     virtual ~BatteryChargerBq25713() = default;
     int Init() override;
 
@@ -27,6 +26,5 @@ public:
     int GetChargerStatus(int32_t &chgr_status) override;
 
 private:
-    Logger &logger_;
     const struct device *charger_dev = DEVICE_DT_GET(DT_NODELABEL(smart_battery_charger));
 };

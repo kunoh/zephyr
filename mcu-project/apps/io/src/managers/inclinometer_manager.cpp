@@ -1,17 +1,10 @@
 #include "inclinometer_manager.h"
 
-#include <inclinometer.h>
-#include <logger.h>
-#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
-#include <functional>
-#include <memory>
-#include <vector>
+LOG_MODULE_REGISTER(incl_mgr, CONFIG_INCLINOMETER_MANAGER_LOG_LEVEL);
 
-#include "util.h"
-
-InclinometerManager::InclinometerManager(Logger &logger, Inclinometer &inclino)
-    : logger_{logger}, inclino_{inclino}
+InclinometerManager::InclinometerManager(Inclinometer &inclino) : inclino_{inclino}
 {
     last_known_x_angle_ = 0;
     last_known_y_angle_ = 0;

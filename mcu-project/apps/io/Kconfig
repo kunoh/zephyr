@@ -1,0 +1,2 @@
+rsource "Kconfig.logging"
+source "Kconfig.zephyr"

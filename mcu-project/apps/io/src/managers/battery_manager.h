@@ -1,6 +1,7 @@
 #pragma once
 
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include <functional>
 #include <map>
@@ -8,7 +9,6 @@
 
 #include "battery.h"
 #include "battery_charger.h"
-#include "logger.h"
 #include "manager.h"
 #include "util.h"
 #include "wrappers_zephyr.h"
@@ -40,7 +40,7 @@ enum installation_mode_t {
 
 class BatteryManager : public Manager {
 public:
-    BatteryManager(Logger& logger, Battery& battery, BatteryCharger& charger);
+    BatteryManager(Battery& battery, BatteryCharger& charger);
     ~BatteryManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -104,7 +104,6 @@ private:
     std::map<installation_mode_t, int32_t> chg_limits_;
     installation_mode_t installation_mode_ = MOBILE;
 
-    Logger& logger_;
     Battery& battery_;
     BatteryCharger& charger_;
     CallbackWrapper on_error_;

@@ -7,13 +7,12 @@
 //
 #include <zephyr/usb/class/usb_hid.h>
 
-#include "logger.h"
 #include "usb_hid.h"
 #include "wrappers_zephyr.h"
 
 class UsbHidZephyr : public UsbHid {
 public:
-    UsbHidZephyr(Logger &logger);
+    UsbHidZephyr();
     virtual ~UsbHidZephyr() = default;
     int Init(void *message_queue, void *work_queue) override;
     void Send(uint8_t *buffer, uint8_t message_length) override;
@@ -27,8 +26,6 @@ private:
     static void HandleIntInReady(const struct device *dev);
 
 private:
-    Logger &logger_;
-
     k_msgq *rx_msgq_;
     k_work *rx_work_;
     self_wrapper<UsbHidZephyr, device> hdev_;

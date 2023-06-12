@@ -8,7 +8,6 @@ include(${CMAKE_SOURCE_DIR}/../../../CMakeLists.txt)
 add_subdirectory(${IOC_DIR}/src/message_handlers ${CMAKE_CURRENT_BINARY_DIR}/message_handlers)
 
 target_include_directories(app PRIVATE
-                           ${IOC_DIR}/src/logger
                            ${IOC_DIR}/src/managers
                            ${IOC_DIR}/src/message_handlers
                            ${IOC_DIR}/src/sensors
@@ -18,7 +17,6 @@ target_include_directories(app PRIVATE
 
 target_sources(app PRIVATE
                ${CMAKE_SOURCE_DIR}/src/test_handlers.cpp
-               ${IOC_DIR}/src/logger/logger_mock.cpp
                ${IOC_DIR}/src/usb/usb_hid_mock.cpp
                ${IOC_DIR}/src/sensors/battery_mock.cpp
                ${IOC_DIR}/src/sensors/battery_charger_mock.cpp

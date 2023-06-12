@@ -1,3 +1,4 @@
 rsource "drivers/Kconfig"
 rsource "modules/Kconfig"
 rsource "tests/Kconfig"
+rsource "apps/io/Kconfig.logging"

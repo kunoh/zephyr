@@ -2,7 +2,6 @@
 #include <zephyr/kernel.h>
 #include <stdio.h>
 #include "util.h"
-#include "logger_zephyr.h"
 #include "inclinometer_manager.h"
 #include "inclinometer_mock.h"
 
@@ -24,9 +23,8 @@ int testCallBack(uint32_t test){
 ZTEST(inclino_manager_suite, test_subscriber)
 {
     // Setup
-    LoggerZephyr logger("");
-    InclinometerMock incl(logger);
-    InclinometerManager inclino_manager(logger, incl);
+    InclinometerMock incl;
+    InclinometerManager inclino_manager(incl);
 
     zassert_equal(inclino_manager.GetSubscribeCount(), 0);
 
@@ -51,9 +49,8 @@ ZTEST(inclino_manager_suite, test_subscriber)
 ZTEST(inclino_manager_suite, test_collect_data)
 {
     // Setup
-    LoggerZephyr logger("");
-    InclinometerMock incl(logger);
-    InclinometerManager inclino_manager(logger, incl);
+    InclinometerMock incl;
+    InclinometerManager inclino_manager(incl);
 
     double last_known_x_val;
     double last_known_y_val;

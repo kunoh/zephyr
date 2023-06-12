@@ -1,7 +1,10 @@
 #include "state_manager_sml.h"
 
-StateManagerSml::StateManagerSml(Logger &logger)
-    : logger_{logger}, sm_{static_cast<FsmOps &>(*this)}
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(sml_mgr, CONFIG_SML_MANAGER_LOG_LEVEL);
+
+StateManagerSml::StateManagerSml() : sm_{static_cast<FsmOps &>(*this)}
 {
     k_work_init(&work_wrapper_.work, &StateManagerSml::ProcessStartEvent);
     work_wrapper_.self = this;
@@ -20,7 +23,7 @@ void StateManagerSml::Run()
 // Init state
 void StateManagerSml::Initialize()
 {
-    logger_.inf("Initializing");
+    LOG_INF("Initializing");
     for (auto m : managers_) {
         m->AddErrorCb(&StateManagerSml::OnError, this);
 
@@ -33,7 +36,7 @@ void StateManagerSml::Initialize()
 
 void StateManagerSml::Selftest()
 {
-    logger_.inf("Selftest");
+    LOG_INF("Selftest");
     // Do something...
     sm_.process_event(Success{});
 }
@@ -41,26 +44,26 @@ void StateManagerSml::Selftest()
 // Ready state
 void StateManagerSml::Ready()
 {
-    logger_.inf("Ready");
+    LOG_INF("Ready");
     // Do something...
 }
 
 // Standby state
 void StateManagerSml::Standby()
 {
-    logger_.inf("Standby");
+    LOG_INF("Standby");
     // Power down or put devices to sleep
 }
 
 void StateManagerSml::Reset()
 {
-    logger_.inf("Reset");
+    LOG_INF("Reset");
     // Do something...
 }
 
 void StateManagerSml::Error()
 {
-    logger_.inf("Error");
+    LOG_INF("Error");
     // Do something...
 }
 

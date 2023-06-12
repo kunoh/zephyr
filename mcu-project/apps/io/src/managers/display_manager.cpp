@@ -1,5 +1,9 @@
 #include "display_manager.h"
 
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(disp_mgr, CONFIG_DISPLAY_MANAGER_LOG_LEVEL);
+
 // Graphic Resources
 const uint8_t logo[] = {
 #include "images/TrackManLogo.h"
@@ -16,7 +20,7 @@ const uint8_t spinner[] = {
 #include "images/Circle8.h"
 };
 
-DisplayManager::DisplayManager(Logger &logger, Display &disp) : logger_{logger}, disp_{disp}
+DisplayManager::DisplayManager(Display &disp) : disp_{disp}
 {
     logo_ = logo;
     spinner_ = spinner;
@@ -30,7 +34,7 @@ DisplayManager::DisplayManager(Logger &logger, Display &disp) : logger_{logger},
 
 int DisplayManager::Init()
 {
-    logger_.inf("Display Init");
+    LOG_INF("Display Init");
     SetBootLogo();
     StartSpinner();
     return 0;

@@ -1,16 +1,20 @@
 #include "inclinometer_scl3300.h"
 
+#include <zephyr/logging/log.h>
+
 #include "scl3300_driver.h"
 
-InclinometerScl3300::InclinometerScl3300(Logger& logger) : logger_{logger}
+LOG_MODULE_REGISTER(incl_scl3300, CONFIG_INCLINOMETER_LOG_LEVEL);
+
+InclinometerScl3300::InclinometerScl3300()
 {}
 
 int InclinometerScl3300::Init()
 {
-    logger_.inf("Inclinometer Scl3300 Init");
+    LOG_INF("Inclinometer Scl3300 Init");
 
     if (!device_is_ready(incl_dev_)) {
-        logger_.err("Inclinometer not found. Aborting...\r\n");
+        LOG_ERR("Inclinometer not found. Aborting...\r\n");
         return 1;
     }
 
@@ -19,7 +23,7 @@ int InclinometerScl3300::Init()
 
 bool InclinometerScl3300::Write()
 {
-    logger_.wrn("InclinometerScl3300::Write() Not yet implemented");
+    LOG_WRN("InclinometerScl3300::Write() Not yet implemented");
     return true;
 }
 
@@ -30,7 +34,7 @@ bool InclinometerScl3300::Read()
 
     status = sensor_sample_fetch(incl_dev_);
     if (status) {
-        logger_.err("Could not fetch inclinometer sample data");
+        LOG_ERR("Could not fetch inclinometer sample data");
     }
 
     status |= sensor_channel_get(incl_dev_, SENSOR_CHAN_ACCEL_XYZ, temp_buffer_array);

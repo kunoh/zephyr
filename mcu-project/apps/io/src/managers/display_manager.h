@@ -1,16 +1,16 @@
 #pragma once
 
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include "display.h"
-#include "logger.h"
 #include "manager.h"
 #include "util.h"
 #include "wrappers_zephyr.h"
 
 class DisplayManager : public Manager {
 public:
-    DisplayManager(Logger& logger, Display& disp);
+    DisplayManager(Display& disp);
     ~DisplayManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
@@ -26,7 +26,6 @@ private:
     static void DoSpinCallback(struct k_work* work);
 
 private:
-    Logger& logger_;
     Display& disp_;
     k_timer timer_;
     k_work_wrapper<DisplayManager> work_wrapper_;

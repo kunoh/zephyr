@@ -1,11 +1,15 @@
 #include "inclinometer_mock.h"
 
-InclinometerMock::InclinometerMock(Logger& logger) : logger_{logger}
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(incl_mock, CONFIG_INCLINOMETER_LOG_LEVEL);
+
+InclinometerMock::InclinometerMock()
 {}
 
 int InclinometerMock::Init()
 {
-    logger_.inf("Inclinometer Mock Init");
+    LOG_INF("Inclinometer Mock Init");
     acc_x_ = 0;
     acc_y_ = 0;
     acc_z_ = 0;

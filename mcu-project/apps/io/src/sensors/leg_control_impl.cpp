@@ -1,5 +1,3 @@
-#include <stdio.h>
-//#include <zephyr.h>
 #include "leg_control_impl.h"
 
 bool LegControlImpl::Write()

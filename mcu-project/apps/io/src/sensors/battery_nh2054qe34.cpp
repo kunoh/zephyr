@@ -1,18 +1,21 @@
 #include "battery_nh2054qe34.h"
 
 #include <nh2054qe34_driver.h>
+#include <zephyr/logging/log.h>
 
 #include <bitset>
 
-BatteryNh2054qe34::BatteryNh2054qe34(Logger &logger) : logger_{logger}
+LOG_MODULE_REGISTER(bat_nh2054qe34, CONFIG_BATTERY_LOG_LEVEL);
+
+BatteryNh2054qe34::BatteryNh2054qe34()
 {}
 
 int BatteryNh2054qe34::Init()
 {
-    logger_.inf("Battery Nh2054qe34 Init");
+    LOG_INF("Battery Nh2054qe34 Init");
 
-    if (!device_is_ready(battery_dev_)) {
-        logger_.err("NH2054QE34 battery not found. Aborting...");
+    if (!device_is_ready(battery_dev)) {
+        LOG_ERR("NH2054QE34 battery not found. Aborting...");
         return 1;
     }
 
@@ -68,7 +71,7 @@ int BatteryNh2054qe34::GetTemperature(float &temp)
 
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_GAUGE_TEMP, &battery_temp);
     if (ret != 0) {
-        logger_.err("Failed to get battery temperature.");
+        LOG_ERR("Failed to get battery temperature.");
         return ret;
     }
 
@@ -83,7 +86,7 @@ int BatteryNh2054qe34::GetVoltage(float &volt)
 
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_VOLTAGE, &battery_volt);
     if (ret != 0) {
-        logger_.err("Failed to get battery voltage.");
+        LOG_ERR("Failed to get battery voltage.");
         return ret;
     }
 
@@ -98,7 +101,7 @@ int BatteryNh2054qe34::GetCurrent(float &current)
 
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_CURRENT, &battery_current);
     if (ret != 0) {
-        logger_.err("Failed to get battery current.");
+        LOG_ERR("Failed to get battery current.");
         return ret;
     }
 
@@ -114,7 +117,7 @@ int BatteryNh2054qe34::GetRemCapacity(int32_t &rem_cap)
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_GAUGE_REMAINING_CHARGE_CAPACITY,
                              &battery_rem_capacity);
     if (ret != 0) {
-        logger_.err("Failed to get remaining battery capacity.");
+        LOG_ERR("Failed to get remaining battery capacity.");
         return ret;
     }
 
@@ -130,7 +133,7 @@ int BatteryNh2054qe34::GetRelativeStateOfCharge(int32_t &relative_charge_state)
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_GAUGE_STATE_OF_CHARGE,
                              &battery_state_of_charge);
     if (ret != 0) {
-        logger_.err("Failed to get battery relative state of charge info.");
+        LOG_ERR("Failed to get battery relative state of charge info.");
         return ret;
     }
 
@@ -145,7 +148,7 @@ int BatteryNh2054qe34::GetCycleCount(int32_t &cycle_count)
 
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_GAUGE_CYCLE_COUNT, &battery_cycle_count);
     if (ret != 0) {
-        logger_.err("Failed to get battery cycle count.");
+        LOG_ERR("Failed to get battery cycle count.");
         return ret;
     }
 
@@ -161,7 +164,7 @@ int BatteryNh2054qe34::GetChargingCurrent(int32_t &charging_current)
     ret = sensor_channel_get(battery_dev_, SENSOR_CHAN_GAUGE_DESIRED_CHARGING_CURRENT,
                              &battery_charging_current);
     if (ret != 0) {
-        logger_.err("Failed to get the battery's desired charging current.");
+        LOG_ERR("Failed to get the battery's desired charging current.");
         return ret;
     }
 
@@ -178,7 +181,7 @@ int BatteryNh2054qe34::GetChargingVoltage(int32_t &charging_volt)
         sensor_channel_get(battery_dev_, (sensor_channel)SENSOR_CHAN_GAUGE_DESIRED_CHARGING_VOLTAGE,
                            &battery_charging_volt);
     if (ret != 0) {
-        logger_.err("Failed to get the battery's desired charging voltage.");
+        LOG_ERR("Failed to get the battery's desired charging voltage.");
         return ret;
     }
 
@@ -193,7 +196,7 @@ int BatteryNh2054qe34::GetStatus(int32_t &status)
 
     ret = sensor_channel_get(battery_dev_, (sensor_channel)SENSOR_CHAN_STATUS, &battery_status);
     if (ret != 0) {
-        logger_.err("Failed to get battery status.");
+        LOG_ERR("Failed to get battery status.");
         return ret;
     }
 

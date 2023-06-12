@@ -8,7 +8,6 @@
 
 #include <zephyr/ztest.h>
 
-#include "logger_mock.h"
 #include "usb_hid_mock.h"
 #include "message_handler.h"
 #include "message_dispatcher.h"
@@ -25,16 +24,14 @@ struct battery_message_handler_suite_fixture {
 	battery_message_handler_suite_fixture()
 	: msg_proto()
 	, dispatcher()
-	, logger("")
-	, usb_mock(logger)
+	, usb_mock()
 	, test_battery_mock()
 	, test_battery_charger_mock()
-	, bat_mngr(logger, test_battery_mock, test_battery_charger_mock)
-	, msg_mngr(logger, usb_mock, msg_proto, dispatcher)
-	, bat_msg_handler(logger, bat_mngr, msg_mngr) {}
+	, bat_mngr(test_battery_mock, test_battery_charger_mock)
+	, msg_mngr(usb_mock, msg_proto, dispatcher)
+	, bat_msg_handler(bat_mngr, msg_mngr) {}
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger;
 	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
@@ -59,9 +56,8 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
+	UsbHidMock usb_mock;
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
 
 	// Setup some dummy variables and assign them to the mocked battery
     BatteryGeneralData test_data_exp;
@@ -79,8 +75,8 @@ ZTEST_F(battery_message_handler_suite, test_handler_request_battery_info)
     test_battery_mock.SetTestCycleCount(test_data_exp.cycle_count);
 
 	BatteryChargerMock test_charger_mock;
-    BatteryManager bat_mngr = BatteryManager(logger, test_battery_mock, test_charger_mock);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+    BatteryManager bat_mngr = BatteryManager(test_battery_mock, test_charger_mock);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	// Encode a RequestBatteryInfo message.
 	MessageBuffer message;
@@ -153,13 +149,12 @@ ZTEST_F(battery_message_handler_suite, test_handler_battery_info)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	// Encode a BatteryInfo message
 	MessageBuffer message;
@@ -186,13 +181,12 @@ ZTEST_F(battery_message_handler_suite, test_handle_true_gen_subcribe_request)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	MessageBuffer message;
 	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, true), "Could not encode ReqBatteryNotifications message.");
@@ -215,13 +209,12 @@ ZTEST_F(battery_message_handler_suite, test_handle_false_gen_subcribe_request)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	MessageBuffer message;
 	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, false), "Could not encode ReqBatteryNotifications message.");
@@ -241,13 +234,12 @@ ZTEST_F(battery_message_handler_suite, test_handle_multiple_gen_subscribe_reques
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -272,13 +264,12 @@ ZTEST_F(battery_message_handler_suite, test_handle_gen_resubscribe_request)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	MessageBuffer message;
 	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, true), "Could not encode ReqBatteryNotifications message.");
@@ -315,13 +306,12 @@ ZTEST_F(battery_message_handler_suite, test_handler_gen_subcribe_response)
 {
 	MessageProto msg_proto;
 	MessageDispatcher dispatcher;
-	LoggerMock logger("");
-	UsbHidMock usb_mock(logger);
+	UsbHidMock usb_mock;
 	BatteryMock test_battery_mock;
 	BatteryChargerMock test_battery_charger_mock;
-	BatteryManager bat_mngr(logger, test_battery_mock, test_battery_charger_mock);
-	MessageManager msg_mngr(logger, usb_mock, msg_proto, dispatcher);
-	BatteryMessageHandlerImpl bat_msg_handler(logger, bat_mngr, msg_mngr);
+	BatteryManager bat_mngr(test_battery_mock, test_battery_charger_mock);
+	MessageManager msg_mngr(usb_mock, msg_proto, dispatcher);
+	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	// Encode a response BatteryNotifications message
 	MessageBuffer message;

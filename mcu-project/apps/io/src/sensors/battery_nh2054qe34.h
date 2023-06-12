@@ -4,7 +4,6 @@
 #include <zephyr/devicetree.h>
 
 #include "battery.h"
-#include "logger.h"
 
 #define BATTERY_STATUS_OVER_CHARGED_BIT_POS 15
 #define BATTERY_STATUS_TERMINATE_CHARGE_BIT_POS 14
@@ -21,7 +20,7 @@
 
 class BatteryNh2054qe34 : public Battery {
 public:
-    BatteryNh2054qe34(Logger &logger);
+    BatteryNh2054qe34();
     virtual ~BatteryNh2054qe34() = default;
     int Init() override;
 
@@ -49,6 +48,5 @@ public:
     bool CanBeCharged(int32_t status_code) override;
 
 private:
-    Logger &logger_;
     const struct device *battery_dev_ = DEVICE_DT_GET(DT_NODELABEL(smart_battery));
 };

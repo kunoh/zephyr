@@ -1,6 +1,6 @@
 #include "display_mock.h"
 
-DisplayMock::DisplayMock(Logger& logger) : logger_{logger}
+DisplayMock::DisplayMock()
 {}
 
 int DisplayMock::DisplayWrite(const uint16_t x, const uint16_t y, const uint16_t width,

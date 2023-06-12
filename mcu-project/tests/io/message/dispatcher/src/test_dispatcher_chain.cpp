@@ -9,7 +9,6 @@
 #include "display_message_encoder.h"
 
 #include "display_mock.h"
-#include "logger_mock.h"
 
 #include "display_manager.h"
 
@@ -18,11 +17,10 @@ ZTEST_SUITE(display_message_dispatching_suite, NULL, NULL, NULL, NULL, NULL);
 
 ZTEST(system_message_dispatching_suite, test_message_version)
 {
-	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	// Initialize message dispatcher and add handler
-	SystemMessageHandlerImpl sys_msg_hdlr(logger);
+	SystemMessageHandlerImpl sys_msg_hdlr;
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(sys_msg_hdlr);
 
@@ -43,13 +41,12 @@ ZTEST(system_message_dispatching_suite, test_message_version)
 
 ZTEST(display_message_dispatching_suite, test_message_stop_spinner)
 {
-	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	// Initialize message dispatcher and add handler
-    DisplayMock disp(logger);
-	DisplayManager disp_mgr(logger, disp);
-	DisplayMessageHandlerImpl disp_msg_hdlr(logger, disp_mgr);
+    DisplayMock disp;
+	DisplayManager disp_mgr(disp);
+	DisplayMessageHandlerImpl disp_msg_hdlr(disp_mgr);
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(disp_msg_hdlr);
 
@@ -70,13 +67,12 @@ ZTEST(display_message_dispatching_suite, test_message_stop_spinner)
 
 ZTEST(display_message_dispatching_suite, test_message_new_frame)
 {
-	LoggerMock logger("");
 	MessageProto msg_proto;
 
 	// Initialize message dispatcher and add handler
-	DisplayMock disp(logger);
-	DisplayManager disp_mgr(logger, disp);
-	DisplayMessageHandlerImpl disp_msg_hdlr(logger, disp_mgr);
+	DisplayMock disp;
+	DisplayManager disp_mgr(disp);
+	DisplayMessageHandlerImpl disp_msg_hdlr(disp_mgr);
 	MessageDispatcher dispatcher;
 	dispatcher.AddHandler(disp_msg_hdlr);
 

@@ -1,13 +1,11 @@
 #include "leg_manager.h"
 
-#include <logger.h>
-#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
-#include "inclinometer_manager.h"
-#include "leg_control.h"
+LOG_MODULE_REGISTER(leg_mgr, CONFIG_LEG_MANAGER_LOG_LEVEL);
 
-LegManager::LegManager(Logger &logger, LegControl &leg_control, InclinometerManager &incl_mgr)
-    : logger_{logger}, leg_control_{leg_control}, incl_mgr_{incl_mgr}
+LegManager::LegManager(LegControl &leg_control, InclinometerManager &incl_mgr)
+    : leg_control_{leg_control}, incl_mgr_{incl_mgr}
 {
     last_known_value_ = 0;
 
@@ -21,11 +19,11 @@ LegManager::LegManager(Logger &logger, LegControl &leg_control, InclinometerMana
 int LegManager::Init()
 {
     if (!leg_control_.Init()) {
-        logger_.err("Failed to initialize legs");
+        LOG_ERR("Failed to initialize legs");
         return 1;
     }
     if (!incl_mgr_.Subscribe(&LegManager::SubscribeCallback)) {
-        logger_.err("Could not subscribe to Inclinometer");
+        LOG_ERR("Could not subscribe to Inclinometer");
         return 1;
     }
     return 0;

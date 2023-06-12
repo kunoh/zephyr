@@ -21,8 +21,9 @@ def test_init(variables):
     ##########################################
     ## Assert we are in App Mode
     switch = SwitchboxIF(variables['device']['raspi_serial_pico'])
-    if switch.set_mcu_boot_mode("app") is False:
-         pytest.exit(f"Failed to enter MCU app mode", 3)
+    if switch.validate_usb("app") is False:
+        if switch.set_mcu_boot_mode("app") is False:
+            pytest.exit(f"Failed to enter MCU app mode", 3)
 
     ## Update FW under test
     if General.firmware_upgrade(env=variables) is False:

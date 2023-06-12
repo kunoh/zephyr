@@ -201,7 +201,7 @@ class General():
         time.sleep(1)
 
         # bring MCU to normal mode
-        if switch.set_mcu_boot_mode("app") is False:
+        if switch.set_mcu_boot_mode("app", hard_reset=False) is False:
             print("Failed to enter MCU APP mode")
             return False
 

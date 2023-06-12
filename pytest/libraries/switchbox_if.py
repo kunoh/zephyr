@@ -55,7 +55,7 @@ class SwitchboxIF:
         
         return False
 
-    def set_mcu_boot_mode(self, mode=None):
+    def set_mcu_boot_mode(self, mode=None, hard_reset=True):
         if not mode:
             print("Boot mode should be specified")
             return False
@@ -70,11 +70,12 @@ class SwitchboxIF:
             print(f"Failed to set MCU boot mode\n{resp})")
             return False
         time.sleep(2)
-        resp = self._ser.async_send_read_message_until(f"reset_mcu", "Raspberry Pi Pico")
-        if "response: ok" not in str(resp):
-            print(f"Failed to hard reset  MCU\n{resp})")
-            return False
-        time.sleep(2)
+        if hard_reset:
+            resp = self._ser.async_send_read_message_until(f"reset_mcu", "Raspberry Pi Pico")
+            if "response: ok" not in str(resp):
+                print(f"Failed to hard reset  MCU\n{resp})")
+                return False
+            time.sleep(2)
 
         resp = self._ser.async_send_read_message_until("get_mcu_bootcfg", "Raspberry Pi Pico")
         if self.mcu_boot_mode_set(mode=mode, response=resp):

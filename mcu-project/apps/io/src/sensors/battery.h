@@ -20,7 +20,15 @@ public:
     /// @return 0 on success. Non-zero otherwise.
     ///
     virtual int TriggerChargingSampling() = 0;
+
+    /// @brief Get last general battery data sample.
+    /// @param[out] data Reference to struct that will be populated with last sampled values.
+    /// @return 0 on success. Non-zero otherwise.
     virtual int GetGeneralData(BatteryGeneralData &data) = 0;
+
+    /// @brief Get last battery charging data sample.
+    /// @param[out] data Reference to struct that will be populated with last sampled values.
+    /// @return 0 on success. Non-zero otherwise.
     virtual int GetChargingData(BatteryChargingData &data) = 0;
 
     ///
@@ -125,5 +133,13 @@ public:
     ///
     virtual int GetStatus(int32_t &status) = 0;
 
+    ///
+    /// @brief Test if a battery allows charging enabled based on its 32-bit status code. This will
+    /// check for any flags raised that prohibit charging.
+    ///
+    /// @param status_code 32-bit battery code to test.
+    ///
+    /// @return True if battery can be charged, False if it cannot.
+    ///
     virtual bool CanBeCharged(int32_t status_code) = 0;
 };

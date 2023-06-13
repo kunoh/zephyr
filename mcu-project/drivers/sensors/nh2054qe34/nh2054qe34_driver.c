@@ -54,7 +54,7 @@ static int nh2054qe34_init(const struct device *dev)
     const struct nh2054qe34_config* battery_config = dev->config;
     const struct i2c_dt_spec battery_i2c_spec = battery_config->i2c_spec;
     struct nh2054qe34_data* battery_data = dev->data;
-    uint32_t i2c_config = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER;
+    uint32_t i2c_config = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER;  // 100 kHz
     
     // Configure I2C controller.
     ret = i2c_configure(battery_i2c_spec.bus, i2c_config);

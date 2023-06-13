@@ -57,28 +57,62 @@ public:
     /// @param[in] period_msec The sampling period (in milliseconds).
     ///
     int StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
+
     void StopSampling(bat_data_t type);
 
     ///
-    /// @brief Adds a function to a list of callback functions to call after each sampling of
-    /// general battery properties.
+    /// @brief Adds a function to a list of callback functions that will be called after each
+    /// sampling of general battery properties.
     ///
-    /// @param cb The callback function to add.
+    /// @param cb The callback function to add, taking a BatteryGeneralData struct.
     ///
     void AddSubscriberGeneral(std::function<void(BatteryGeneralData)> cb);
 
     ///
-    /// @brief Adds a function to a list of callback functions to call after each sampling of
-    /// battery charging properties.
+    /// @brief Adds a function to a list of callback functions that will be called after each
+    /// sampling of battery charging properties.
     ///
-    /// @param cb The callback function to add.
+    /// @param cb The callback function to add, taking a BatteryChargingData struct.
     ///
     void AddSubscriberCharging(std::function<void(BatteryChargingData)> cb);
 
+    ///
+    /// @brief Returns the number of subscribed callbacks for a specific battery data category.
+    ///
+    /// @param type Enum specifying type of subscribers.
+    ///
+    /// @return Number of subscribers for the specified type.
+    ///
     size_t GetSubscriberCount(bat_data_t type);
+
+    ///
+    /// @brief Clear subscribers of a specific battery data category.
+    ///
+    /// @param type Enum specifying type to clear.
+    ///
+    /// @note Clearing GENERAL subscribers will also deassert the "cpu subscribed" status.
+    ///
     void ClearSubscribers(bat_data_t type);
+
+    ///
+    /// @brief Function to specificy cpu subscribed status. Should be used in conjunction with a
+    /// AddSubscriber<x>() call.
+    ///
     void SetCpuSubscribed(bool val);
+
+    ///
+    /// @brief Get whether CPU is considered subscribed to battery notifications or not.
+    ///
+    /// @return True if CPU is subscribed, false otherwise.
+    ///
     bool CpuIsSubscribed();
+
+    ///
+    /// @brief Get manager's battery charging status.
+    ///
+    /// @return True if manager has written charging configuration to charger. False if charging has
+    /// been inhibited.
+    ///
     bool IsCharging();
     bool ModeIsKnown(int32_t mode);
     void SetInstallationMode(installation_mode_t mode);
@@ -86,7 +120,24 @@ public:
     int SetModeChargingLimit(installation_mode_t mode, int32_t limit);
     int GetModeChargingLimit(installation_mode_t mode, int32_t& limit);
 
+    ///
+    /// @brief Get last general battery data sampling manager is holding.
+    ///
+    /// @param[out] bat_gen_data Struct to populate with manager last known values. Will be
+    /// populated with invalid default values if sampling timer is not running.
+    ///
+    /// @return 0 on success. EIO if sampling timer is not running at moment of call.
+    ///
     int GetLastGeneralData(BatteryGeneralData& bat_gen_data);
+
+    ///
+    /// @brief Get last charging battery data sampling manager is holding.
+    ///
+    /// @param[out] bat_gen_data Struct to populate with manager last known values. Will be
+    /// populated with invalid default values if sampling timer is not running.
+    ///
+    /// @return 0 on success. EIO if sampling timer is not running at moment of call.
+    ///
     int GetLastChargingData(BatteryChargingData& bat_chg_data);
 
 private:

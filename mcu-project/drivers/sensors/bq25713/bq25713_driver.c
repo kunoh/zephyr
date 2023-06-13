@@ -119,7 +119,7 @@ static int bq25713_init(const struct device* dev)
 	// TODO: do some initial configuration of the charging circuit.
 }
 
-// Private extensions of the sensor API's sensor_channel enum are needed for missing sensor property types.
+// Custom extensions of the sensor API's sensor_channel enum are needed for missing sensor property types.
 // When used in a switch or if statement on a value of type sensor_channel these extensions produce warnings which we suppress.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -197,7 +197,6 @@ static int bq25713_attr_set(const struct device* dev, enum sensor_channel chan, 
 					if(ret != 0)
 					{
 						ret |= ERR_CHARGING_CURRENT_CODE;
-						return ret;
 					}
 					break;
 

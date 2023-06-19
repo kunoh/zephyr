@@ -16,14 +16,20 @@ message BatteryChargingInfo {
     bool charging = 5;
 }
 
-// Poll BatteryManager for a BatteryInfo reading
+// Poll BatteryManager for a BatteryGeneralInfo reading
 message ReqBatteryGeneralInfo {
     //
 }
 
-// Request battery to start pushing BatteryInfo messages periodically
+// Poll BatteryManager for a BatteryChargingInfo reading
+message ReqBatteryChargingInfo {
+    //
+}
+
+// Request battery to start pushing Battery<X>Info messages periodically
 message ReqBatteryNotifications {
-    bool enable = 1;
+    string subscription_type = 1;
+    string data_type = 2;
 }
 
 message RespBatteryNotifications {
@@ -31,7 +37,7 @@ message RespBatteryNotifications {
 }
 
 message SetInstallationMode {
-    int32 mode = 1;
+    string mode = 1;
 }
 
 message RespInstallationMode {
@@ -39,7 +45,7 @@ message RespInstallationMode {
 }
 
 message SetModeChargingLimit {
-    int32 mode = 1;
+    string mode = 1;
     int32 chg_limit = 2;
 }
 

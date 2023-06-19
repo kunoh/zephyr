@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "battery.h"
@@ -24,18 +25,15 @@
 
 #define CHARGING_REL_CHG_STATE_MIN          20
 #define CHARGING_REL_CHG_STATE_MAX          100
-#define CHARGING_REL_CHG_STATE_DEFAULT      80
+#define CHARGING_REL_CHG_STATE_DEFAULT      CHARGING_REL_CHG_STATE_MAX
+
+#define INSTALLATION_MODE_DEFAULT           installation_modes[0]
 // clang-format on
 
 enum bat_data_t {
     GENERAL,
     CHARGING,
-};
-
-enum installation_mode_t {
-    MOBILE,
-    FIXED,
-    SENTINEL,
+    BAT_SENTINEL,
 };
 
 class BatteryManager : public Manager {
@@ -45,20 +43,31 @@ public:
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
 
-    ///
-    /// @brief Start battery sampling.
-    ///
-    /// \note It is permitted to call StartSampling() while already started.
-    ///       This will restart the sampling timers with the new specified parameters.
-    /// @param[in] type The category of battery properties to start sampling. Can be general or
-    /// charging related.
-    /// @param[in] init_delay_msec The initial delay (in milliseconds) from calling sampling start
-    /// to the first sample is fetched.
-    /// @param[in] period_msec The sampling period (in milliseconds).
-    ///
-    int StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
+    //--- Installation mode and limits ---//
 
-    void StopSampling(bat_data_t type);
+    ///
+    /// @brief Get the BatteryManager currently configured installation mode.
+    ///
+    std::string GetInstallationMode();
+
+    /// @brief Set the BatteryManager currently configured installation mode.
+    /// @param mode String specifying mode to set.
+    /// @return 0 on success. EINVAL if the mode is not mapped.
+    int SetInstallationMode(std::string mode);
+
+    /// @brief Get the currently configured charging limit for a specific installation mode.
+    /// @param mode Installation mode to get limit for.
+    /// @param limit The configured limit.
+    /// @return 0 on success. If the mode is not mapped.
+    int GetModeChargingLimit(std::string mode, int32_t& limit);
+
+    /// @brief Set the currently configured charging limit for a specific installation mode.
+    /// @param mode Installation mode to get limit for.
+    /// @param limit The limit to configure.
+    /// @return 0 on success. If the mode is not mapped.
+    int SetModeChargingLimit(std::string mode, int32_t limit);
+
+    //--- Subscriptions ---///
 
     ///
     /// @brief Adds a function to a list of callback functions that will be called after each
@@ -66,7 +75,7 @@ public:
     ///
     /// @param cb The callback function to add, taking a BatteryGeneralData struct.
     ///
-    void AddSubscriberGeneral(std::function<void(BatteryGeneralData)> cb);
+    int AddSubscriberGeneral(std::function<int(BatteryGeneralData)> cb, std::string subscriber);
 
     ///
     /// @brief Adds a function to a list of callback functions that will be called after each
@@ -74,7 +83,7 @@ public:
     ///
     /// @param cb The callback function to add, taking a BatteryChargingData struct.
     ///
-    void AddSubscriberCharging(std::function<void(BatteryChargingData)> cb);
+    int AddSubscriberCharging(std::function<int(BatteryChargingData)> cb, std::string subscriber);
 
     ///
     /// @brief Returns the number of subscribed callbacks for a specific battery data category.
@@ -83,7 +92,7 @@ public:
     ///
     /// @return Number of subscribers for the specified type.
     ///
-    size_t GetSubscriberCount(bat_data_t type);
+    size_t GetSubscriberCbCount(bat_data_t type);
 
     ///
     /// @brief Clear subscribers of a specific battery data category.
@@ -95,30 +104,29 @@ public:
     void ClearSubscribers(bat_data_t type);
 
     ///
-    /// @brief Function to specificy cpu subscribed status. Should be used in conjunction with a
-    /// AddSubscriber<x>() call.
+    /// @brief Check if a subscriber is subscribed to a specific type of battery data.
     ///
-    void SetCpuSubscribed(bool val);
+    bool IsSubscribed(std::string subscriber, bat_data_t data_type);
+
+    //--- Sampling and charging ---//
 
     ///
-    /// @brief Get whether CPU is considered subscribed to battery notifications or not.
+    /// @brief Start sampling of a category of battery data.
     ///
-    /// @return True if CPU is subscribed, false otherwise.
+    /// \note It is permitted to call StartSampling() while already started.
+    ///       This will restart the sampling timers with the new specified parameters.
+    /// @param[in] type The category of battery properties to start sampling. Can be general or
+    /// charging related.
+    /// @param[in] init_delay_msec The initial delay (in milliseconds) from calling sampling start
+    /// to the first sample is fetched.
+    /// @param[in] period_msec The sampling period (in milliseconds).
     ///
-    bool CpuIsSubscribed();
+    int StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
 
     ///
-    /// @brief Get manager's battery charging status.
+    /// @brief Stop sampling of a category of battery data.
     ///
-    /// @return True if manager has written charging configuration to charger. False if charging has
-    /// been inhibited.
-    ///
-    bool IsCharging();
-    bool ModeIsKnown(int32_t mode);
-    void SetInstallationMode(installation_mode_t mode);
-    installation_mode_t GetInstallationMode();
-    int SetModeChargingLimit(installation_mode_t mode, int32_t limit);
-    int GetModeChargingLimit(installation_mode_t mode, int32_t& limit);
+    void StopSampling(bat_data_t type);
 
     ///
     /// @brief Get last general battery data sampling manager is holding.
@@ -140,20 +148,48 @@ public:
     ///
     int GetLastChargingData(BatteryChargingData& bat_chg_data);
 
+    ///
+    /// @brief Get manager's battery charging status.
+    ///
+    /// @return True if manager has written charging configuration to charger. False if charging has
+    /// been inhibited.
+    ///
+    bool IsCharging();
+
 private:
     void HandleBatteryGeneralData();
     void HandleBatteryChargingData();
     static void TimerQueueWork(struct k_timer* timer);
     static void HandleBatteryGeneralDataCallback(struct k_work* work);
     static void HandleBatteryChargingDataCallback(struct k_work* work);
+
+    ///
+    /// @brief Internal function for checking whether a certain pair of (subscriber type,  battery
+    /// data type) exists as a key in the internal map.
+    ///
+    /// @return True if the key exists, false if not.
+    ///
+    bool SubscriptionTypeIsKnown(std::string sub, bat_data_t data_type);
+
+    ///
+    /// @brief Internal function for checking whether a mode string exists as a key in the internal
+    /// map.
+    ///
+    /// @return True if the key exists, false if not.
+    ///
+    bool ModeIsRegistered(std::string mode);
+
+    ///
+    /// @brief Function for determining
+    ///
+    /// @return True if battery charging is allowed, false otherwise.
+    ///
     bool ChargingAllowed();
 
+    std::string installation_mode_ = INSTALLATION_MODE_DEFAULT;
     bool is_charging_ = false;
-    bool cpu_subscribed_ = false;
-    BatteryGeneralData last_bat_gen_data_;
-    BatteryChargingData last_bat_chg_data_;
-    std::map<installation_mode_t, int32_t> chg_limits_;
-    installation_mode_t installation_mode_ = MOBILE;
+    std::map<std::pair<std::string, bat_data_t>, bool> subscriptions_;
+    std::map<std::string, int32_t> chg_limits_;
 
     Battery& battery_;
     BatteryCharger& charger_;
@@ -162,4 +198,6 @@ private:
     std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_chg_data_;
     std::vector<std::function<void(BatteryGeneralData)>> subscriber_cbs_gen_;
     std::vector<std::function<void(BatteryChargingData)>> subscriber_cbs_chg_;
+    BatteryGeneralData last_bat_gen_data_;
+    BatteryChargingData last_bat_chg_data_;
 };

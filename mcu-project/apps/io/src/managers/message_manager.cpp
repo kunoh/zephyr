@@ -29,27 +29,34 @@ void MessageManager::AddErrorCb(void (*cb)(void*), void* user_data)
     on_error_.user_data = user_data;
 }
 
-void MessageManager::on_battery_chg_data_cb(BatteryChargingData data)
+int MessageManager::on_battery_chg_data_cb(BatteryChargingData data)
 {
     MessageBuffer buffer;
     buffer.msg_type = OUTGOING;
-    BatteryMessageEncoder::EncodeBatteryChargingInfo(buffer, data.des_chg_current,
-                                                     data.des_chg_volt, data.status,
-                                                     data.relative_charge_state, data.charging);
+    if (!BatteryMessageEncoder::EncodeBatteryChargingInfo(
+            buffer, data.des_chg_current, data.des_chg_volt, data.status,
+            data.relative_charge_state, data.charging)) {
+        return 1;
+    }
 
     k_msgq_put(&msgq_, &buffer, K_NO_WAIT);
     k_work_submit(&work_wrapper_.work);
+    return 0;
 }
 
-void MessageManager::on_battery_gen_data_cb(BatteryGeneralData data)
+int MessageManager::on_battery_gen_data_cb(BatteryGeneralData data)
 {
     MessageBuffer buffer;
     buffer.msg_type = OUTGOING;
-    BatteryMessageEncoder::EncodeBatteryGeneralInfo(buffer, data.temp, data.volt, data.current,
-                                                    data.remaining_capacity, data.cycle_count);
+    if (!BatteryMessageEncoder::EncodeBatteryGeneralInfo(buffer, data.temp, data.volt, data.current,
+                                                         data.remaining_capacity,
+                                                         data.cycle_count)) {
+        return 1;
+    }
 
     k_msgq_put(&msgq_, &buffer, K_NO_WAIT);
     k_work_submit(&work_wrapper_.work);
+    return 0;
 }
 
 void MessageManager::HandleQueuedMessage()

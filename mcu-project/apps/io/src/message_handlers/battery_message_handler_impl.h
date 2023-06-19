@@ -14,6 +14,8 @@ private:
     bool HandleBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleBatteryChargingInfo(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleReqBatteryGeneralInfo(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleReqBatteryChargingInfo(MessageProto& msg, MessageBuffer& buffer) override;
+
     bool HandleReqBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleRespBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
 

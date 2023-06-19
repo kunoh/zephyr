@@ -58,30 +58,82 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
     return true;
 }
 
+/// @brief Have the battery manager get the last charging data battery sample
+///        and encode it as a BatteryChargingInfo response to the CPU.
+bool BatteryMessageHandlerImpl::HandleReqBatteryChargingInfo(MessageProto& msg,
+                                                             MessageBuffer& buffer)
+{
+    int ret = 0;
+
+    ReqBatteryChargingInfo bi = ReqBatteryChargingInfo_init_zero;
+    if (!msg.DecodeInnerMessage(ReqBatteryChargingInfo_fields, &bi)) {
+        return false;
+    }
+
+    BatteryChargingData data;
+    ret = battery_manager_.GetLastChargingData(data);
+    if (ret != 0) {
+        LOG_WRN(
+            "Failed to get last battery charging data sample. Responding with empty "
+            "BatteryChargingInfo.");
+    }
+
+    // Encode response
+    if (!BatteryMessageEncoder::EncodeBatteryChargingInfo(
+            buffer, data.status, data.des_chg_current, data.des_chg_volt,
+            data.relative_charge_state, data.charging)) {
+        LOG_WRN("Failed to encode BatteryChargingInfo.");
+        return false;
+    }
+
+    buffer.msg_type = OUTGOING;
+    return true;
+}
+
 /// @brief Add CPU as receiver of periodic battery information and encode a response.
 bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
                                                               MessageBuffer& buffer)
 {
+    int ret = 0;
+    bool match = false;
     ReqBatteryNotifications bn = ReqBatteryNotifications_init_zero;
     if (!msg.DecodeInnerMessage(ReqBatteryNotifications_fields, &bn)) {
         return false;
     }
 
-    if (bn.enable) {
-        if (!battery_manager_.CpuIsSubscribed()) {
-            battery_manager_.AddSubscriberGeneral([&](BatteryGeneralData sample_data) {
-                msg_manager_.on_battery_gen_data_cb(sample_data);
-            });
-            battery_manager_.SetCpuSubscribed(true);
+    // Match on data type to determine callback func
+    if (!strcmp(bn.data_type, "GENERAL")) {
+        if (!battery_manager_.IsSubscribed(bn.subscription_type, GENERAL)) {
+            ret = battery_manager_.AddSubscriberGeneral(
+                [&](BatteryGeneralData sample_data) -> int {
+                    return msg_manager_.on_battery_gen_data_cb(sample_data);
+                },
+                bn.subscription_type);
         }
-
-        // Encode response
-        if (!BatteryMessageEncoder::EncodeRespBatteryNotifications(buffer)) {
-            LOG_WRN("Failed to Encode RespBatteryNotifications");
-            return false;
+        match = true;
+    } else if (!strcmp(bn.data_type, "CHARGING") != 0) {
+        if (!battery_manager_.IsSubscribed(bn.subscription_type, CHARGING)) {
+            ret = battery_manager_.AddSubscriberCharging(
+                [&](BatteryChargingData sample_data) -> int {
+                    return msg_manager_.on_battery_chg_data_cb(sample_data);
+                },
+                bn.subscription_type);
         }
-        buffer.msg_type = OUTGOING;
+        match = true;
     }
+
+    if (!match || (ret != 0 && ret != EEXIST)) {
+        LOG_WRN("Subscriber (%s) tried to sub to unknown data type (%s)", bn.subscription_type,
+                bn.data_type);
+        return false;
+    }
+
+    // Encode response
+    if (!BatteryMessageEncoder::EncodeRespBatteryNotifications(buffer)) {
+        LOG_WRN("Failed to Encode RespBatteryNotifications");
+        return false;
+    }
+    buffer.msg_type = OUTGOING;
 
     return true;
 }
@@ -103,12 +155,12 @@ bool BatteryMessageHandlerImpl::HandleSetInstallationMode(MessageProto& msg, Mes
     SetInstallationMode sim = SetInstallationMode_init_zero;
     if (!msg.DecodeInnerMessage(SetInstallationMode_fields, &sim)) {
         return false;
-    } else if (!battery_manager_.ModeIsKnown(sim.mode)) {
-        LOG_WRN("Tried to set non-existing installation mode.");
-        return false;
     }
 
-    battery_manager_.SetInstallationMode((installation_mode_t)sim.mode);
+    if (battery_manager_.SetInstallationMode(sim.mode) != 0) {
+        LOG_WRN("Tried to set unknown installation mode.");
+        return false;
+    }
     // Encode response
     if (!BatteryMessageEncoder::EncodeRespInstallationMode(buffer)) {
         LOG_WRN("Failed to Encode RespInstallationMode");
@@ -134,14 +186,11 @@ bool BatteryMessageHandlerImpl::HandleSetModeChargingLimit(MessageProto& msg, Me
     SetModeChargingLimit smcl = SetModeChargingLimit_init_zero;
     if (!msg.DecodeInnerMessage(SetModeChargingLimit_fields, &smcl)) {
         return false;
-    } else if (!battery_manager_.ModeIsKnown(smcl.mode)) {
-        LOG_WRN("Tried to set non-existing installation mode.");
-        return false;
     }
 
-    if (battery_manager_.SetModeChargingLimit((installation_mode_t)smcl.mode, smcl.chg_limit) !=
-        0) {
-        LOG_WRN("Failed to set charging limit. Limit outside permissible range.");
+    int ret = battery_manager_.SetModeChargingLimit(smcl.mode, smcl.chg_limit);
+    if (ret != 0) {
+        LOG_WRN("Failed to set charging limit. Reason: %d", ret);
         return false;
     }
 

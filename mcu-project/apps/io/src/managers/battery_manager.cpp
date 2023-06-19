@@ -26,8 +26,16 @@ int BatteryManager::Init()
 {
     int ret = 0;
 
-    for (int i = MOBILE; i != SENTINEL; i++) {
-        chg_limits_.insert({static_cast<installation_mode_t>(i), CHARGING_REL_CHG_STATE_DEFAULT});
+    // Initialize installation mode charging limits
+    for (int32_t mode_num = 0; mode_num < NUM_INSTALLATION_MODES; mode_num++) {
+        chg_limits_.emplace(installation_modes[mode_num], CHARGING_REL_CHG_STATE_DEFAULT);
+    }
+
+    for (int32_t sub_num = 0; sub_num < NUM_SUBSCRIBER_TYPES; sub_num++) {
+        for (int32_t data = GENERAL; data != BAT_SENTINEL; data++) {
+            subscriptions_.emplace(
+                std::make_pair(subscriber_types[sub_num], static_cast<bat_data_t>(data)), false);
+        }
     }
 
     ret = battery_.Init();
@@ -50,6 +58,208 @@ void BatteryManager::AddErrorCb(void (*cb)(void *), void *user_data)
     on_error_.cb = cb;
     on_error_.user_data = user_data;
 }
+
+std::string BatteryManager::GetInstallationMode()
+{
+    return installation_mode_;
+}
+
+int BatteryManager::SetInstallationMode(std::string mode)
+{
+    if (!ModeIsRegistered(mode)) {
+        return EINVAL;
+    }
+
+    installation_mode_ = mode;
+    return 0;
+}
+
+int BatteryManager::GetModeChargingLimit(std::string mode, int32_t &limit)
+{
+    if (!ModeIsRegistered(mode)) {
+        return EINVAL;
+    }
+
+    limit = chg_limits_[mode];
+    return 0;
+}
+
+int BatteryManager::SetModeChargingLimit(std::string mode, int32_t limit)
+{
+    if (!ModeIsRegistered(mode)) {
+        return EINVAL;
+    } else if (limit < CHARGING_REL_CHG_STATE_MIN || limit > CHARGING_REL_CHG_STATE_MAX) {
+        return ERANGE;
+    }
+
+    chg_limits_[mode] = limit;
+    return 0;
+}
+
+int BatteryManager::AddSubscriberGeneral(std::function<int(BatteryGeneralData)> cb,
+                                         std::string subscriber)
+{
+    if (!SubscriptionTypeIsKnown(subscriber, GENERAL)) {
+        return EINVAL;
+    } else if (IsSubscribed(subscriber, GENERAL)) {
+        return EEXIST;
+    }
+
+    subscriber_cbs_gen_.push_back(cb);
+    subscriptions_[{subscriber, GENERAL}] = true;
+    return 0;
+}
+
+int BatteryManager::AddSubscriberCharging(std::function<int(BatteryChargingData)> cb,
+                                          std::string subscriber)
+{
+    if (!SubscriptionTypeIsKnown(subscriber, CHARGING)) {
+        return EINVAL;
+    } else if (IsSubscribed(subscriber, CHARGING)) {
+        return EEXIST;
+    }
+
+    subscriber_cbs_chg_.push_back(cb);
+    subscriptions_[{subscriber, CHARGING}] = true;
+    return 0;
+}
+
+size_t BatteryManager::GetSubscriberCbCount(bat_data_t type)
+{
+    switch (type) {
+        case GENERAL:
+            return subscriber_cbs_gen_.size();
+        case CHARGING:
+            return subscriber_cbs_chg_.size();
+        default:
+            LOG_ERR("Trying to get non-existing type of subscribers.");
+            return 0;
+    }
+}
+
+void BatteryManager::ClearSubscribers(bat_data_t type)
+{
+    switch (type) {
+        case GENERAL:
+            subscriber_cbs_gen_.clear();
+            for (int i = 0; i < NUM_SUBSCRIBER_TYPES; i++) {
+                subscriptions_[{subscriber_types[i], GENERAL}] = false;
+            }
+            break;
+
+        case CHARGING:
+            subscriber_cbs_chg_.clear();
+            for (int i = 0; i < NUM_SUBSCRIBER_TYPES; i++) {
+                subscriptions_[{subscriber_types[i], CHARGING}] = false;
+            }
+            break;
+
+        default:
+            LOG_ERR("Trying to clear non-existing type of subscribers.");
+            break;
+    }
+}
+
+bool BatteryManager::IsSubscribed(std::string subscriber, bat_data_t data_type)
+{
+    if (SubscriptionTypeIsKnown(subscriber, data_type)) {
+        return subscriptions_[std::make_pair(subscriber, data_type)];
+    }
+    return false;
+}
+
+int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec)
+{
+    switch (type) {
+        case GENERAL:
+            k_timer_start(&timer_work_bat_gen_data_.first, K_MSEC(init_delay_msec),
+                          K_MSEC(period_msec));
+            break;
+
+        case CHARGING:
+            if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
+                LOG_ERR("Tried to set too slow battery data charging sample rate.");
+                return ERANGE;
+            }
+
+            k_timer_start(&timer_work_bat_chg_data_.first, K_MSEC(init_delay_msec),
+                          K_MSEC(period_msec));
+            break;
+
+        default:
+            LOG_ERR("Trying to start non-existing bat sampling timer.");
+            return EINVAL;
+            break;
+    }
+
+    return 0;
+}
+
+void BatteryManager::StopSampling(bat_data_t type)
+{
+    switch (type) {
+        case GENERAL:
+            k_timer_stop(&timer_work_bat_gen_data_.first);
+            break;
+
+        case CHARGING:
+            k_timer_stop(&timer_work_bat_chg_data_.first);
+            break;
+
+        default:
+            LOG_ERR("Trying to stop non-existing bat sampling timer.");
+            break;
+    }
+}
+
+int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)
+{
+    // If sampling timer is stopped, data might be old.
+    if (k_timer_remaining_ticks(&timer_work_bat_gen_data_.first) != 0) {
+        bat_gen_data.temp = last_bat_gen_data_.temp;
+        bat_gen_data.current = last_bat_gen_data_.current;
+        bat_gen_data.volt = last_bat_gen_data_.volt;
+        bat_gen_data.remaining_capacity = last_bat_gen_data_.remaining_capacity;
+        bat_gen_data.cycle_count = last_bat_gen_data_.cycle_count;
+    } else {
+        bat_gen_data.temp = DEFAULT_INVALID_BAT_FLOAT;
+        bat_gen_data.current = DEFAULT_INVALID_BAT_FLOAT;
+        bat_gen_data.volt = DEFAULT_INVALID_BAT_FLOAT;
+        bat_gen_data.remaining_capacity = DEFAULT_INVALID_BAT_INT;
+        bat_gen_data.cycle_count = DEFAULT_INVALID_BAT_INT;
+        return EIO;
+    }
+
+    return 0;
+}
+
+int BatteryManager::GetLastChargingData(BatteryChargingData &bat_chg_data)
+{
+    // If sampling timer is stopped, data might be old.
+    if (k_timer_remaining_ticks(&timer_work_bat_chg_data_.first) != 0) {
+        bat_chg_data.des_chg_current = last_bat_chg_data_.des_chg_current;
+        bat_chg_data.des_chg_volt = last_bat_chg_data_.des_chg_volt;
+        bat_chg_data.status = last_bat_chg_data_.status;
+        bat_chg_data.relative_charge_state = last_bat_chg_data_.relative_charge_state;
+        bat_chg_data.charging = is_charging_;
+    } else {
+        bat_chg_data.des_chg_current = DEFAULT_INVALID_BAT_INT;
+        bat_chg_data.des_chg_volt = DEFAULT_INVALID_BAT_INT;
+        bat_chg_data.status = DEFAULT_INVALID_BAT_INT;
+        bat_chg_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
+        bat_chg_data.charging = false;
+        return EIO;
+    }
+
+    return 0;
+}
+
+bool BatteryManager::IsCharging()
+{
+    return is_charging_;
+}
+
+//--- Private member functions ---//
 
 void BatteryManager::HandleBatteryGeneralData()
 {
@@ -153,140 +363,21 @@ void BatteryManager::HandleBatteryChargingDataCallback(struct k_work *work)
     self->HandleBatteryChargingData();
 }
 
-int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec)
+bool BatteryManager::SubscriptionTypeIsKnown(std::string sub, bat_data_t data_type)
 {
-    switch (type) {
-        case GENERAL:
-            k_timer_start(&timer_work_bat_gen_data_.first, K_MSEC(init_delay_msec),
-                          K_MSEC(period_msec));
-            break;
-
-        case CHARGING:
-            if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
-                LOG_ERR("Tried to set too slow battery data charging sample rate.");
-                return ERANGE;
-            }
-
-            k_timer_start(&timer_work_bat_chg_data_.first, K_MSEC(init_delay_msec),
-                          K_MSEC(period_msec));
-            break;
-
-        default:
-            LOG_ERR("Trying to start non-existing bat sampling timer.");
-            return EINVAL;
-            break;
-    }
-
-    return 0;
-}
-
-void BatteryManager::StopSampling(bat_data_t type)
-{
-    switch (type) {
-        case GENERAL:
-            k_timer_stop(&timer_work_bat_gen_data_.first);
-            break;
-
-        case CHARGING:
-            k_timer_stop(&timer_work_bat_chg_data_.first);
-            break;
-
-        default:
-            LOG_ERR("Trying to stop non-existing bat sampling timer.");
-            break;
-    }
-}
-
-void BatteryManager::AddSubscriberGeneral(std::function<void(BatteryGeneralData)> cb)
-{
-    subscriber_cbs_gen_.push_back(cb);
-}
-
-void BatteryManager::AddSubscriberCharging(std::function<void(BatteryChargingData)> cb)
-{
-    subscriber_cbs_chg_.push_back(cb);
-}
-
-size_t BatteryManager::GetSubscriberCount(bat_data_t type)
-{
-    switch (type) {
-        case GENERAL:
-            return subscriber_cbs_gen_.size();
-        case CHARGING:
-            return subscriber_cbs_chg_.size();
-        default:
-            LOG_ERR("Trying to clear non-existing type of subscribers.");
-            return 0;
-    }
-}
-
-void BatteryManager::ClearSubscribers(bat_data_t type)
-{
-    switch (type) {
-        case GENERAL:
-            subscriber_cbs_gen_.clear();
-            cpu_subscribed_ = false;
-            break;
-        case CHARGING:
-            subscriber_cbs_chg_.clear();
-            break;
-        default:
-            LOG_ERR("Trying to clear non-existing type of subscribers.");
-            break;
-    }
-}
-
-void BatteryManager::SetCpuSubscribed(bool val)
-{
-    cpu_subscribed_ = val;
-}
-
-bool BatteryManager::CpuIsSubscribed()
-{
-    return cpu_subscribed_;
-}
-
-bool BatteryManager::IsCharging()
-{
-    return is_charging_;
-}
-
-bool BatteryManager::ModeIsKnown(int32_t mode)
-{
-    if (chg_limits_.count((installation_mode_t)mode) < 1) {
+    if (subscriptions_.count(std::make_pair(sub, data_type)) < 1) {
         return false;
     }
     return true;
 }
 
-void BatteryManager::SetInstallationMode(installation_mode_t mode)
+bool BatteryManager::ModeIsRegistered(std::string mode)
 {
-    installation_mode_ = mode;
-}
-
-installation_mode_t BatteryManager::GetInstallationMode()
-{
-    return installation_mode_;
-}
-
-/* SANITY CHECK BEGIN */
-int BatteryManager::SetModeChargingLimit(installation_mode_t mode, int32_t limit)
-{
-    if (limit < CHARGING_REL_CHG_STATE_MIN || limit > CHARGING_REL_CHG_STATE_MAX) {
-        return ERANGE;
+    if (chg_limits_.count(mode) < 1) {
+        return false;
     }
-
-    chg_limits_[mode] = limit;
-    return 0;
+    return true;
 }
-
-int BatteryManager::GetModeChargingLimit(installation_mode_t mode, int32_t &limit)
-{
-    // if()
-    limit = chg_limits_[mode];
-    return 0;
-}
-/* SANITY CHECK END */
 
 bool BatteryManager::ChargingAllowed()
 {
@@ -296,46 +387,4 @@ bool BatteryManager::ChargingAllowed()
         battery_.CanBeCharged(last_bat_chg_data_.status);  // Battery specific requirements
 
     return bat_can_be_charged && chg_rules_passed;
-}
-
-int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)
-{
-    // If sampling timer is stopped, data might be old.
-    if (k_timer_remaining_ticks(&timer_work_bat_gen_data_.first) != 0) {
-        bat_gen_data.temp = last_bat_gen_data_.temp;
-        bat_gen_data.current = last_bat_gen_data_.current;
-        bat_gen_data.volt = last_bat_gen_data_.volt;
-        bat_gen_data.remaining_capacity = last_bat_gen_data_.remaining_capacity;
-        bat_gen_data.cycle_count = last_bat_gen_data_.cycle_count;
-    } else {
-        bat_gen_data.temp = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.current = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.volt = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.remaining_capacity = DEFAULT_INVALID_BAT_INT;
-        bat_gen_data.cycle_count = DEFAULT_INVALID_BAT_INT;
-        return EIO;
-    }
-
-    return 0;
-}
-
-int BatteryManager::GetLastChargingData(BatteryChargingData &bat_chg_data)
-{
-    // If sampling timer is stopped, data might be old.
-    if (k_timer_remaining_ticks(&timer_work_bat_chg_data_.first) != 0) {
-        bat_chg_data.des_chg_current = last_bat_chg_data_.des_chg_current;
-        bat_chg_data.des_chg_volt = last_bat_chg_data_.des_chg_volt;
-        bat_chg_data.status = last_bat_chg_data_.status;
-        bat_chg_data.relative_charge_state = last_bat_chg_data_.relative_charge_state;
-        bat_chg_data.charging = last_bat_chg_data_.charging;
-    } else {
-        bat_chg_data.des_chg_current = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.des_chg_volt = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.status = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.charging = false;
-        return EIO;
-    }
-
-    return 0;
 }

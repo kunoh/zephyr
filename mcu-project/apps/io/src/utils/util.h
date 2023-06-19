@@ -3,8 +3,15 @@
 #include <stdint.h>
 #include <zephyr/kernel.h>
 
+#include <string>
+
 #define DEFAULT_INVALID_BAT_INT INT32_MIN
 #define DEFAULT_INVALID_BAT_FLOAT -1000.0
+
+#define NUM_INSTALLATION_MODES 2
+#define NUM_SUBSCRIBER_TYPES 1
+const std::string installation_modes[NUM_INSTALLATION_MODES] = {"MOBILE", "FIXED"};
+const std::string subscriber_types[NUM_SUBSCRIBER_TYPES] = {"CPU"};
 
 struct CallbackWrapper {
     void *user_data = NULL;

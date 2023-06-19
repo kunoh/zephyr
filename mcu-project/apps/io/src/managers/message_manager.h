@@ -16,8 +16,8 @@ public:
     ~MessageManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
-    void on_battery_gen_data_cb(BatteryGeneralData sample_data);
-    void on_battery_chg_data_cb(BatteryChargingData sample_data);
+    int on_battery_gen_data_cb(BatteryGeneralData sample_data);
+    int on_battery_chg_data_cb(BatteryChargingData sample_data);
 
 private:
     void HandleQueuedMessage();

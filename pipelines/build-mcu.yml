@@ -12,17 +12,12 @@ trigger:
   branches:
     include:
       - master
-
-pool:
-  name: 'Embedded'
-  demands: TM_CAP_YOCTO_BUILD -equals 1
-
 stages:
   - stage: clang_format
     displayName: Check formatting of code
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: Check_clang_format
@@ -60,7 +55,7 @@ stages:
     dependsOn: clang_format
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: Init_Zephyr
@@ -101,7 +96,7 @@ stages:
     dependsOn: west_init
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: run_unit_tests
@@ -154,7 +149,7 @@ stages:
     dependsOn: ztest
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: build_io_bootloader
@@ -191,7 +186,7 @@ stages:
     dependsOn: ztest
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: build_io
@@ -248,7 +243,7 @@ stages:
     dependsOn: ztest
     pool:
       name: 'Embedded'
-      demands: TM_CAP_YOCTO_BUILD -equals 1
+      demands: TM_CAP_CONTAINER -equals 1
 
     jobs:
       - job: build_ble

@@ -47,7 +47,7 @@
 // Remove the SD card bindings, as they use the same pins as SPI1.
 /{
     aliases{    // Remove the alias, as it will refer to a node that does not exists.
-        /delete-property/ sdhc0;
+		/delete-property/ sdhc0;
     };
 
 };
@@ -67,3 +67,11 @@
 	};
 };
 
+// Use interal (OC) ram,  instead of external ram.
+// This setting here replaces the default device tree "zephyr,sram" field in zephyrproject/zephyr/boards/arm/mimxrt1060_evk/mimxrt1060_evk.dts.
+// The 'ocram' tag/label is defined in zephyrproject/zephyr/dts/arm/nxp/nxp_rt1060.dtsi.
+/{
+	chosen {
+		zephyr,sram = &ocram;
+	};
+};

@@ -80,7 +80,7 @@ def build_app(mcu_type, board, clean, release, without_bootloader):
     if "io" in mcu_type:
         mcu_type = "io"
         config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
-        config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/logging.conf")
+        config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/logging.conf")
         if not release:
             config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/debug.conf")
         if not without_bootloader:

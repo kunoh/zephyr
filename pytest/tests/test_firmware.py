@@ -1,7 +1,7 @@
 import pytest
 from libraries.general import General
 
-pytestmark = pytest.mark.order(3)
+pytestmark = pytest.mark.order(5)
 
 @pytest.mark.smoke
 def test_firmware_downgrade(variables):

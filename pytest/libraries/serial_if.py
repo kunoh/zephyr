@@ -142,7 +142,6 @@ class MessageIF():
         self._com_proto_lib.send(encoded_message)
         resp = self._com_proto_lib.read()
         print(f"Encoded Recv Msg: {resp}")
-        encoded_message = self._iface_lib.handle_response(resp, True)
-        print(f"Decoded Recv Msg: {encoded_message}")
+        decoded_message = self._iface_lib.handle_response(resp, True)
 
-        return encoded_message
+        return decoded_message

@@ -1,15 +1,15 @@
-#include <settings/settings.h>
+#include <zephyr/settings/settings.h>
 #include <stddef.h>
-#include <sys/printk.h>
-#include <sys/util.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h>
 #include <zephyr/types.h>
 #include <tm_hello_module.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/gatt.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/services/bas.h>
-#include <bluetooth/services/hrs.h>
-#include <bluetooth/uuid.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/services/bas.h>
+#include <zephyr/bluetooth/services/hrs.h>
+#include <zephyr/bluetooth/uuid.h>
 #include <event_mgr.h>
 #include <zephyr/logging/log.h>
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME

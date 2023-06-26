@@ -25,9 +25,9 @@ PROJECT_PATH = {
             "modules": "mcu-project/modules"
            }
 DOXYGEN_BUILD_DIRS = {
-                    "io": "Doxygen_IO",
-                    "ble": "Doxygen_BLE",
-                    "modules": "Doxygen_Modules"
+                    "io": "Doxygen_io",
+                    "ble": "Doxygen_ble",
+                    "modules": "Doxygen_modules"
                     }
 
 def run_cmd(cmd):
@@ -68,7 +68,7 @@ def build_bootloader(mcu_type, board, clean):
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board, clean, release, without_bootloader):
+def build_app(mcu_type, board, clean, release, without_bootloader, version):
 
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
@@ -77,6 +77,7 @@ def build_app(mcu_type, board, clean, release, without_bootloader):
             shutil.rmtree(build_dir)
 
     overlay = ""
+    extra_args = ""
     if "io" in mcu_type:
         mcu_type = "io"
         config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
@@ -87,7 +88,9 @@ def build_app(mcu_type, board, clean, release, without_bootloader):
             config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/bootloader.conf")
         dts_overlay = add_to_overlay(None, f"mcu-project/boards/{board}.overlay")
         dts_overlay = add_to_overlay(dts_overlay, f"{APP_DIR}/{mcu_type}/boards/{board}.overlay")
-        overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay}"
+        if version:
+            extra_args = f'-DCONFIG_MCUBOOT_EXTRA_IMGTOOL_ARGS="\\"--version {version}\\""'
+        overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay} {extra_args}"
 
     run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
 
@@ -180,6 +183,8 @@ def main():
                         help='Format code using clang')
     parser.add_argument('-d', '--document', choices=['io', 'ble', 'modules'],
                         help='Build Doxygen documentation')
+    parser.add_argument('-v', '--version', type=str, default='0.0.0+0',
+                        help='Inject a version into the signed binary, format; <major>.<minor>.<patch>[+build]')
 
     args = parser.parse_args()
 
@@ -212,7 +217,7 @@ def main():
         if args.bootloader:
             build_bootloader(args.type, board, args.clean)
         else:
-            build_app(mcu_type, board, args.clean, args.release, args.without_bootloader)
+            build_app(mcu_type, board, args.clean, args.release, args.without_bootloader, args.version)
     else:
         args.flash = True
 

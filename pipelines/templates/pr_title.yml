@@ -1,0 +1,23 @@
+steps:
+- script: |
+    id="$(System.PullRequest.PullRequestId)"
+    echo "ID: $id"
+    if [ -n "$id" ]; then
+      link="https://dev.azure.com/trackman/embedded/_apis/git/repositories/mcu/pullRequests/$id/"
+      jsonvariable=$(curl "$link" \
+          -H 'Content-Type: application/json' \
+          -u '$(System.AccessToken):' )
+      title=$(echo $jsonvariable | jq .title)
+
+      if ! pipelines/scripts/validate_pr_names.sh "$title"; then
+        exit 1
+      fi
+
+      # Title or description should not contain either <*> or & as these characters are not allowed in confluence
+      description=$(echo $jsonvariable | jq .description)
+      [[ "$title" =~ \<.*\> ]] || [[ "$description" =~ \<.*\> ]] && echo "<*> is not allowed in title or description" && exit 1
+      [[ "$title" =~ \& ]] || [[ "$description" =~ \& ]] && echo "& is not allowed in title or description" && exit 1
+    fi
+    exit 0
+  displayName: Validate PR name
+  condition: ne(variables['system.pullrequest.pullrequestid'], '')

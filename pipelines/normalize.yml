@@ -1,6 +1,0 @@
-steps:
-- script: |
-    branch="$(Build.SourceBranch)"
-    branch=$(echo $branch | sed -e 's/\//-/g' | sed -e 's/_/-/g' | sed -e 's/refs-heads-//')
-    echo "##vso[task.setvariable variable=normalizedBranchName]$branch"
-  displayName: 'Normalize branch name'

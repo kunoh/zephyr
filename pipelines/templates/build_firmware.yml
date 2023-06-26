@@ -1,0 +1,58 @@
+parameters:
+- name: artifact_name
+  type: string
+- name: target
+  type: string
+- name: bootloader
+  type: boolean
+  default: false
+
+steps:
+- checkout: self
+  clean: ${{ startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/') }}
+  fetchDepth: 1
+
+- template: check_zephyr_env.yml
+- script: |
+    version=$(Build.BuildNumber)
+    unset ZEPHYR_BASE
+    if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+        echo "Updating Zephyr python requirements"
+        pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+    fi
+
+    if [ "${{ parameters.bootloader }}" = True ]; then
+      if ! ./build.py -t ${{ parameters.target }} -l; then
+        echo "Failed to build ${{ parameters.artifact_name }}"
+        exit 1
+      fi
+      cp build/${{ parameters.target }}/bootloader/zephyr/zephyr.bin $(Build.ArtifactStagingDirectory)/${{ parameters.target }}-boot-$version.bin
+      exit 0
+    fi
+
+    if [ $(isRelease) -eq 1 ]; then
+      echo "Building release"
+      ./build.py -t ${{ parameters.target }} -r -v $version
+    else
+      echo "Building development/beta"
+      ./build.py -t ${{ parameters.target }} -r
+    fi
+
+    if [ $? -ne 0 ] ; then
+      echo "Failed to build ${{ parameters.artifact_name }}"
+      exit 1
+    fi
+
+    cp build/${{ parameters.target }}/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/${{ parameters.target }}-$version.bin
+    if [ "${{ parameters.target }}" = io1060 ]; then
+      mkdir -p $(Build.ArtifactStagingDirectory)/proto/inner/
+      mkdir -p $(Build.ArtifactStagingDirectory)/proto/outer/
+      cp -r mcu-project/apps/io/src/message_handlers/proto/. $(Build.ArtifactStagingDirectory)/proto/inner/
+      cp mcu-project/modules/message_handler/outer.proto $(Build.ArtifactStagingDirectory)/proto/outer/
+      cp -r mcu-project/modules/message_handler/google $(Build.ArtifactStagingDirectory)/proto/outer/
+    fi
+  displayName: Building FW
+
+- publish: $(Build.ArtifactStagingDirectory)
+  artifact: ${{ parameters.artifact_name }}
+  displayName: Publish FW

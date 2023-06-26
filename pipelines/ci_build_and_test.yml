@@ -1,0 +1,196 @@
+variables:
+- name: major
+  value: 0
+- name: minor
+  value: 1
+- name: patch
+  value: 0
+- name: isRelease
+  value: 0
+- name: normalizedBranchName
+  value: ${{ replace(replace(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), '_', '-'), '/', '-') }}
+- name: buildCounter
+  ${{ if eq(variables['isRelease'], 0) }}:
+    value: $[counter(format('{0}-{1}-{2}', variables['Build.SourceBranch'], variables['major'], variables['minor']), 0)]
+  ${{ if eq(variables['isRelease'], 1) }}:
+    value: $[counter(format('{0}-release', variables['Build.SourceBranch']), 0)]
+- name: versionSuffix
+  value: -$(normalizedBranchName).$(buildCounter)
+- name: version
+  value: '$(major).$(minor).$(patch)$(versionSuffix)'
+
+
+trigger:
+  branches:
+    include:
+      - master
+
+stages:
+  - stage: init
+    displayName: Prepare for build
+    dependsOn:
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    jobs:
+      - job: Init
+        timeoutInMinutes: 60
+        steps:
+        # Must run as one of the first things to update the build number.
+        # Used later when building the firmwares
+        - template: templates/set_version.yml
+
+  - stage: clang_format
+    displayName: Check formatting of code
+    dependsOn:
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    jobs:
+      - job: Check_clang_format
+        timeoutInMinutes: 10
+        steps:
+        - template: templates/clang_format.yml
+
+  - stage: ztest
+    displayName: Unit tests
+    dependsOn:
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_CONTAINER -equals 1
+
+    jobs:
+      - job: run_unit_tests
+        timeoutInMinutes: 10
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - template: templates/check_zephyr_env.yml
+        - template: templates/run_unit_test.yml
+
+  - stage: pr_title
+    displayName: Validate PR title
+    dependsOn:
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    jobs:
+      - job: check_pr_title
+        timeoutInMinutes: 10
+
+        steps:
+        - template: templates/pr_title.yml
+
+  - stage: gen_doxy_documentation
+    displayName: "Generating Doxygen documentation"
+    dependsOn:
+    pool:
+      vmImage: 'ubuntu-20.04'
+    jobs:
+    - job:
+      displayName: Doxygen
+      steps:
+      - template: templates/build_docs.yml
+        parameters:
+          target: io
+      - template: templates/build_docs.yml
+        parameters:
+          target: ble
+      - template: templates/build_docs.yml
+        parameters:
+          target: modules
+
+  - stage: build_io_bootloader
+    displayName: Build IO bootloader
+    dependsOn:
+      - init
+      - ztest
+      - clang_format
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_CONTAINER -equals 1
+
+    jobs:
+      - job: build_io_bootloader
+        displayName: Build IO bootloader
+        timeoutInMinutes: 10
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - template: templates/build_firmware.yml
+          parameters:
+            artifact_name: io_bootloader_fw
+            target: io1060
+            bootloader: true
+
+  - stage: build_io_app
+    displayName: Build IO App
+    dependsOn:
+      - init
+      - ztest
+      - clang_format
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_CONTAINER -equals 1
+
+    jobs:
+      - job: build_io
+        timeoutInMinutes: 10
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - template: templates/build_firmware.yml
+          parameters:
+            artifact_name: io_app_fw
+            target: io1060
+            bootloader: false
+
+  - stage: build_ble_app
+    displayName: Build BLE App
+    dependsOn:
+      - init
+      - ztest
+      - clang_format
+    pool:
+      name: 'Embedded'
+      demands: TM_CAP_CONTAINER -equals 1
+
+    jobs:
+      - job: build_ble
+        timeoutInMinutes: 10
+        container:
+          image: tmesw.azurecr.io/mcu-builder:latest
+          endpoint: tmesw-container-registry
+
+        steps:
+        - template: templates/build_firmware.yml
+          parameters:
+            artifact_name: ble_app_fw
+            target: ble
+            bootloader: false
+
+## Test MCU (TM5)
+  - stage: smoke_test_io_app
+    displayName: Smoke-testing IO App
+    dependsOn: build_io_app
+    condition: succeeded('build_io_app')
+    pool:
+      name: Embedded
+      demands: TM_CAP_TM5_MCU -equals 1
+
+    jobs:
+    - job: smoke_test
+      timeoutInMinutes: 45
+      displayName: Smoke-testing IO App
+
+      steps:
+      - template: templates/run_smoke_test.yml
+        parameters:
+          artifact_name: io_app_fw
+          target: io

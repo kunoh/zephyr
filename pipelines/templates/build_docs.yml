@@ -1,0 +1,50 @@
+parameters:
+- name: target
+  type: string
+
+steps:
+- checkout: self
+  clean: false
+  persistCredentials: true
+  fetchDepth: 1
+
+- script: |
+    sudo apt install doxygen graphviz
+  displayName: Installing Doxygen prerequisites
+
+- script: |
+    RET_CODE=0
+
+    cd mcu
+
+    # Remove any existing Doxygen directories
+    rm -rf $(Build.ArtifactStagingDirectory)/mcu/build/Doxygen_*
+
+    echo "Generating Doxygen documentation."
+    ./build.py -d ${{ parameters.target }}
+    if [ $? != 0 ]
+    then
+      echo "Couldn't generate ${{ parameters.target }} docs"
+      RET_CODE=1
+    fi
+
+    if [ $RET_CODE != 0 ]
+    then
+      exit $RET_CODE
+    else
+      echo "Compressing html"
+      zip -r build/Doxygen_${{ parameters.target }}/mcu_${{ parameters.target }}_docs.zip build/Doxygen_${{ parameters.target }}/html
+    fi
+  displayName: Generating doxygen ${{ upper(parameters.target) }}
+
+- task: CopyFiles@2
+  displayName: 'Copying build files to Artifacts'
+  inputs:
+    contents: |
+      mcu/build/Doxygen_${{ parameters.target }}/mcu_${{ parameters.target }}_docs.zip
+      mcu/build/Doxygen_${{ parameters.target }}/DoxygenWarningLog_${{ parameters.target }}.txt
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- publish: '$(Build.ArtifactStagingDirectory)'
+  displayName: Publishing documentation artifacts
+  artifact: ${{ parameters.target }}_docs

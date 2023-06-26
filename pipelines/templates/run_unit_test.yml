@@ -1,0 +1,38 @@
+steps:
+- checkout: self
+  clean: false
+  persistCredentials: true
+
+- script: |
+    pack_logs () {
+      tar -czf "$(Build.ArtifactStagingDirectory)/unit_tests_$(System.JobId).tar.gz" -C build/unit_tests .
+      rm -rf build/unit_tests
+    }
+    unset ZEPHYR_BASE
+    if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+        echo "Updating Zephyr python requirements"
+        pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+    fi
+
+    ./build.py --test
+
+    # Validate that all test passed by looking at the twister output file.
+    # Twister is not returning any exit codes on failures, therefore we will manual scan the results.
+    for testsuite in $(jq '.testsuites[]' build/unit_tests/twister-out/twister.json | tr -d '\t\r\n '); do
+      for status in $(echo ${testsuite} | jq '.status'); do
+        if [[ "${status}" != "\"passed\"" ]]; then
+          pack_logs
+          exit 1
+        fi
+      done
+    done
+
+    pack_logs
+  displayName: Run unit tests
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Unit tests'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'unit_tests_$(System.JobId)'
+  condition: always()

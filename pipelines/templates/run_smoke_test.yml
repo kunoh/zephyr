@@ -1,0 +1,115 @@
+parameters:
+- name: artifact_name
+  type: string
+- name: target
+  type: string
+
+steps:
+- checkout: self
+  clean: false
+  fetchDepth: 1
+
+- task: DownloadPipelineArtifact@2
+  displayName: Download FW
+  inputs:
+    artifact: ${{ parameters.artifact_name }}
+    path: '$(System.DefaultWorkingDirectory)/pytest/binaries/'
+    ${{ if eq('nightly', 'todo') }}:
+      source: 'specific'
+      project: 'Embedded'
+      pipeline: 1411
+      runVersion: 'latestFromBranch'
+      runBranch: 'refs/heads/master'
+    ${{ if eq('smoke', 'smoke') }}:
+      source: 'current'
+
+- script: |
+    pytest --version
+    python3 -m venv mcu_py_venev
+    source mcu_py_venev/bin/activate
+    pip3 install -r $(System.DefaultWorkingDirectory)/docker/requirements.txt
+
+    version=$(Build.BuildNumber)
+    results_folder="$(System.DefaultWorkingDirectory)/pytest/results"
+    tests_folder="$(System.DefaultWorkingDirectory)/pytest"
+    binaries_folder="$(System.DefaultWorkingDirectory)/pytest/binaries"
+
+    fw_file_name=$(ls $binaries_folder/*.bin)
+
+    rm -rf $results_folder
+
+    echo "Generate environment file env-setup.json"
+    jq -n '{
+        "device": {
+            "mcu_serial_zephyr": "$(MCU_ZEPHYR_IO_DEVICE)",
+            "mcu_serial_jlink": "$(MCU_SEGGER_JLINK)",
+            "raspi_serial_pico": "$(RASPBERRY_PICO)",
+            "mcu_communication_protocol": "usb",
+            "mcu_interface": "${{ parameters.target }}"
+            },
+        "binaries": {
+            "normal": {
+              "file": "'"$fw_file_name"'",
+              "path": "'"$binaries_folder"'",
+              "version": "'"$version"'"
+              },
+            "recovery": {
+              "file": "/home/tm/mcu_binaries/zephyr.signed.bin",
+              "path": "/home/tm/mcu_binaries",
+              "version": ""
+              },
+            "bootloader": {
+              "file": "/home/tm/mcu_binaries/zephyr.bin",
+              "path": "/home/tm/mcu_binaries",
+              "version": ""
+              }
+            },
+        "paths": {
+            "root_path": "$(System.DefaultWorkingDirectory)",
+            "test_path": "'"$tests_folder"'",
+            "results_path": "'"$results_folder"'",
+            "flashloader_path": "$(TOOL_FLASHLOADER_PATH)"
+            },
+        "dev_mode": {
+            "skip_flash": false,
+            "skip_recovery": false
+            }
+        }' > env-setup.json
+    cat env-setup.json| jq empty; echo "Validate env file [ok==0 ; nok==1]: $?"
+    if [ $? != 0 ]; then
+        rm -rf $binaries_folder
+        exit $?
+    fi
+
+    echo "Start serial tool to collect prints form segger port"
+    mkdir -p $results_folder
+    python3 pytest/libraries/print_collector.py -s $(MCU_SEGGER_JLINK) -p $results_folder -f segger_serial.log &
+
+    echo "Start testing $version"
+    pytest $tests_folder \
+      --junitxml $results_folder/xunit.xml --html $results_folder/report.html \
+      --envfile env-setup.json \
+      -s -v
+    status=$?
+    echo "Test end status: ${status}"
+
+    rm -rf $binaries_folder
+
+    echo "Send SIGINT signal to serial tool in 3 secs"
+    python3 -c "from time import sleep; sleep(3)"
+    kill -SIGINT `cat $results_folder/tmp_pid`
+    echo "Serial tool killed [ok==0 ; nok==1]: $?"
+    echo "Wait 5 sec serial tool to close all files"
+    python3 -c "from time import sleep; sleep(5)"
+
+    exit $status
+
+  workingDirectory: '$(System.DefaultWorkingDirectory)/'
+  displayName: Test fw version
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish test Reports'
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/pytest/results/'
+    artifact: '${{ parameters.target }}_smoke_test_report'
+  condition: always()

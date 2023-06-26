@@ -1,0 +1,21 @@
+steps:
+- script: |
+    rm -rf build
+    unset ZEPHYR_BASE
+    echo "Updating Zephyr repositories"
+    if ! ./build.py --update; then
+        # Sometimes git lock files remain if a job was stopped. Make a clean update in that case
+        rm -rf zephyrproject
+        ./build.py --update
+    fi
+    if [[ "$ZEPHYR_REQUIREMENTS" != "$(yq -r .manifest.projects[0].revision mcu-project/west.yml)" ]]; then
+        echo "Updating python requirements"
+        pip3 install --user -r zephyrproject/zephyr/scripts/requirements.txt
+    fi
+
+    # Compiling to native posix using cpp20 is failing when using GCC >= 11.
+    # The Linux libstdc++ included in the host GCC 11 now directly makes use of the Linux futex for the atomics
+    # If the symbol `_GLIBCXX_HAVE_LINUX_FUTEX` is not defined, libstdc++ will fall back to using an ordinary mutex.
+    # Create a parallel c++config.h which undef the symbol
+    cp -r files/bits zephyrproject/zephyr/boards/posix/native_posix
+  displayName: Initialize Zephyr environment

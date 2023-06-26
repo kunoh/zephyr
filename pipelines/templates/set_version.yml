@@ -1,0 +1,37 @@
+steps:
+
+# If this is a PR build, replace the full version with `pr[unique PR number].[build counter]`
+- script: |
+    echo "##vso[task.setvariable variable=patch]0"
+    echo "##vso[task.setvariable variable=versionSuffix]-pr$(system.pullrequest.pullrequestid).$(buildCounter)"
+  displayName: 'Set version for pull request build'
+  condition: ne(variables['system.pullrequest.pullrequestid'], '')
+
+# If this is a beta release build, append a `-beta.[build counter]` to the version
+- script: |
+    echo "##vso[task.setvariable variable=patch]0"
+    echo "##vso[task.setvariable variable=versionSuffix]-beta.$(buildCounter)"
+  displayName: 'Set version for release branch build (beta)'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'), eq(variables['isRelease'], 0))
+
+# If this is a release build, remove the version suffix and increment the patch number
+- script: |
+    echo "##vso[task.setvariable variable=patch]$(buildCounter)"
+    echo "##vso[task.setvariable variable=versionSuffix]"
+  displayName: 'Set version for release branch build'
+  condition: and(startsWith(variables['Build.SourceBranch'], 'refs/heads/releases/'), eq(variables['isRelease'], 1))
+
+- script: |
+    echo "##vso[build.updatebuildnumber]$(version)"
+    echo "##vso[task.setvariable variable=version]$(version)"
+  displayName: 'Set build number'
+
+- script: |
+    echo "major=$(major)" > version
+    echo "minor=$(minor)" >> version
+    echo "patch=$(patch)" >> version
+    echo "versionSuffix=$(versionSuffix)" >> version
+  displayName: Create version file
+- publish: $(System.DefaultWorkingDirectory)/version
+  artifact: version
+  displayName: Publish version

@@ -1,0 +1,25 @@
+
+steps:
+- checkout: self
+  clean: false
+  persistCredentials: true
+  fetchDepth: 1
+
+- script: |
+    git clean -fxd mcu-project/apps mcu-project/modules
+    if [[ `git status --porcelain mcu-project/apps mcu-project/modules` ]]; then
+      git status
+      echo "##vso[task.logissue type=error]apps/ or modules/ is not clean after checkout."
+      exit 1
+    fi
+
+    if ! ./build.py --format; then
+      exit 1
+    fi
+    if [[ `git status --porcelain mcu-project/apps mcu-project/modules` ]]; then
+      git status
+      git diff
+      echo "##vso[task.logissue type=error]C/C++ code in apps/ or modules/ is not correctly formatted. Run 'build.py --format'."
+      exit 1
+    fi
+  displayName: Check formatting of code

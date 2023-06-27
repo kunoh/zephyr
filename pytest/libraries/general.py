@@ -44,7 +44,7 @@ class General():
             print(f"FW binary does not exist")
             return False
 
-        base_cmd = '{}/go/bin/mcumgr --conntype serial --connstring "{},baud=115200"'.format(pathlib.Path.home() ,env['device']['mcu_serial_zephyr'])
+        base_cmd = '{}/go/bin/mcumgr --conntype serial --connstring "{},baud=115200"'.format(pathlib.Path.home(), env['device']['mcu_serial_zephyr'])
 
         exec_cmd_list_image = base_cmd + " image list"
         print(f"{exec_cmd_list_image}")
@@ -61,19 +61,15 @@ class General():
             # conitnue with new fw update
         flash_progress_file = os.path.join(env['paths']['results_path'], "flash_progress.log")
         exec_cmd_fw_upgrade = base_cmd + " image upload {} > {}".format(fw_file, flash_progress_file)
+        exec_cmd_fw_upgrade = '{}/projects/mcumgr-client/target/release/mcumgr-client --mtu 256 --device {} upload {} > {}' \
+            .format(pathlib.Path.home(), env['device']['mcu_serial_zephyr'], fw_file, flash_progress_file)
         print(f"{exec_cmd_fw_upgrade}")
         try:
             out = subprocess.check_output(exec_cmd_fw_upgrade, shell=True, stderr=subprocess.STDOUT, timeout=300)
-        except Exception as e:
-            print(f"{e}")
+        except subprocess.CalledProcessError as oute:
+            print("error code", oute.returncode, oute.output)
             return False
-        with open(flash_progress_file, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                if "Done" in line:
-                    print(str(line))
-            assert "100.00%" in str(lines)
-            assert "Done" in str(lines)
+
         print(f"{exec_cmd_list_image}")
         try:
             out = subprocess.check_output(exec_cmd_list_image, shell=True, stderr=subprocess.STDOUT, timeout=10)

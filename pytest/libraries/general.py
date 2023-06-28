@@ -61,7 +61,7 @@ class General():
             # conitnue with new fw update
         flash_progress_file = os.path.join(env['paths']['results_path'], "flash_progress.log")
         exec_cmd_fw_upgrade = base_cmd + " image upload {} > {}".format(fw_file, flash_progress_file)
-        exec_cmd_fw_upgrade = '{}/projects/mcumgr-client/target/release/mcumgr-client --mtu 256 --device {} upload {} > {}' \
+        exec_cmd_fw_upgrade = '{}/projects/mcumgr-client/target/release/mcumgr-client --mtu 512 --device {} upload {} > {}' \
             .format(pathlib.Path.home(), env['device']['mcu_serial_zephyr'], fw_file, flash_progress_file)
         print(f"{exec_cmd_fw_upgrade}")
         try:

@@ -123,9 +123,10 @@ stages:
         steps:
         - template: templates/build_firmware.yml
           parameters:
-            artifact_name: io_bootloader_fw
+            artifact_name: io1060-boot-tma0005
             target: io1060
             bootloader: true
+            feed: io-controller
 
   - stage: build_io_app
     displayName: Build IO App
@@ -147,9 +148,10 @@ stages:
         steps:
         - template: templates/build_firmware.yml
           parameters:
-            artifact_name: io_app_fw
+            artifact_name: io1060-tma0005
             target: io1060
             bootloader: false
+            feed: io-controller
 
   - stage: build_ble_app
     displayName: Build BLE App
@@ -171,9 +173,10 @@ stages:
         steps:
         - template: templates/build_firmware.yml
           parameters:
-            artifact_name: ble_app_fw
+            artifact_name: ble-tma0005
             target: ble
             bootloader: false
+            feed: ble-controller
 
 ## Test MCU (TM5)
   - stage: smoke_test_io_app
@@ -192,5 +195,5 @@ stages:
       steps:
       - template: templates/run_smoke_test.yml
         parameters:
-          artifact_name: io_app_fw
+          artifact_name: io1060-tma0005
           target: io

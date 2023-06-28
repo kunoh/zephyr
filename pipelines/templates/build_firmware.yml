@@ -5,6 +5,8 @@ parameters:
   type: string
 - name: bootloader
   type: boolean
+- name: feed
+  type: string
   default: false
 
 steps:
@@ -43,7 +45,7 @@ steps:
       exit 1
     fi
 
-    cp build/${{ parameters.target }}/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/${{ parameters.target }}-$version.bin
+    cp build/${{ parameters.target }}/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/${{ parameters.artifact_name }}-$version.bin
     if [ "${{ parameters.target }}" = io1060 ]; then
       mkdir -p $(Build.ArtifactStagingDirectory)/proto/inner/
       mkdir -p $(Build.ArtifactStagingDirectory)/proto/outer/
@@ -56,3 +58,15 @@ steps:
 - publish: $(Build.ArtifactStagingDirectory)
   artifact: ${{ parameters.artifact_name }}
   displayName: Publish FW
+
+- task: UniversalPackages@0
+  displayName: Publish .bin and .proto to Azure Artifacts
+  condition: eq(variables['system.pullrequest.pullrequestid'], '')
+  inputs:
+    command: publish
+    publishDirectory: $(Build.ArtifactStagingDirectory)
+    vstsFeedPublish: 'Embedded/${{ parameters.feed }}'
+    vstsFeedPackagePublish: '${{ parameters.artifact_name }}'
+    versionOption: custom
+    versionPublish: '$(Build.BuildNumber)'
+    packagePublishDescription: 'Publish IO FW and Proto files'

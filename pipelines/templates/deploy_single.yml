@@ -1,0 +1,80 @@
+parameters:
+- name: target
+  type: string
+- name: product
+  type: string
+- name: artifact_name
+  type: string
+- name: feed
+  type: string
+
+steps:
+  - task: AzureCLI@2
+    condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))
+    displayName: Upload ${{ parameters.target }}-${{ parameters.product }}
+    inputs:
+      scriptType: bash
+      scriptLocation: inlineScript
+      azureSubscription: 'TM eSW Resources'
+      inlineScript: |
+        function retain_build () {
+          echo "Feed: $1"
+          echo "Package: $2"
+          echo "Version: $3"
+          curl -X "PATCH" https://pkgs.dev.azure.com/trackman/Embedded/_apis/packaging/feeds/$1/upack/packages/$2/versions/$3?api-version=6.1-preview.1 \
+              -H 'Content-Type: application/json' \
+              -u '$(api_user)' \
+              -d $'{
+                "views": {
+                  "op": "add",
+                  "path": "/views/-",
+                  "value": "Release"
+                }
+              }'
+        }
+
+        echo "Upload firmware to blob storage"
+        firmware_path=$(ls $(Pipeline.Workspace)/mcu-build/${{ parameters.artifact_name }}/*.bin)
+        firmware_name=$(basename $firmware_path)
+        if [ -z "$firmware_name" ]; then
+          exit 1
+        fi
+        az storage blob upload --account-name eswfirmware --container-name mcufirmware --file $firmware_path --name ${{ parameters.target }}/${{ parameters.product }}/$firmware_name --overwrite
+        firmware_url="https://eswfirmware.blob.core.windows.net/eswfirmware/${{ parameters.target }}/${{ parameters.product }}/$firmware_name"
+        echo "**$firmware_name:** [Download]("$firmware_url")" >> $(Build.SourcesDirectory)/pipelines/Releases.md
+
+        ## Generate build changes in a html format and add build info on Confluence
+        filename=changes.html
+        echo "<ul>" > $filename
+        git log $(git describe --tags `git rev-list --tags --max-count=1`)..$(resources.pipeline.mcu-build.sourceCommit) --pretty="<li>%B</li>" -5 >> $filename
+        echo "</ul>" >> $filename
+        total_commits_since_last_tag=$(git rev-list $(git describe --tags `git rev-list --tags --max-count=1`)..$(resources.pipeline.mcu-build.sourceCommit) --count)
+        if [ $total_commits_since_last_tag -gt 5 ]; then
+            # commits_left=$(expr $total_commits_since_last_tag - 5)
+            echo "<p>There are more changes...</p>" >> $filename
+        fi
+        changes_html="$(sed -z 's/\n//g' $filename)"
+
+        # Get version
+        major="$(cat $(Pipeline.Workspace)/mcu-build/version/version | grep major | awk -F= '/./{print $2}')"
+        minor="$(cat $(Pipeline.Workspace)/mcu-build/version/version | grep minor | awk -F= '/./{print $2}')"
+        patch="$(cat $(Pipeline.Workspace)/mcu-build/version/version | grep patch | awk -F= '/./{print $2}')"
+        versionSuffix="$(cat $(Pipeline.Workspace)/mcu-build/version/version | grep versionSuffix | awk -F= '/./{print $2}')"
+        version="${major}.${minor}.${patch}${versionSuffix}"
+
+        echo "Retain builds"
+        # Tag used IO Controller as Release to make sure it doesn't get removed by the Azure retention policy
+        retain_build ${{ parameters.feed }} ${{ parameters.artifact_name }} $version
+
+        version="v$version"
+        # Update BuildNumber for a more informative Run title
+        echo "##vso[build.updatebuildnumber]${{ parameters.target }}-${{ parameters.product }}-${version}"
+
+        # Installing script requirements
+        pip3 install -r $(Build.SourcesDirectory)/pipelines/scripts/requirements.txt
+        # Update Confluence page
+        python3 $(Build.SourcesDirectory)/pipelines/scripts/deploy_on_confluence.py $(username) $(password) ${{ parameters.target }} "$version" "$firmware_url" -p ${{ parameters.product }} -c "$changes_html"
+
+        # Git tag
+        git tag ${{ parameters.target }}/${{ parameters.product }}/$version $(resources.pipeline.mcu-build.sourceCommit)
+        git push origin ${{ parameters.target }}/${{ parameters.product }}/$version

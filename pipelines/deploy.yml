@@ -1,0 +1,80 @@
+parameters:
+- name: deploy_io_boot_tma0005
+  displayName: Deploy IO Bootloader
+  type: boolean
+  default: false
+- name: deploy_io_app_tma0005
+  displayName: Deploy IO App
+  type: boolean
+  default: false
+- name: deploy_ble_app_tma0005
+  displayName: Deploy BLE App
+  type: boolean
+  default: false
+
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-20.04'
+
+resources:
+  pipelines:
+  - pipeline: mcu-build
+    source: 'MCU - Build FW'
+    trigger: none
+
+steps:
+- checkout: self
+  persistCredentials: true
+  condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))
+
+- download: mcu-build
+  displayName: Download all artifacts
+  condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))
+
+- ${{ if eq(parameters.deploy_io_boot_tma0005, true) }}:
+  - template: templates/deploy_single.yml
+    parameters:
+      target: io1060-boot
+      product: tma0005
+      artifact_name: io1060-boot-tma0005
+      feed: io-controller
+
+- ${{ if eq(parameters.deploy_io_app_tma0005, true) }}:
+  - template: templates/deploy_single.yml
+    parameters:
+      target: io1060
+      product: tma0005
+      artifact_name: io1060-tma0005
+      feed: io-controller
+
+- ${{ if eq(parameters.deploy_ble_app_tma0005, true) }}:
+  - template: templates/deploy_single.yml
+    parameters:
+      target: ble
+      product: tma0005
+      artifact_name: ble-tma0005
+      feed: ble-controller
+
+- script: |
+    curl -X "PATCH" https://dev.azure.com/trackman/Embedded/_apis/build/builds/$(Build.BuildId)?api-version=6.0 \
+        -H 'Content-Type: application/json' \
+        -u '$(System.AccessToken):' \
+        -d $'{ "keepForever": true }'
+  displayName: Retain Deploy Build
+  condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))
+
+- script: |
+    curl -X "PATCH" https://dev.azure.com/trackman/Embedded/_apis/build/builds/$(resources.pipeline.mcu-build.RunID)?api-version=6.0 \
+        -H 'Content-Type: application/json' \
+        -u '$(System.AccessToken):' \
+        -d $'{ "keepForever": true }'
+  displayName: Retain CI Build
+  condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))
+
+- script: |
+    if [ -f "$(Build.SourcesDirectory)/pipelines/Releases.md" ]; then
+      echo "##vso[task.uploadsummary]$(Build.SourcesDirectory)/pipelines/Releases.md"
+    fi
+  displayName: Upload summary
+  condition: not(startsWith(variables['resources.pipeline.mcu-build.sourceBranch'], 'refs/pull'))

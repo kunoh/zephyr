@@ -34,5 +34,5 @@ steps:
   displayName: 'Publish Unit tests'
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: 'unit_tests_$(System.JobId)'
+    artifact: 'unit-tests-$(System.JobId)'
   condition: always()

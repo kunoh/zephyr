@@ -47,4 +47,4 @@ steps:
 
 - publish: '$(Build.ArtifactStagingDirectory)'
   displayName: Publishing documentation artifacts
-  artifact: ${{ parameters.target }}_docs
+  artifact: ${{ parameters.target }}-docs

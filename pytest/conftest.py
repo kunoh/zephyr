@@ -24,12 +24,11 @@ def variables(request):
 ##########################################
 @pytest.fixture(scope="session")
 def test_init(variables):
-    ###### Setup 
-    ## Assert we are in App Mode
+    ############## Setup ##############
+    ## Assert we start in App Mode
     switch = SwitchboxIF(variables['device']['raspi_serial_pico'])
-    if switch.validate_usb("app") is False:
-        if switch.set_mcu_boot_mode("app") is False:
-            pytest.exit(f"Failed to enter MCU app mode", 3)
+    if switch.check_usb_app_zephyr() is False:
+        pytest.exit(f"Failed to validate USB ZEPHYR: Die", 3)
 
     ## Update FW under test
     if General.firmware_upgrade(env=variables) is False:
@@ -41,7 +40,10 @@ def test_init(variables):
 
     yield
 
-    ###### Teardown 
+    ############## Teardown ##############
+    ## Assert we end in App Mode
+    if switch.check_usb_app_zephyr() is False:
+        pytest.exit(f"Failed to validate USB ZEPHYR: Die", 3)
 
 
 ##########################################

@@ -55,7 +55,7 @@ class SwitchboxIF:
         
         return False
 
-    def set_mcu_boot_mode(self, mode=None, hard_reset=True):
+    def set_mcu_boot_mode(self, mode=None):
         if not mode:
             print("Boot mode should be specified")
             return False
@@ -70,22 +70,29 @@ class SwitchboxIF:
             print(f"Failed to set MCU boot mode\n{resp})")
             return False
         time.sleep(2)
-        
-        if hard_reset:
-            resp = self._ser.async_send_read_message_until(f"reset_mcu", "Raspberry Pi Pico")
-            if "response: ok" not in str(resp):
-                print(f"Failed to hard reset  MCU\n{resp})")
-                return False
-            time.sleep(2)
 
-            resp = self._ser.async_send_read_message_until("get_mcu_bootcfg", "Raspberry Pi Pico")
-            if self.mcu_boot_mode_set(mode=mode, response=resp):
-                return self.validate_usb(mode)
-        else:
-            return True
+        return True
        
     def reset_hard_mcu(self):
         resp = self._ser.async_send_read_message_until(f"reset_mcu", "Raspberry Pi Pico")
-        if "response: ok" in str(resp):
-            return self.validate_usb("app")
-        return False
+        if "response: ok" not in str(resp):
+            print(f"Failed to hard reset  MCU\n{resp})")
+            return False
+        time.sleep(2)
+
+        return True
+    
+    def check_usb_app_zephyr(self):
+        if self.validate_usb("app") is False:
+            print(f"USB ZEPHYR not found: Reset to APP mode")
+            if self.set_mcu_boot_mode("app") is False:
+                print(f"Failed to set MCU app mode")
+                return False
+            if self.reset_hard_mcu() is False:
+                print(f"Failed to hard reset MCU")
+                return False
+            if self.validate_usb("app") is False:
+                print(f"Failed to validate USB ZEPHYR")
+                return False
+            
+        return True

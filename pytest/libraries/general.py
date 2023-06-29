@@ -156,8 +156,13 @@ class General():
 
         switch = SwitchboxIF(env['device']['raspi_serial_pico'])
         if switch.set_mcu_boot_mode("bootloader") is False:
-            print("Failed to enter MCU BOOTLOADER mode")
+            print("Failed to set MCU bootloader mode")
             return False
+        if switch.reset_hard_mcu() is False:
+            print(f"Failed to hard reset MCU")
+            return False
+        if switch.validate_usb("bootloader") is False:
+            print(f"Failed to validate USB BOOTLOADER")
 
         sdk = SecProvSDK(tool_path=env['paths']['flashloader_path'])
 
@@ -196,19 +201,20 @@ class General():
         time.sleep(1)
 
         # bring MCU to normal mode
-        if switch.set_mcu_boot_mode("app", hard_reset=False) is False:
+        if switch.set_mcu_boot_mode("app") is False:
             print("Failed to set MCU APP mode")
             return False
 
         # Reset MCU
-        if sdk.reset_mcu() is False:
+        if sdk.reset_soft_mcu() is False:
             print(f"Failed to soft reset MCU: Try hard reset")
             if switch.reset_hard_mcu() is False:
-                print("Also hard reset failed")
+                print(f"Failed also to hard reset MCU")
                 return False
-        else:
-            if switch.validate_usb("app") is False:
-                print(f"Failed to validate USB in mode APP / ZEPHYR")
-                return False
+            print(f"MCU hard reset successful")
+       
+        if switch.validate_usb("app") is False:
+            print(f"Failed to validate USB in mode APP / ZEPHYR")
+            return False
 
         return True

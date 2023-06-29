@@ -146,7 +146,7 @@ class SecProvSDK():
             return False
         return False
 
-    def reset_mcu(self, hid="0x15a2,0x0073"):
+    def reset_soft_mcu(self, hid="0x15a2,0x0073"):
         '''
         sudo $(flashloader_tool_path)/Tools/blhost/linux/amd64/blhost -u 0x15a2,0x0073 -- reset
             [sudo] password for tm: 

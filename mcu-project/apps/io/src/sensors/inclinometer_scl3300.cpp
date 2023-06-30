@@ -3,6 +3,7 @@
 #include <zephyr/logging/log.h>
 
 #include "scl3300_driver.h"
+#include "util.h"
 
 LOG_MODULE_REGISTER(incl_scl3300, CONFIG_INCLINOMETER_LOG_LEVEL);
 
@@ -51,9 +52,9 @@ bool InclinometerScl3300::Read()
     return status;
 }
 
-void InclinometerScl3300::GetAngle(double xyz_angle[])
+void InclinometerScl3300::GetAngle(SensorSampleData *xyz_angle)
 {
-    xyz_angle[0] = angle_x_;
-    xyz_angle[1] = angle_y_;
-    xyz_angle[2] = angle_z_;
+    xyz_angle->x = angle_x_;
+    xyz_angle->y = angle_y_;
+    xyz_angle->z = angle_z_;
 }

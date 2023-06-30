@@ -92,7 +92,7 @@ int main(void)
     SystemMessageHandlerImpl system_msg_handler;
     BatteryMessageHandlerImpl battery_msg_handler(battery_manager, msg_manager);
     DisplayMessageHandlerImpl display_msg_handler(disp_manager);
-    InclinometerMessageHandlerImpl inclinometer_msg_handler(incl);
+    InclinometerMessageHandlerImpl inclinometer_msg_handler(inclino_manager);
 
     dispatcher.AddHandler(system_msg_handler);
     dispatcher.AddHandler(battery_msg_handler);

@@ -2,6 +2,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include "util.h"
+
 LOG_MODULE_REGISTER(incl_mgr, CONFIG_INCLINOMETER_MANAGER_LOG_LEVEL);
 
 InclinometerManager::InclinometerManager(Inclinometer &inclino) : inclino_{inclino}
@@ -24,6 +26,7 @@ int InclinometerManager::Init()
     if (ret != 0) {
         return ret;
     }
+    sample_period_ = 0;
     StartInclinoTimer();
     return 0;
 }
@@ -34,37 +37,53 @@ void InclinometerManager::AddErrorCb(void (*cb)(void *), void *user_data)
     on_error_.user_data = user_data;
 }
 
-uint32_t InclinometerManager::GetLastXAngle()
+float InclinometerManager::GetLastXAngle()
 {
     return last_known_x_angle_;
 }
-uint32_t InclinometerManager::GetLastYAngle()
+float InclinometerManager::GetLastYAngle()
 {
     return last_known_y_angle_;
 }
-uint32_t InclinometerManager::GetLastZAngle()
+float InclinometerManager::GetLastZAngle()
 {
     return last_known_z_angle_;
 }
 
+/// @brief Set sample timer timout interval in ms.
+/// @param new_time_ms New sample timer timeout in ms.
+/// @return True
 bool InclinometerManager::ChangeTimer(uint32_t new_time_ms)
 {
     // Set timer to new time
     k_timer_start(&timer_, K_MSEC(500), K_MSEC(new_time_ms));
+    sample_period_ = new_time_ms;
     return true;
 }
 
+/// @brief Start the sample timer.
+///
 void InclinometerManager::StartInclinoTimer()
 {
+    sample_period_ = 2000;
     k_timer_start(&timer_, K_MSEC(2000), K_MSEC(2000));
 }
 
+/// @brief Stop the sample timer.
+///
 void InclinometerManager::StopInclinoTimer()
 {
     k_timer_stop(&timer_);
 }
 
-bool InclinometerManager::Subscribe(std::function<int(uint32_t)> new_sub)
+/// @brief  Returns the period of the sample timer in ms.
+/// @return Sample timer timeout in ms.
+uint32_t InclinometerManager::GetSamplePeriod()
+{
+    return sample_period_;
+}
+
+bool InclinometerManager::Subscribe(std::function<int(SensorSampleData)> new_sub)
 {
     subscribers_.push_back(new_sub);
 
@@ -78,18 +97,18 @@ uint32_t InclinometerManager::GetSubscribeCount(void)
 
 void InclinometerManager::ReadInclinoData()
 {
-    double rx_buffer[3];
+    SensorSampleData rx_buffer;
 
     // Do inclinometer read here:
     inclino_.Read();
-    inclino_.GetAngle(rx_buffer);
-    last_known_x_angle_ = rx_buffer[0];
-    last_known_y_angle_ = rx_buffer[1];
-    last_known_z_angle_ = rx_buffer[2];
+    inclino_.GetAngle(&rx_buffer);
+    last_known_x_angle_ = rx_buffer.x;
+    last_known_y_angle_ = rx_buffer.y;
+    last_known_z_angle_ = rx_buffer.z;
 
     // Hand latest data to subscribers:
     for (auto &cb : subscribers_) {
-        cb(last_known_x_angle_);
+        cb(rx_buffer);
     }
 }
 

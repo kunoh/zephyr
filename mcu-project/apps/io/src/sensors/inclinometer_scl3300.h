@@ -14,7 +14,7 @@ public:
     int Init() override;
     bool Write() override;
     bool Read() override;
-    void GetAngle(double xyz_angle[]) override;
+    void GetAngle(SensorSampleData* xyz_angle) override;
 
 private:
     const struct device* spi_dev_ = DEVICE_DT_GET(DT_NODELABEL(lpspi1));

@@ -10,10 +10,10 @@ ZTEST_SUITE(inclino_manager_suite, NULL, NULL, NULL, NULL, NULL);
 
 
 // Test function to check subscribtions.
-int testCallBack(uint32_t test){
-    static int testVar = 0;
+double testCallBack(SensorSampleData test){
+    static double testVar = 0;
 
-    testVar += test;
+    testVar += test.x;
     return testVar;
 }
 
@@ -25,6 +25,11 @@ ZTEST(inclino_manager_suite, test_subscriber)
     // Setup
     InclinometerMock incl;
     InclinometerManager inclino_manager(incl);
+    SensorSampleData zero_data;
+
+    zero_data.x = 0;
+    zero_data.y = 0;
+    zero_data.z = 0;
 
     zassert_equal(inclino_manager.GetSubscribeCount(), 0);
 
@@ -33,12 +38,11 @@ ZTEST(inclino_manager_suite, test_subscriber)
     zassert_equal(inclino_manager.GetSubscribeCount(), 1);
 
     // Test subcribtion is called.
-
-    zassert_equal(testCallBack(0), 0);
+    zassert_equal(testCallBack(zero_data), 0);
     inclino_manager.StartInclinoTimer();
     k_sleep(K_MSEC(2200));
     inclino_manager.StopInclinoTimer();
-    zassert_true(testCallBack(0) != 0);
+    zassert_true(testCallBack(zero_data) != 0);
 
 };
 

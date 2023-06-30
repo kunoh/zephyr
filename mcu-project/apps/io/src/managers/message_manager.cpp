@@ -4,6 +4,7 @@
 #include <zephyr/logging/log.h>
 
 #include "battery_message_encoder.h"
+#include "inclinometer_message_encoder.h"
 
 LOG_MODULE_REGISTER(msg_mgr, CONFIG_MESSAGE_MANAGER_LOG_LEVEL);
 
@@ -52,6 +53,22 @@ int MessageManager::on_battery_gen_data_cb(BatteryGeneralData data)
                                                          data.remaining_capacity,
                                                          data.cycle_count)) {
         return 1;
+    }
+
+    k_msgq_put(&msgq_, &buffer, K_NO_WAIT);
+    k_work_submit(&work_wrapper_.work);
+    return 0;
+}
+
+int MessageManager::OnInclinoAngleCb(SensorSampleData data)
+{
+    MessageBuffer buffer;
+    buffer.msg_type = OUTGOING;
+    if (!InclinometerMessageEncoder::EncodeXYZAngle(buffer, data.x, data.y,
+                                                    data.z))  // Encode response
+    {
+        LOG_WRN("Failed to Encode RespGetAngle");
+        return false;
     }
 
     k_msgq_put(&msgq_, &buffer, K_NO_WAIT);

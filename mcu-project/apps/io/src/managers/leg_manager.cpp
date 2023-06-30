@@ -2,6 +2,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include "util.h"
+
 LOG_MODULE_REGISTER(leg_mgr, CONFIG_LEG_MANAGER_LOG_LEVEL);
 
 LegManager::LegManager(LegControl &leg_control, InclinometerManager &incl_mgr)
@@ -57,9 +59,9 @@ bool LegManager::ChangeTimer(uint32_t new_time_ms)
     return 0;
 }
 
-int LegManager::SubscribeCallback(uint32_t data)
+int LegManager::SubscribeCallback(SensorSampleData data)
 {
-    // printk("SUB FROM LEG! data: %u\r\n",data);
+    // printk("SUB FROM LEG! data: %f\r\n", data.x);
     return 0;
 }
 

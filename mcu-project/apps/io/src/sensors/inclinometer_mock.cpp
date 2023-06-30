@@ -42,9 +42,9 @@ bool InclinometerMock::Read()
     return true;
 }
 
-void InclinometerMock::GetAngle(double xyz_angle[])
+void InclinometerMock::GetAngle(SensorSampleData *xyz_angle)
 {
-    xyz_angle[0] = angle_x_;
-    xyz_angle[1] = angle_y_;
-    xyz_angle[2] = angle_z_;
+    xyz_angle->x = angle_x_;
+    xyz_angle->y = angle_y_;
+    xyz_angle->z = angle_z_;
 }

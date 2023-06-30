@@ -18,6 +18,7 @@ public:
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     int on_battery_gen_data_cb(BatteryGeneralData sample_data);
     int on_battery_chg_data_cb(BatteryChargingData sample_data);
+    int OnInclinoAngleCb(SensorSampleData data);
 
 private:
     void HandleQueuedMessage();

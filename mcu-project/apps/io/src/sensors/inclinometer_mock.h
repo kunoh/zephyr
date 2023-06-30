@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "inclinometer.h"
+#include "util.h"
 
 class InclinometerMock : public Inclinometer {
 public:
@@ -12,7 +13,7 @@ public:
     int Init() override;
     bool Write() override;
     bool Read() override;
-    void GetAngle(double xyz_angle[]) override;
+    void GetAngle(SensorSampleData *xyz_angle) override;
 
 private:
     double acc_x_;

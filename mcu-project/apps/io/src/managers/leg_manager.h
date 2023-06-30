@@ -18,7 +18,7 @@ public:
     bool ChangeTimer(uint32_t new_time_ms);
     void StartLegTimer();
     void StopLegTimer();
-    static int SubscribeCallback(uint32_t data);
+    static int SubscribeCallback(SensorSampleData data);
 
 private:
     void DoLegWork();

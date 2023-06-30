@@ -1,5 +1,27 @@
 syntax = "proto3";
 
-message SetSampleRate {
-    int32 rate = 1;
+message SetSamplePeriod {
+    int32 period = 1;
+}
+
+message RespSamplePeriod {
+    //
+}
+
+message GetSamplePeriod {
+    //
+}
+
+message RespGetSamplePeriod {
+    int32 period = 1;
+}
+
+message GetAngle {
+    //
+}
+
+message XYZAngle {
+    float x_angle = 1;
+    float y_angle = 2;
+    float z_angle = 3;
 }

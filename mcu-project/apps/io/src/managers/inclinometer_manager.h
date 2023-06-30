@@ -16,14 +16,14 @@ public:
     ~InclinometerManager() = default;
     int Init() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
-    uint32_t GetLastXAngle();
-    uint32_t GetLastYAngle();
-    uint32_t GetLastZAngle();
-    uint32_t GetLastValue();
+    float GetLastXAngle();
+    float GetLastYAngle();
+    float GetLastZAngle();
     bool ChangeTimer(uint32_t new_time_ms);
     void StartInclinoTimer();
     void StopInclinoTimer();
-    bool Subscribe(std::function<int(uint32_t)>);
+    uint32_t GetSamplePeriod();
+    bool Subscribe(std::function<int(SensorSampleData)> new_sub);
     uint32_t GetSubscribeCount(void);
 
 private:
@@ -36,8 +36,9 @@ private:
     double last_known_x_angle_;
     double last_known_y_angle_;
     double last_known_z_angle_;
+    uint32_t sample_period_;  /// Sample period in ms.
     k_timer timer_;
     k_work_wrapper<InclinometerManager> work_wrapper_;
     CallbackWrapper on_error_;
-    std::vector<std::function<int(uint32_t)>> subscribers_;
+    std::vector<std::function<int(SensorSampleData)>> subscribers_;
 };

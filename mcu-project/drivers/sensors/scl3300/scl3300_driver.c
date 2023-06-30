@@ -382,6 +382,8 @@ static int scl3300_sample_fetch(const struct device *dev, enum sensor_channel ch
  * @param val pointer to senser value struct, or array of sensor value struct. MAKE SURE THIS ARRAY HAS ROOM FOR ALL REQUESTED VALUES! If in doubt make it 3 long.
  * @return int 0 for success. INCL_ERR_INVALID_ARGUMENT if given invalid channel argument.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
 static int scl3300_channel_get(const struct device *dev, enum sensor_channel chan,
                                struct sensor_value *val)
 {
@@ -444,6 +446,8 @@ static int scl3300_channel_get(const struct device *dev, enum sensor_channel cha
 
     return 0;
 }
+
+#pragma GCC diagnostic pop
 
 ///
 /// @brief API init function.

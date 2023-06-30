@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util.h"
+
 class Inclinometer {
 public:
     ///
@@ -33,5 +35,5 @@ public:
     /// Returns the last sampled X, Y, and Z angle data into the passed array.
     /// Unit: degrees.
     ///
-    virtual void GetAngle(double XYZAngle[]) = 0;
+    virtual void GetAngle(SensorSampleData *XYZAngle) = 0;
 };

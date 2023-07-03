@@ -50,8 +50,8 @@ ZTEST(battery_manager_suite, test_set_get_installation_mode)
     zassert_equal(battery_mngr.SetInstallationMode("UNKNOWN_MODE"), EINVAL);
     zassert_equal(battery_mngr.GetInstallationMode(), val);
 
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling("GENERAL");
+    battery_mngr.StopSampling("CHARGING");
 }
 
 ZTEST(battery_manager_suite, test_initialized_set_get_chg_limit)
@@ -74,8 +74,8 @@ ZTEST(battery_manager_suite, test_initialized_set_get_chg_limit)
         zassert_equal(limit_out, limit_in);
     }
 
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling("GENERAL");
+    battery_mngr.StopSampling("CHARGING");
 }
 
 ZTEST(battery_manager_suite, test_set_get_chg_limit_deny_unregistered_mode)
@@ -100,8 +100,8 @@ ZTEST(battery_manager_suite, test_set_get_chg_limit_deny_unregistered_mode)
     zassert_equal(battery_mngr.GetModeChargingLimit("UNKNOWN_MODE", limit_out), EINVAL);
     zassert_equal(limit_out, 0);
 
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling("GENERAL");
+    battery_mngr.StopSampling("CHARGING");
 }
 
 ZTEST(battery_manager_suite, test_initialized_set_get_chg_limit_outside_range)
@@ -130,8 +130,8 @@ ZTEST(battery_manager_suite, test_initialized_set_get_chg_limit_outside_range)
         zassert_equal(limit_out, CHARGING_REL_CHG_STATE_DEFAULT);
     }
 
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling("GENERAL");
+    battery_mngr.StopSampling("CHARGING");
 }
 
 ZTEST(battery_manager_suite, test_adding_clearing_subscribers)
@@ -140,30 +140,25 @@ ZTEST(battery_manager_suite, test_adding_clearing_subscribers)
     BatteryChargerMock test_chg;
     BatteryManager battery_mngr(test_bat_mock, test_chg);
     battery_mngr.Init();
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling("GENERAL");
+    battery_mngr.StopSampling("CHARGING");
 
     std::string test_sub = "CPU";
-    bat_data_t test_type = GENERAL;
+    std::string test_type = "GENERAL";
 
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
-    zassert_ok(battery_mngr.AddSubscriberGeneral(test_cb_gen, test_sub));
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
+    zassert_ok(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen));
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
     battery_mngr.ClearSubscribers(test_type);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
 
-    test_type = CHARGING;
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
-    zassert_ok(battery_mngr.AddSubscriberCharging(test_cb_chg, test_sub));
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    test_type = "CHARGING";
+    zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
+    zassert_ok(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_chg));
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
     battery_mngr.ClearSubscribers(test_type);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
 }
-
 
 ZTEST(battery_manager_suite, test_subscriber_errors)
 {
@@ -173,41 +168,31 @@ ZTEST(battery_manager_suite, test_subscriber_errors)
     std::string test_sub = "CPU";
 
     // Subscriber is not registered as key in map
-    bat_data_t test_type = GENERAL;
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
+    std::string test_type = "GENERAL";
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_equal(battery_mngr.AddSubscriberGeneral(test_cb_gen, test_sub), EINVAL);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
+    zassert_equal(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen), EINVAL);
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
 
-    test_type = CHARGING;
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
+    test_type = "CHARGING";
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_equal(battery_mngr.AddSubscriberCharging(test_cb_chg, test_sub), EINVAL);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
+    zassert_equal(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_chg), EINVAL);
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
 
 
     battery_mngr.Init();
-    test_type = GENERAL;
+    test_type = "GENERAL";
     // Subscriber is already subscribed
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_ok(battery_mngr.AddSubscriberGeneral(test_cb_gen, test_sub));
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    zassert_ok(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen));
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_equal(battery_mngr.AddSubscriberGeneral(test_cb_gen, test_sub), EEXIST);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    zassert_equal(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen), EEXIST);
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
 
-    test_type = CHARGING;
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 0);
+    test_type = "CHARGING";
     zassert_false(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_ok(battery_mngr.AddSubscriberCharging(test_cb_chg, test_sub));
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    zassert_ok(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_chg));
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
-    zassert_equal(battery_mngr.AddSubscriberCharging(test_cb_chg, test_sub), EEXIST);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(test_type), 1);
+    zassert_equal(battery_mngr.AddSubscriber(test_sub, test_type, test_cb_chg), EEXIST);
     zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
 }
 
@@ -216,14 +201,15 @@ ZTEST(battery_manager_suite, test_deny_low_sample_rate_chg_timer)
     BatteryMock test_bat_mock;
     BatteryChargerMock test_chg;
     BatteryManager battery_mngr(test_bat_mock, test_chg);
-    zassert_equal(battery_mngr.StartSampling(CHARGING, 20, CHARGING_PERIOD_UPPER_LIMIT_MSEC + 1), ERANGE);
-    zassert_ok(battery_mngr.StartSampling(CHARGING, 20, CHARGING_PERIOD_UPPER_LIMIT_MSEC));
-    battery_mngr.StopSampling(CHARGING);
+    zassert_equal(battery_mngr.StartSampling("CHARGING", 20, CHARGING_PERIOD_UPPER_LIMIT_MSEC + 1), ERANGE);
+    zassert_ok(battery_mngr.StartSampling("CHARGING", 20, CHARGING_PERIOD_UPPER_LIMIT_MSEC));
+    battery_mngr.StopSampling("CHARGING");
 }
 
 ZTEST(battery_manager_suite, test_gen_cb_is_called_on_sample)
 {
     std::string test_sub = "CPU";
+    std::string test_type = "GENERAL";
     BatteryGeneralData test_data_veri;
     test_data_veri.cycle_count = 0;
     BatteryGeneralData test_data_exp;
@@ -233,26 +219,24 @@ ZTEST(battery_manager_suite, test_gen_cb_is_called_on_sample)
     BatteryChargerMock test_chg;
     test_bat_mock.SetTestCycleCount(test_data_exp.cycle_count);
     BatteryManager battery_mngr(test_bat_mock, test_chg);
-
-    zassert_equal(battery_mngr.GetSubscriberCbCount(GENERAL), 0);
     
     battery_mngr.Init();
-    battery_mngr.StopSampling(GENERAL); // We need to stop sampling to do a more controlled unit test.
+    battery_mngr.StopSampling(test_type); // We need to stop sampling to do a more controlled unit test.
 
-    battery_mngr.AddSubscriberGeneral(test_cb_gen, test_sub);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(GENERAL), 1);
+    battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen);
+
     zassert_equal(test_cb_gen(test_data_veri), 0);
-    
-    battery_mngr.StartSampling(GENERAL, 20, 60000);
+    battery_mngr.StartSampling(test_type, 20, 60000);
     k_msleep(30);
-    battery_mngr.StopSampling(GENERAL);
-    battery_mngr.StopSampling(CHARGING);
+    battery_mngr.StopSampling(test_type);
+    battery_mngr.StopSampling("CHARGING");
     zassert_equal(test_cb_gen(test_data_veri), test_data_exp.cycle_count);
 }
 
 ZTEST(battery_manager_suite, test_chg_cb_is_called_on_sample)
 {
     std::string test_sub = "CPU";
+    std::string test_type = "CHARGING";
     BatteryChargingData test_data_veri;
     test_data_veri.des_chg_current= 0;
     BatteryChargingData test_data_exp;
@@ -263,20 +247,17 @@ ZTEST(battery_manager_suite, test_chg_cb_is_called_on_sample)
     test_bat_mock.SetTestChargingCurrent(test_data_exp.des_chg_current);
     BatteryManager battery_mngr(test_bat_mock, test_chg);
 
-    zassert_equal(battery_mngr.GetSubscriberCbCount(CHARGING), 0);
-
     battery_mngr.Init();
-    battery_mngr.StopSampling(CHARGING); // We need to stop sampling to do a more controlled unit test.
+    battery_mngr.StopSampling(test_type); // We need to stop sampling to do a more controlled unit test.
 
-    battery_mngr.AddSubscriberCharging(test_cb_chg, test_sub);
-    zassert_equal(battery_mngr.GetSubscriberCbCount(CHARGING), 1);
+    battery_mngr.AddSubscriber(test_sub, test_type, test_cb_chg);
+
     zassert_equal(test_cb_chg(test_data_veri), 0);
-    
-    battery_mngr.StartSampling(CHARGING, 20, 3000);
+    battery_mngr.StartSampling(test_type, 20, 3000);
     k_msleep(30);
 
-    battery_mngr.StopSampling(CHARGING);
-    battery_mngr.StopSampling(GENERAL);
+    battery_mngr.StopSampling(test_type);
+    battery_mngr.StopSampling("GENERAL");
     zassert_equal(test_cb_chg(test_data_veri), test_data_exp.des_chg_current);
 }
 
@@ -300,18 +281,18 @@ ZTEST(battery_manager_suite, test_get_last_general_data)
 
     BatteryManager battery_mngr(test_bat_mock, test_chg);
     BatteryGeneralData test_data_res;
-    zassert_equal(battery_mngr.GetLastGeneralData(test_data_res), EIO);
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.temp, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.volt, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.current, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.remaining_capacity, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.cycle_count, DEFAULT_INVALID_BAT_INT);
 
-    battery_mngr.StartSampling(GENERAL, 20, 60000);
+    battery_mngr.StartSampling("GENERAL", 20, 60000);
     k_msleep(30);
 
-    zassert_ok(battery_mngr.GetLastGeneralData(test_data_res));
-    battery_mngr.StopSampling(GENERAL);
+    zassert_ok(battery_mngr.GetLastData(test_data_res));
+    battery_mngr.StopSampling("GENERAL");
     zassert_equal(test_data_res.temp, test_data_exp.temp);
     zassert_equal(test_data_res.volt, test_data_exp.volt);
     zassert_equal(test_data_res.current, test_data_exp.current);
@@ -339,18 +320,18 @@ ZTEST(battery_manager_suite, test_get_last_general_data_timer_stopped)
 
     BatteryManager battery_mngr(test_bat_mock, test_chg);
     BatteryGeneralData test_data_res;
-    zassert_equal(battery_mngr.GetLastGeneralData(test_data_res), EIO);
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.temp, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.volt, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.current, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.remaining_capacity, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.cycle_count, DEFAULT_INVALID_BAT_INT);
 
-    battery_mngr.StartSampling(GENERAL, 20, 60000);
+    battery_mngr.StartSampling("GENERAL", 20, 60000);
     k_msleep(30);
 
-    battery_mngr.StopSampling(GENERAL);
-    zassert_equal(battery_mngr.GetLastGeneralData(test_data_res), EIO);
+    battery_mngr.StopSampling("GENERAL");
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.temp, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.volt, DEFAULT_INVALID_BAT_FLOAT);
     zassert_equal(test_data_res.current, DEFAULT_INVALID_BAT_FLOAT);
@@ -375,17 +356,17 @@ ZTEST(battery_manager_suite, test_get_last_chg_data)
     test_bat_mock.SetTestRelChargeState(test_data_exp.relative_charge_state);
     BatteryManager battery_mngr(test_bat_mock, test_chg);
     BatteryChargingData test_data_res;
-    zassert_equal(battery_mngr.GetLastChargingData(test_data_res), EIO);
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.des_chg_current, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.des_chg_volt, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.status, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.relative_charge_state, DEFAULT_INVALID_BAT_INT);
 
-    battery_mngr.StartSampling(CHARGING, 20, 3000);
+    battery_mngr.StartSampling("CHARGING", 20, 3000);
     k_msleep(30);
 
-    zassert_ok(battery_mngr.GetLastChargingData(test_data_res));
-    battery_mngr.StopSampling(CHARGING);
+    zassert_ok(battery_mngr.GetLastData(test_data_res));
+    battery_mngr.StopSampling("CHARGING");
     zassert_equal(test_data_res.des_chg_current, test_data_exp.des_chg_current);
     zassert_equal(test_data_res.des_chg_volt, test_data_exp.des_chg_volt);
     zassert_equal(test_data_res.status, test_data_exp.status);
@@ -409,17 +390,17 @@ ZTEST(battery_manager_suite, test_get_last_chg_data_timer_stopped)
     test_bat_mock.SetTestRelChargeState(test_data_exp.relative_charge_state);
     BatteryManager battery_mngr(test_bat_mock, test_chg);
     BatteryChargingData test_data_res;
-    zassert_equal(battery_mngr.GetLastChargingData(test_data_res), EIO);
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.des_chg_current, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.des_chg_volt, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.status, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.relative_charge_state, DEFAULT_INVALID_BAT_INT);
 
-    battery_mngr.StartSampling(CHARGING, 20, 3000);
+    battery_mngr.StartSampling("CHARGING", 20, 3000);
     k_msleep(30);
 
-    battery_mngr.StopSampling(CHARGING);
-    zassert_equal(battery_mngr.GetLastChargingData(test_data_res), EIO);
+    battery_mngr.StopSampling("CHARGING");
+    zassert_equal(battery_mngr.GetLastData(test_data_res), EIO);
     zassert_equal(test_data_res.des_chg_current, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.des_chg_volt, DEFAULT_INVALID_BAT_INT);
     zassert_equal(test_data_res.status, DEFAULT_INVALID_BAT_INT);

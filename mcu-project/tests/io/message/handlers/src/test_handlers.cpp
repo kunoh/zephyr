@@ -117,7 +117,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_gen_info)
     BatteryManager bat_mngr = BatteryManager(test_battery_mock, test_charger_mock);
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
-	bat_mngr.StartSampling(GENERAL, 20, 60000);
+	bat_mngr.StartSampling("GENERAL", 20, 60000);
 	k_msleep(30);
 
 	// Encode a RequestBatteryGeneralInfo message.
@@ -143,7 +143,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_gen_info)
 	zassert_equal(bgi.cycle_count, test_data_exp.cycle_count);
 
 	// If the sampling timer is stopped we expect request-responses with invalid data.
-	bat_mngr.StopSampling(GENERAL);
+	bat_mngr.StopSampling("GENERAL");
 }
 
 /// @brief Test message handling of ReqBatteryChargingInfo.
@@ -171,7 +171,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_chg_info)
     BatteryManager bat_mngr = BatteryManager(test_battery_mock, test_charger_mock);
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
-	bat_mngr.StartSampling(CHARGING, 20, CHARGING_PERIOD_MSEC);
+	bat_mngr.StartSampling("CHARGING", 20, CHARGING_PERIOD_MSEC);
 	k_msleep(30);
 
 	// Encode a RequestBatteryChargingInfo message.
@@ -196,7 +196,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_chg_info)
 	zassert_equal(bci.charging, false);
 
 	// If the sampling timer is stopped we expect request-responses with invalid data.
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("CHARGING");
 }
 
 /// @brief Test successful handling of ReqBatteryNotifications
@@ -212,43 +212,41 @@ ZTEST_F(battery_message_handler_suite, test_handle_req_battery_notifications)
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 
 	// Encode a SetInstallationMode message
 	MessageBuffer message;
 	char sub[4] = "CPU";
 
 	// General battery data
-	char type[8] = "GENERAL";
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type), "Could not encode ReqBatteryNotifications message.");
+	
+	char data_type[8] = "GENERAL";
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 
-	zassert_equal(bat_mngr.GetSubscriberCbCount(GENERAL), 0);
-	zassert_false(bat_mngr.IsSubscribed(sub, GENERAL));
+	zassert_false(bat_mngr.IsSubscribed(sub, data_type));
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
-	zassert_true(bat_mngr.IsSubscribed(sub, GENERAL));
-	zassert_equal(bat_mngr.GetSubscriberCbCount(GENERAL), 1);
+	zassert_true(bat_mngr.IsSubscribed(sub, data_type));
 	
 	// Check that handling encoded a response message
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message");
+	
 	RespBatteryNotifications bn = RespBatteryNotifications_init_zero;
 	zassert_true(msg_proto.DecodeInnerMessage(RespBatteryNotifications_fields, &bn), "Could not decode RespBatteryNotifications message");
-
+	
 	// Battery charging data
-	char type_2[9] = "CHARGING";
+	char data_type_2[9] = "CHARGING";
 	message.msg_type = INCOMING;
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type_2), "Could not encode ReqBatteryNotifications message.");
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type_2), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 
-	zassert_equal(bat_mngr.GetSubscriberCbCount(CHARGING), 0);
-	zassert_false(bat_mngr.IsSubscribed(sub, CHARGING));
+	zassert_false(bat_mngr.IsSubscribed(sub, data_type_2));
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
-	zassert_true(bat_mngr.IsSubscribed(sub, CHARGING));
-	zassert_equal(bat_mngr.GetSubscriberCbCount(CHARGING), 1);
+	zassert_true(bat_mngr.IsSubscribed(sub, data_type_2));
 	
 	// Check that handling encoded a response message
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
@@ -270,30 +268,29 @@ ZTEST_F(battery_message_handler_suite, test_handle_req_battery_notifications_alr
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 
 	// Encode a SetInstallationMode message
 	MessageBuffer message;
 	char sub[4] = "CPU";
 
 	// General battery data
-	char type[8] = "GENERAL";
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type), "Could not encode ReqBatteryNotifications message.");
+	char data_type[8] = "GENERAL";
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
-	zassert_equal(bat_mngr.GetSubscriberCbCount(GENERAL), 0);
-	zassert_false(bat_mngr.IsSubscribed(sub, GENERAL));
+	zassert_false(bat_mngr.IsSubscribed(sub, data_type));
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 
 	// Encode again
 	message.msg_type = INCOMING;
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type), "Could not encode ReqBatteryNotifications message.");
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");	// Subscribe again
-	zassert_true(bat_mngr.IsSubscribed(sub, GENERAL));
-	zassert_equal(bat_mngr.GetSubscriberCbCount(GENERAL), 1);
+	zassert_true(bat_mngr.IsSubscribed(sub, data_type));
+
 	// Check that handling a repeated request still returns an ACK
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message");
@@ -301,23 +298,22 @@ ZTEST_F(battery_message_handler_suite, test_handle_req_battery_notifications_alr
 	zassert_true(msg_proto.DecodeInnerMessage(RespBatteryNotifications_fields, &bn), "Could not decode RespBatteryNotifications message");
 	
 	// Battery charging data
-	char type_2[9] = "CHARGING";
+	char data_type_2[9] = "CHARGING";
 	message.msg_type = INCOMING;
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type_2), "Could not encode ReqBatteryNotifications message.");
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type_2), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
-	zassert_equal(bat_mngr.GetSubscriberCbCount(CHARGING), 0);
-	zassert_false(bat_mngr.IsSubscribed(sub, CHARGING));
+	zassert_false(bat_mngr.IsSubscribed(sub, data_type_2));
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 
 	// Encode again
 	message.msg_type = INCOMING;
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type_2), "Could not encode ReqBatteryNotifications message.");
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type_2), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_true(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");	// Subscribe again
-	zassert_true(bat_mngr.IsSubscribed(sub, CHARGING));
-	zassert_equal(bat_mngr.GetSubscriberCbCount(CHARGING), 1);
+	zassert_true(bat_mngr.IsSubscribed(sub, data_type_2));
+
 	// Check that handling a repeated request still returns an ACK
 	zassert_equal(message.msg_type, msg_type_t::OUTGOING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message");
@@ -338,28 +334,29 @@ ZTEST_F(battery_message_handler_suite, test_handle_req_battery_notifications_no_
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 
 	// Encode a SetInstallationMode message
 	MessageBuffer message;
 	char sub[4] = "UPC";
-	char type[8] = "GENERAL";
+	char data_type[8] = "GENERAL";
 
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, type), "Could not encode ReqBatteryNotifications message.");
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub, data_type), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_false(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 
 	char sub_2[4] = "CPU";
-	char type_2[7] = "FOOBAR";
-	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub_2, type_2), "Could not encode ReqBatteryNotifications message.");
+	char data_type_2[7] = "FOOBAR";
+	zassert_true(BatteryMessageEncoder::EncodeReqBatteryNotifications(message, sub_2, data_type_2), "Could not encode ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 	zassert_true(msg_proto.DecodeOuterMessage(message), "Could not decode BatteryNotifications Outer message.");
 	zassert_false(bat_msg_handler.Handle(msg_proto, message), "Could not handle ReqBatteryNotifications message.");
 	zassert_equal(message.msg_type, INCOMING);
 }
+
 
 /// @brief Test RespBatteryNotifications 
 ZTEST_F(battery_message_handler_suite, test_handle_subcribe_response)
@@ -395,8 +392,8 @@ ZTEST_F(battery_message_handler_suite, test_handle_set_installation_mode)
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 	zassert_equal(bat_mngr.GetInstallationMode(), INSTALLATION_MODE_DEFAULT);
 
 	// Encode a SetInstallationMode message
@@ -427,7 +424,6 @@ ZTEST_F(battery_message_handler_suite, test_handle_set_installation_mode)
 	zassert_true(msg_proto.DecodeInnerMessage(RespInstallationMode_fields, &im), "Could not decode RespInstallationMode message");
 }
 
-
 /// @brief Test SetInstallationMode fails on trying to set unknown installation mode
 ZTEST_F(battery_message_handler_suite, test_handle_set_installation_mode_unknown)
 {
@@ -441,8 +437,8 @@ ZTEST_F(battery_message_handler_suite, test_handle_set_installation_mode_unknown
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 	zassert_equal(bat_mngr.GetInstallationMode(), INSTALLATION_MODE_DEFAULT);
 
 	// Encode a SetInstallationMode message
@@ -492,8 +488,8 @@ ZTEST_F(battery_message_handler_suite, test_handle_set_mode_charging_limit)
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 
 	// Encode a SetInstallationMode message
 	MessageBuffer message;
@@ -535,8 +531,8 @@ ZTEST_F(battery_message_handler_suite, test_handle_set_mode_charging_limit_ERANG
 	BatteryMessageHandlerImpl bat_msg_handler(bat_mngr, msg_mngr);
 
 	bat_mngr.Init();
-	bat_mngr.StopSampling(GENERAL);
-	bat_mngr.StopSampling(CHARGING);
+	bat_mngr.StopSampling("GENERAL");
+	bat_mngr.StopSampling("CHARGING");
 
 	// Encode a SetInstallationMode message
 	MessageBuffer message;

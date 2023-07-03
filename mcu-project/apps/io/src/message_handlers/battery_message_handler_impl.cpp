@@ -40,7 +40,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
     }
 
     BatteryGeneralData data;
-    ret = battery_manager_.GetLastGeneralData(data);
+    ret = battery_manager_.GetLastData(data);
     if (ret != 0) {
         LOG_WRN(
             "Failed to get last general battery sample. Responding with empty BatteryGeneralInfo.");
@@ -71,7 +71,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryChargingInfo(MessageProto& msg,
     }
 
     BatteryChargingData data;
-    ret = battery_manager_.GetLastChargingData(data);
+    ret = battery_manager_.GetLastData(data);
     if (ret != 0) {
         LOG_WRN(
             "Failed to get last battery charging data sample. Responding with empty "
@@ -95,35 +95,30 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
                                                               MessageBuffer& buffer)
 {
     int ret = 0;
-    bool match = false;
     ReqBatteryNotifications bn = ReqBatteryNotifications_init_zero;
     if (!msg.DecodeInnerMessage(ReqBatteryNotifications_fields, &bn)) {
         return false;
     }
 
-    // Match on data type to determine callback func
     if (!strcmp(bn.data_type, "GENERAL")) {
-        if (!battery_manager_.IsSubscribed(bn.subscription_type, GENERAL)) {
-            ret = battery_manager_.AddSubscriberGeneral(
-                [&](BatteryGeneralData sample_data) -> int {
-                    return msg_manager_.on_battery_gen_data_cb(sample_data);
-                },
-                bn.subscription_type);
-        }
-        match = true;
-    } else if (!strcmp(bn.data_type, "CHARGING") != 0) {
-        if (!battery_manager_.IsSubscribed(bn.subscription_type, CHARGING)) {
-            ret = battery_manager_.AddSubscriberCharging(
-                [&](BatteryChargingData sample_data) -> int {
-                    return msg_manager_.on_battery_chg_data_cb(sample_data);
-                },
-                bn.subscription_type);
-        }
-        match = true;
+        std::function<int(BatteryGeneralData)> func = [&](BatteryGeneralData data) {
+            return msg_manager_.on_battery_gen_data_cb(data);
+        };
+        ret = battery_manager_.AddSubscriber(bn.subscription_type, bn.data_type, func);
+
+    } else if (!strcmp(bn.data_type, "CHARGING")) {
+        std::function<int(BatteryChargingData)> func = [&](BatteryChargingData data) {
+            return msg_manager_.on_battery_chg_data_cb(data);
+        };
+        ret = battery_manager_.AddSubscriber(bn.subscription_type, bn.data_type, func);
+    } else {
+        LOG_WRN("Subscriber (%s) tried to sub to unknown data type (%s)", bn.subscription_type,
+                bn.data_type);
+        return false;
     }
 
-    if (!match || (ret != 0 && ret != EEXIST)) {
-        LOG_WRN("Subscriber (%s) tried to sub to unknown data type (%s)", bn.subscription_type,
+    if (ret != 0 && ret != EEXIST) {
+        LOG_WRN("Failed to subscribe (%s) to sub (%s) battery data", bn.subscription_type,
                 bn.data_type);
         return false;
     }

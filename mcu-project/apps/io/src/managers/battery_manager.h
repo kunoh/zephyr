@@ -30,12 +30,6 @@
 #define INSTALLATION_MODE_DEFAULT           installation_modes[0]
 // clang-format on
 
-enum bat_data_t {
-    GENERAL,
-    CHARGING,
-    BAT_SENTINEL,
-};
-
 class BatteryManager : public Manager {
 public:
     BatteryManager(Battery& battery, BatteryCharger& charger);
@@ -71,28 +65,21 @@ public:
 
     ///
     /// @brief Adds a function to a list of callback functions that will be called after each
-    /// sampling of general battery properties.
+    /// sampling of a type of battery properties.
     ///
     /// @param cb The callback function to add, taking a BatteryGeneralData struct.
     ///
-    int AddSubscriberGeneral(std::function<int(BatteryGeneralData)> cb, std::string subscriber);
+    int AddSubscriber(std::string subscriber, std::string data_type,
+                      std::function<int(BatteryGeneralData)> cb);
 
     ///
     /// @brief Adds a function to a list of callback functions that will be called after each
-    /// sampling of battery charging properties.
+    /// sampling of a type of battery properties.
     ///
     /// @param cb The callback function to add, taking a BatteryChargingData struct.
     ///
-    int AddSubscriberCharging(std::function<int(BatteryChargingData)> cb, std::string subscriber);
-
-    ///
-    /// @brief Returns the number of subscribed callbacks for a specific battery data category.
-    ///
-    /// @param type Enum specifying type of subscribers.
-    ///
-    /// @return Number of subscribers for the specified type.
-    ///
-    size_t GetSubscriberCbCount(bat_data_t type);
+    int AddSubscriber(std::string subscriber, std::string data_type,
+                      std::function<int(BatteryChargingData)> cb);
 
     ///
     /// @brief Clear subscribers of a specific battery data category.
@@ -101,12 +88,12 @@ public:
     ///
     /// @note Clearing GENERAL subscribers will also deassert the "cpu subscribed" status.
     ///
-    void ClearSubscribers(bat_data_t type);
+    void ClearSubscribers(std::string data_type);
 
     ///
     /// @brief Check if a subscriber is subscribed to a specific type of battery data.
     ///
-    bool IsSubscribed(std::string subscriber, bat_data_t data_type);
+    bool IsSubscribed(std::string subscriber, std::string data_type);
 
     //--- Sampling and charging ---//
 
@@ -121,32 +108,32 @@ public:
     /// to the first sample is fetched.
     /// @param[in] period_msec The sampling period (in milliseconds).
     ///
-    int StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec);
+    int StartSampling(std::string data_type, uint32_t init_delay_msec, uint32_t period_msec);
 
     ///
     /// @brief Stop sampling of a category of battery data.
     ///
-    void StopSampling(bat_data_t type);
+    void StopSampling(std::string data_type);
 
     ///
     /// @brief Get last general battery data sampling manager is holding.
     ///
-    /// @param[out] bat_gen_data Struct to populate with manager last known values. Will be
-    /// populated with invalid default values if sampling timer is not running.
+    /// @param[out] bat_data BatteryGeneralData struct to populate with manager last known values.
+    /// Will be populated with invalid default values if sampling timer is not running.
     ///
     /// @return 0 on success. EIO if sampling timer is not running at moment of call.
     ///
-    int GetLastGeneralData(BatteryGeneralData& bat_gen_data);
+    int GetLastData(BatteryGeneralData& bat_data);
 
     ///
-    /// @brief Get last charging battery data sampling manager is holding.
+    /// @brief Get last battery charging data sampling manager is holding.
     ///
-    /// @param[out] bat_gen_data Struct to populate with manager last known values. Will be
-    /// populated with invalid default values if sampling timer is not running.
+    /// @param[out] bat_data BatteryChargingData struct to populate with manager last known values.
+    /// Will be populated with invalid default values if sampling timer is not running.
     ///
     /// @return 0 on success. EIO if sampling timer is not running at moment of call.
     ///
-    int GetLastChargingData(BatteryChargingData& bat_chg_data);
+    int GetLastData(BatteryChargingData& bat_data);
 
     ///
     /// @brief Get manager's battery charging status.
@@ -169,7 +156,7 @@ private:
     ///
     /// @return True if the key exists, false if not.
     ///
-    bool SubscriptionTypeIsKnown(std::string sub, bat_data_t data_type);
+    bool SubscriptionTypeIsKnown(std::string subscriber, std::string data_type);
 
     ///
     /// @brief Internal function for checking whether a mode string exists as a key in the internal
@@ -188,7 +175,8 @@ private:
 
     std::string installation_mode_ = INSTALLATION_MODE_DEFAULT;
     bool is_charging_ = false;
-    std::map<std::pair<std::string, bat_data_t>, bool> subscriptions_;
+    std::map<std::string, std::function<int(BatteryGeneralData)>> subscribers_gen_;
+    std::map<std::string, std::function<int(BatteryChargingData)>> subscribers_chg_;
     std::map<std::string, int32_t> chg_limits_;
 
     Battery& battery_;
@@ -196,8 +184,6 @@ private:
     CallbackWrapper on_error_;
     std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_gen_data_;
     std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_chg_data_;
-    std::vector<std::function<void(BatteryGeneralData)>> subscriber_cbs_gen_;
-    std::vector<std::function<void(BatteryChargingData)>> subscriber_cbs_chg_;
     BatteryGeneralData last_bat_gen_data_;
     BatteryChargingData last_bat_chg_data_;
 };

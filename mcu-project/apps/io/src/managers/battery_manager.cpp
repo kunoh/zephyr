@@ -32,23 +32,21 @@ int BatteryManager::Init()
     }
 
     for (int32_t sub_num = 0; sub_num < NUM_SUBSCRIBER_TYPES; sub_num++) {
-        for (int32_t data = GENERAL; data != BAT_SENTINEL; data++) {
-            subscriptions_.emplace(
-                std::make_pair(subscriber_types[sub_num], static_cast<bat_data_t>(data)), false);
-        }
+        subscribers_gen_.insert({subscriber_types[sub_num], NULL});
+        subscribers_chg_.insert({subscriber_types[sub_num], NULL});
     }
 
     ret = battery_.Init();
     if (ret != 0) {
         return ret;
     }
-    StartSampling(GENERAL, GENERAL_INIT_DELAY_MSEC, GENERAL_PERIOD_MSEC);
+    StartSampling("GENERAL", GENERAL_INIT_DELAY_MSEC, GENERAL_PERIOD_MSEC);
 
     ret = charger_.Init();
     if (ret != 0) {
         return ret;
     }
-    StartSampling(CHARGING, CHARGING_INIT_DELAY_MSEC, CHARGING_PERIOD_MSEC);
+    StartSampling("CHARGING", CHARGING_INIT_DELAY_MSEC, CHARGING_PERIOD_MSEC);
 
     return 0;
 }
@@ -96,158 +94,143 @@ int BatteryManager::SetModeChargingLimit(std::string mode, int32_t limit)
     return 0;
 }
 
-int BatteryManager::AddSubscriberGeneral(std::function<int(BatteryGeneralData)> cb,
-                                         std::string subscriber)
+int BatteryManager::AddSubscriber(std::string subscriber, std::string data_type,
+                                  std::function<int(BatteryGeneralData)> cb)
 {
-    if (!SubscriptionTypeIsKnown(subscriber, GENERAL)) {
+    if (!SubscriptionTypeIsKnown(subscriber, data_type)) {
         return EINVAL;
-    } else if (IsSubscribed(subscriber, GENERAL)) {
+    } else if (IsSubscribed(subscriber, data_type)) {
         return EEXIST;
     }
 
-    subscriber_cbs_gen_.push_back(cb);
-    subscriptions_[{subscriber, GENERAL}] = true;
+    subscribers_gen_[subscriber] = cb;
     return 0;
 }
 
-int BatteryManager::AddSubscriberCharging(std::function<int(BatteryChargingData)> cb,
-                                          std::string subscriber)
+int BatteryManager::AddSubscriber(std::string subscriber, std::string data_type,
+                                  std::function<int(BatteryChargingData)> cb)
 {
-    if (!SubscriptionTypeIsKnown(subscriber, CHARGING)) {
+    if (!SubscriptionTypeIsKnown(subscriber, data_type)) {
         return EINVAL;
-    } else if (IsSubscribed(subscriber, CHARGING)) {
+    } else if (IsSubscribed(subscriber, data_type)) {
         return EEXIST;
     }
 
-    subscriber_cbs_chg_.push_back(cb);
-    subscriptions_[{subscriber, CHARGING}] = true;
+    subscribers_chg_[subscriber] = cb;
     return 0;
 }
 
-size_t BatteryManager::GetSubscriberCbCount(bat_data_t type)
+void BatteryManager::ClearSubscribers(std::string data_type)
 {
-    switch (type) {
-        case GENERAL:
-            return subscriber_cbs_gen_.size();
-        case CHARGING:
-            return subscriber_cbs_chg_.size();
-        default:
-            LOG_ERR("Trying to get non-existing type of subscribers.");
-            return 0;
+    if (data_type == "GENERAL") {
+        for (auto &item : subscribers_gen_) {
+            item.second = NULL;
+        }
+        LOG_INF("Cleared GENERAL subscribers.");
+    } else if (data_type == "CHARGING") {
+        for (auto &item : subscribers_chg_) {
+            item.second = NULL;
+        }
+        LOG_INF("Cleared CHARGING subscribers.");
+    } else {
+        LOG_ERR("Trying to clear non-existing type of subscribers.");
     }
 }
 
-void BatteryManager::ClearSubscribers(bat_data_t type)
+bool BatteryManager::IsSubscribed(std::string subscriber, std::string data_type)
 {
-    switch (type) {
-        case GENERAL:
-            subscriber_cbs_gen_.clear();
-            for (int i = 0; i < NUM_SUBSCRIBER_TYPES; i++) {
-                subscriptions_[{subscriber_types[i], GENERAL}] = false;
-            }
-            break;
-
-        case CHARGING:
-            subscriber_cbs_chg_.clear();
-            for (int i = 0; i < NUM_SUBSCRIBER_TYPES; i++) {
-                subscriptions_[{subscriber_types[i], CHARGING}] = false;
-            }
-            break;
-
-        default:
-            LOG_ERR("Trying to clear non-existing type of subscribers.");
-            break;
+    if (!SubscriptionTypeIsKnown(subscriber, data_type)) {
+        return false;
     }
-}
 
-bool BatteryManager::IsSubscribed(std::string subscriber, bat_data_t data_type)
-{
-    if (SubscriptionTypeIsKnown(subscriber, data_type)) {
-        return subscriptions_[std::make_pair(subscriber, data_type)];
+    if (data_type == "GENERAL") {
+        if (subscribers_gen_[subscriber] != NULL) {
+            return true;
+        }
+        return false;
+    } else if (data_type == "CHARGING") {
+        if (subscribers_chg_[subscriber] != NULL) {
+            return true;
+        }
+        return false;
     }
+
+    LOG_WRN("Failed to get subscription type (%s, %s)", subscriber.c_str(), data_type.c_str());
     return false;
 }
 
-int BatteryManager::StartSampling(bat_data_t type, uint32_t init_delay_msec, uint32_t period_msec)
+int BatteryManager::StartSampling(std::string data_type, uint32_t init_delay_msec,
+                                  uint32_t period_msec)
 {
-    switch (type) {
-        case GENERAL:
-            k_timer_start(&timer_work_bat_gen_data_.first, K_MSEC(init_delay_msec),
-                          K_MSEC(period_msec));
-            break;
+    int ret = 0;
+    if (data_type == "GENERAL") {
+        k_timer_start(&timer_work_bat_gen_data_.first, K_MSEC(init_delay_msec),
+                      K_MSEC(period_msec));
 
-        case CHARGING:
-            if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
-                LOG_ERR("Tried to set too slow battery data charging sample rate.");
-                return ERANGE;
-            }
+    } else if (data_type == "CHARGING") {
+        if (period_msec > CHARGING_PERIOD_UPPER_LIMIT_MSEC) {
+            LOG_ERR("Tried to set too slow battery data charging sample rate.");
+            return ERANGE;
+        }
 
-            k_timer_start(&timer_work_bat_chg_data_.first, K_MSEC(init_delay_msec),
-                          K_MSEC(period_msec));
-            break;
+        k_timer_start(&timer_work_bat_chg_data_.first, K_MSEC(init_delay_msec),
+                      K_MSEC(period_msec));
 
-        default:
-            LOG_ERR("Trying to start non-existing bat sampling timer.");
-            return EINVAL;
-            break;
+    } else {
+        LOG_ERR("Trying to start non-existing bat sampling timer.");
+        ret = EINVAL;
     }
 
-    return 0;
+    return ret;
 }
 
-void BatteryManager::StopSampling(bat_data_t type)
+void BatteryManager::StopSampling(std::string data_type)
 {
-    switch (type) {
-        case GENERAL:
-            k_timer_stop(&timer_work_bat_gen_data_.first);
-            break;
-
-        case CHARGING:
-            k_timer_stop(&timer_work_bat_chg_data_.first);
-            break;
-
-        default:
-            LOG_ERR("Trying to stop non-existing bat sampling timer.");
-            break;
+    if (data_type == "GENERAL") {
+        k_timer_stop(&timer_work_bat_gen_data_.first);
+    } else if (data_type == "CHARGING") {
+        k_timer_stop(&timer_work_bat_chg_data_.first);
+    } else {
+        LOG_ERR("Trying to stop non-existing bat sampling timer.");
     }
 }
 
-int BatteryManager::GetLastGeneralData(BatteryGeneralData &bat_gen_data)
+int BatteryManager::GetLastData(BatteryGeneralData &bat_data)
 {
     // If sampling timer is stopped, data might be old.
     if (k_timer_remaining_ticks(&timer_work_bat_gen_data_.first) != 0) {
-        bat_gen_data.temp = last_bat_gen_data_.temp;
-        bat_gen_data.current = last_bat_gen_data_.current;
-        bat_gen_data.volt = last_bat_gen_data_.volt;
-        bat_gen_data.remaining_capacity = last_bat_gen_data_.remaining_capacity;
-        bat_gen_data.cycle_count = last_bat_gen_data_.cycle_count;
+        bat_data.temp = last_bat_gen_data_.temp;
+        bat_data.current = last_bat_gen_data_.current;
+        bat_data.volt = last_bat_gen_data_.volt;
+        bat_data.remaining_capacity = last_bat_gen_data_.remaining_capacity;
+        bat_data.cycle_count = last_bat_gen_data_.cycle_count;
     } else {
-        bat_gen_data.temp = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.current = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.volt = DEFAULT_INVALID_BAT_FLOAT;
-        bat_gen_data.remaining_capacity = DEFAULT_INVALID_BAT_INT;
-        bat_gen_data.cycle_count = DEFAULT_INVALID_BAT_INT;
+        bat_data.temp = DEFAULT_INVALID_BAT_FLOAT;
+        bat_data.current = DEFAULT_INVALID_BAT_FLOAT;
+        bat_data.volt = DEFAULT_INVALID_BAT_FLOAT;
+        bat_data.remaining_capacity = DEFAULT_INVALID_BAT_INT;
+        bat_data.cycle_count = DEFAULT_INVALID_BAT_INT;
         return EIO;
     }
 
     return 0;
 }
 
-int BatteryManager::GetLastChargingData(BatteryChargingData &bat_chg_data)
+int BatteryManager::GetLastData(BatteryChargingData &bat_data)
 {
     // If sampling timer is stopped, data might be old.
     if (k_timer_remaining_ticks(&timer_work_bat_chg_data_.first) != 0) {
-        bat_chg_data.des_chg_current = last_bat_chg_data_.des_chg_current;
-        bat_chg_data.des_chg_volt = last_bat_chg_data_.des_chg_volt;
-        bat_chg_data.status = last_bat_chg_data_.status;
-        bat_chg_data.relative_charge_state = last_bat_chg_data_.relative_charge_state;
-        bat_chg_data.charging = is_charging_;
+        bat_data.des_chg_current = last_bat_chg_data_.des_chg_current;
+        bat_data.des_chg_volt = last_bat_chg_data_.des_chg_volt;
+        bat_data.status = last_bat_chg_data_.status;
+        bat_data.relative_charge_state = last_bat_chg_data_.relative_charge_state;
+        bat_data.charging = is_charging_;
     } else {
-        bat_chg_data.des_chg_current = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.des_chg_volt = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.status = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
-        bat_chg_data.charging = false;
+        bat_data.des_chg_current = DEFAULT_INVALID_BAT_INT;
+        bat_data.des_chg_volt = DEFAULT_INVALID_BAT_INT;
+        bat_data.status = DEFAULT_INVALID_BAT_INT;
+        bat_data.relative_charge_state = DEFAULT_INVALID_BAT_INT;
+        bat_data.charging = false;
         return EIO;
     }
 
@@ -271,8 +254,10 @@ void BatteryManager::HandleBatteryGeneralData()
     }
 
     // Send to subscribers
-    for (auto &cb : subscriber_cbs_gen_) {
-        cb(last_bat_gen_data_);
+    for (auto &cb : subscribers_gen_) {
+        if (cb.second != NULL) {
+            cb.second(last_bat_gen_data_);
+        }
     }
 }
 
@@ -336,8 +321,10 @@ void BatteryManager::HandleBatteryChargingData()
 
     // Send to subscribers
     last_bat_chg_data_.charging = is_charging_;
-    for (auto &cb : subscriber_cbs_chg_) {
-        cb(last_bat_chg_data_);
+    for (auto &cb : subscribers_chg_) {
+        if (cb.second != NULL) {
+            cb.second(last_bat_chg_data_);
+        }
     }
 }
 
@@ -363,12 +350,16 @@ void BatteryManager::HandleBatteryChargingDataCallback(struct k_work *work)
     self->HandleBatteryChargingData();
 }
 
-bool BatteryManager::SubscriptionTypeIsKnown(std::string sub, bat_data_t data_type)
+bool BatteryManager::SubscriptionTypeIsKnown(std::string subscriber, std::string data_type)
 {
-    if (subscriptions_.count(std::make_pair(sub, data_type)) < 1) {
-        return false;
+    if (data_type == "GENERAL" && subscribers_gen_.count(subscriber) >= 1) {
+        return true;
+    } else if (data_type == "CHARGING" && subscribers_chg_.count(subscriber) >= 1) {
+        return true;
     }
-    return true;
+
+    LOG_WRN("Subscription type (%s, %s) is unknown", subscriber.c_str(), data_type.c_str());
+    return false;
 }
 
 bool BatteryManager::ModeIsRegistered(std::string mode)

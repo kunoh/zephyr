@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <zephyr/kernel.h>
 
+#include <functional>
 #include <string>
 
 #define DEFAULT_INVALID_BAT_INT INT32_MIN
@@ -43,4 +44,26 @@ struct BatteryChargingData {
     int32_t status = DEFAULT_INVALID_BAT_INT;
     int32_t relative_charge_state = DEFAULT_INVALID_BAT_INT;
     bool charging = false;
+};
+
+struct GeneralSubscription {
+    std::function<int(BatteryGeneralData)> cb = NULL;
+    BatteryGeneralData thresholds = {
+        .temp = 0.1,
+        .current = 0.1,
+        .volt = 0.1,
+        .remaining_capacity = 1,
+        .cycle_count = 1};  // We use a change-in-value from last notification threshold to
+                            // determine when to push a new notification.
+    BatteryGeneralData last_notificaton_;
+};
+
+struct ChargingSubscription {
+    std::function<int(BatteryChargingData)> cb = NULL;
+    BatteryChargingData thresholds = {
+        .des_chg_current = 1,
+        .des_chg_volt = 1,
+        .relative_charge_state = 1};  // We use a change-in-value from last notification threshold
+                                      // to determine when to push a new notification.
+    BatteryChargingData last_notification_;
 };

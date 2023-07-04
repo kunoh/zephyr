@@ -1,4 +1,6 @@
 ReqBatteryNotifications.subscription_type max_size:16
 ReqBatteryNotifications.data_type max_size:16
+SetBatGenNotiThresh.subscription_type max_size:16
+SetBatChgNotiThresh.subscription_type max_size:16
 SetInstallationMode.mode max_size:16
 SetModeChargingLimit.mode max_size:16

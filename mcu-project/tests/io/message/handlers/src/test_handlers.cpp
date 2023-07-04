@@ -158,7 +158,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_chg_info)
     BatteryChargingData test_data_exp;
 	test_data_exp.des_chg_current = 5500;
 	test_data_exp.des_chg_volt = 16500;
-	test_data_exp.status = 0x80000000;
+	test_data_exp.status = 192;
 	test_data_exp.relative_charge_state = 80;
 
     BatteryMock test_battery_mock;
@@ -193,7 +193,7 @@ ZTEST_F(battery_message_handler_suite, test_handle_request_battery_chg_info)
 	zassert_equal(bci.desired_charging_voltage, test_data_exp.des_chg_volt);
 	zassert_equal(bci.status, test_data_exp.status);
 	zassert_equal(bci.relative_state_of_charge, test_data_exp.relative_charge_state);
-	zassert_equal(bci.charging, false);
+	zassert_false(bci.charging);
 
 	// If the sampling timer is stopped we expect request-responses with invalid data.
 	bat_mngr.StopSampling("CHARGING");

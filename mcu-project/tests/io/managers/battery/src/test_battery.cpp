@@ -9,7 +9,7 @@
 
 static int test_cb_gen(BatteryGeneralData data)
 {
-    static float tester = 0;
+    static int tester = 0;
     tester += data.cycle_count;
     return tester;
 }
@@ -224,6 +224,7 @@ ZTEST(battery_manager_suite, test_gen_cb_is_called_on_sample)
     battery_mngr.StopSampling(test_type); // We need to stop sampling to do a more controlled unit test.
 
     battery_mngr.AddSubscriber(test_sub, test_type, test_cb_gen);
+    zassert_true(battery_mngr.IsSubscribed(test_sub, test_type));
 
     zassert_equal(test_cb_gen(test_data_veri), 0);
     battery_mngr.StartSampling(test_type, 20, 60000);

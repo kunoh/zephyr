@@ -42,24 +42,24 @@ public:
     ///
     /// @brief Get the BatteryManager currently configured installation mode.
     ///
-    std::string GetInstallationMode();
+    std::string GetInstallationMode() const;
 
     /// @brief Set the BatteryManager currently configured installation mode.
     /// @param mode String specifying mode to set.
     /// @return 0 on success. EINVAL if the mode is not mapped.
-    int SetInstallationMode(std::string mode);
+    int SetInstallationMode(const std::string& mode);
 
     /// @brief Get the currently configured charging limit for a specific installation mode.
     /// @param mode Installation mode to get limit for.
     /// @param limit The configured limit.
     /// @return 0 on success. If the mode is not mapped.
-    int GetModeChargingLimit(std::string mode, int32_t& limit);
+    int GetModeChargingLimit(const std::string& mode, int32_t& limit);
 
     /// @brief Set the currently configured charging limit for a specific installation mode.
     /// @param mode Installation mode to get limit for.
     /// @param limit The limit to configure.
     /// @return 0 on success. If the mode is not mapped.
-    int SetModeChargingLimit(std::string mode, int32_t limit);
+    int SetModeChargingLimit(const std::string& mode, int32_t limit);
 
     //--- Subscriptions ---///
 
@@ -69,7 +69,7 @@ public:
     ///
     /// @param cb The callback function to add, taking a BatteryGeneralData struct.
     ///
-    int AddSubscriber(std::string subscriber, std::string data_type,
+    int AddSubscriber(const std::string& subscriber, const std::string& data_type,
                       std::function<int(BatteryGeneralData)> cb);
 
     ///
@@ -78,7 +78,7 @@ public:
     ///
     /// @param cb The callback function to add, taking a BatteryChargingData struct.
     ///
-    int AddSubscriber(std::string subscriber, std::string data_type,
+    int AddSubscriber(const std::string& subscriber, const std::string& data_type,
                       std::function<int(BatteryChargingData)> cb);
 
     ///
@@ -88,12 +88,17 @@ public:
     ///
     /// @note Clearing GENERAL subscribers will also deassert the "cpu subscribed" status.
     ///
-    void ClearSubscribers(std::string data_type);
+    void ClearSubscribers(const std::string& data_type);
 
     ///
     /// @brief Check if a subscriber is subscribed to a specific type of battery data.
     ///
-    bool IsSubscribed(std::string subscriber, std::string data_type);
+    bool IsSubscribed(const std::string& subscriber, const std::string& data_type);
+
+    int SetNotificationThresholds(const std::string& subscriber,
+                                  const BatteryGeneralData& thresholds);
+    int SetNotificationThresholds(const std::string& subscriber,
+                                  const BatteryChargingData& thresholds);
 
     //--- Sampling and charging ---//
 
@@ -108,12 +113,13 @@ public:
     /// to the first sample is fetched.
     /// @param[in] period_msec The sampling period (in milliseconds).
     ///
-    int StartSampling(std::string data_type, uint32_t init_delay_msec, uint32_t period_msec);
+    int StartSampling(const std::string& data_type, const uint32_t init_delay_msec,
+                      const uint32_t period_msec);
 
     ///
     /// @brief Stop sampling of a category of battery data.
     ///
-    void StopSampling(std::string data_type);
+    void StopSampling(const std::string& data_type);
 
     ///
     /// @brief Get last general battery data sampling manager is holding.
@@ -141,7 +147,7 @@ public:
     /// @return True if manager has written charging configuration to charger. False if charging has
     /// been inhibited.
     ///
-    bool IsCharging();
+    bool IsCharging() const;
 
 private:
     void HandleBatteryGeneralData();
@@ -150,13 +156,18 @@ private:
     static void HandleBatteryGeneralDataCallback(struct k_work* work);
     static void HandleBatteryChargingDataCallback(struct k_work* work);
 
+    bool IsOverThreshold(const GeneralSubscription& subscription,
+                         const BatteryGeneralData& last_sample) const;
+    bool IsOverThreshold(const ChargingSubscription& subscription,
+                         const BatteryChargingData& last_sample) const;
+
     ///
     /// @brief Internal function for checking whether a certain pair of (subscriber type,  battery
     /// data type) exists as a key in the internal map.
     ///
     /// @return True if the key exists, false if not.
     ///
-    bool SubscriptionTypeIsKnown(std::string subscriber, std::string data_type);
+    bool SubscriptionTypeIsKnown(std::string subscriber, std::string data_type) const;
 
     ///
     /// @brief Internal function for checking whether a mode string exists as a key in the internal
@@ -164,7 +175,7 @@ private:
     ///
     /// @return True if the key exists, false if not.
     ///
-    bool ModeIsRegistered(std::string mode);
+    bool ModeIsRegistered(const std::string& mode) const;
 
     ///
     /// @brief Function for determining
@@ -175,8 +186,8 @@ private:
 
     std::string installation_mode_ = INSTALLATION_MODE_DEFAULT;
     bool is_charging_ = false;
-    std::map<std::string, std::function<int(BatteryGeneralData)>> subscribers_gen_;
-    std::map<std::string, std::function<int(BatteryChargingData)>> subscribers_chg_;
+    std::map<std::string, GeneralSubscription> subscriptions_gen_;
+    std::map<std::string, ChargingSubscription> subscriptions_chg_;
     std::map<std::string, int32_t> chg_limits_;
 
     Battery& battery_;
@@ -184,6 +195,7 @@ private:
     CallbackWrapper on_error_;
     std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_gen_data_;
     std::pair<k_timer, k_work_wrapper<BatteryManager>> timer_work_bat_chg_data_;
-    BatteryGeneralData last_bat_gen_data_;
-    BatteryChargingData last_bat_chg_data_;
+
+    BatteryGeneralData last_gen_data_;
+    BatteryChargingData last_chg_data_;
 };

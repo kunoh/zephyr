@@ -18,6 +18,10 @@ private:
 
     bool HandleReqBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleRespBatteryNotifications(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleSetBatGenNotiThresh(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleRespBatGenNotiThresh(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleSetBatChgNotiThresh(MessageProto& msg, MessageBuffer& buffer) override;
+    bool HandleRespBatChgNotiThresh(MessageProto& msg, MessageBuffer& buffer) override;
 
     bool HandleSetInstallationMode(MessageProto& msg, MessageBuffer& buffer) override;
     bool HandleRespInstallationMode(MessageProto& msg, MessageBuffer& buffer) override;

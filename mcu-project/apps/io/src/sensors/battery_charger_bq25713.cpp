@@ -13,13 +13,12 @@ BatteryChargerBq25713::BatteryChargerBq25713()
 
 int BatteryChargerBq25713::Init()
 {
-    LOG_INF("Battery Charger Bq25713 Init");
-
     if (!device_is_ready(charger_dev)) {
         LOG_ERR("BQ25713 battery charger not found. Aborting...");
         return 1;
     }
 
+    LOG_INF("Battery Charger BQ25713 initialized.");
     return 0;
 }
 

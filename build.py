@@ -56,7 +56,7 @@ def build_bootloader(mcu_type, board, clean):
         if os.path.exists(build_dir):
             shutil.rmtree(build_dir)
 
-    cmd = f"west build -b{board} -d{build_dir} zephyrproject/bootloader/mcuboot/boot/zephyr "
+    cmd = f"west build -b {board} -d {build_dir} zephyrproject/bootloader/mcuboot/boot/zephyr "
     if "io" in mcu_type:
         mcu_type = "io"
         config_overlay = add_to_overlay(None, f"{BOOT_DIR}/{mcu_type}/boards/{board}.conf")
@@ -92,7 +92,7 @@ def build_app(mcu_type, board, clean, release, without_bootloader, version):
             extra_args = f'-DCONFIG_MCUBOOT_EXTRA_IMGTOOL_ARGS="\\"--version {version}\\""'
         overlay = f"-- -DOVERLAY_CONFIG={config_overlay} -DDTC_OVERLAY_FILE={dts_overlay} {extra_args}"
 
-    run_cmd(f"west build -b {board} -d{build_dir} {APP_DIR}/{mcu_type} {overlay}")
+    run_cmd(f"west build -b {board} -d {build_dir} {APP_DIR}/{mcu_type} {overlay}")
 
 def flash(mcu_type, bootloader):
     if bootloader:

@@ -12,13 +12,12 @@ BatteryNh2054qe34::BatteryNh2054qe34()
 
 int BatteryNh2054qe34::Init()
 {
-    LOG_INF("Battery Nh2054qe34 Init");
-
     if (!device_is_ready(battery_dev_)) {
         LOG_ERR("NH2054QE34 battery not found. Aborting...");
         return 1;
     }
 
+    LOG_INF("Battery NH2054QE34 initialized.");
     return 0;
 }
 

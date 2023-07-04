@@ -34,8 +34,8 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryGeneralInfo(MessageProto& msg,
 {
     int ret = 0;
 
-    ReqBatteryGeneralInfo bi = ReqBatteryGeneralInfo_init_zero;
-    if (!msg.DecodeInnerMessage(ReqBatteryGeneralInfo_fields, &bi)) {
+    ReqBatteryGeneralInfo bgi = ReqBatteryGeneralInfo_init_zero;
+    if (!msg.DecodeInnerMessage(ReqBatteryGeneralInfo_fields, &bgi)) {
         return false;
     }
 
@@ -65,8 +65,8 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryChargingInfo(MessageProto& msg,
 {
     int ret = 0;
 
-    ReqBatteryChargingInfo bi = ReqBatteryChargingInfo_init_zero;
-    if (!msg.DecodeInnerMessage(ReqBatteryChargingInfo_fields, &bi)) {
+    ReqBatteryChargingInfo bci = ReqBatteryChargingInfo_init_zero;
+    if (!msg.DecodeInnerMessage(ReqBatteryChargingInfo_fields, &bci)) {
         return false;
     }
 
@@ -111,6 +111,7 @@ bool BatteryMessageHandlerImpl::HandleReqBatteryNotifications(MessageProto& msg,
             return msg_manager_.on_battery_chg_data_cb(data);
         };
         ret = battery_manager_.AddSubscriber(bn.subscription_type, bn.data_type, func);
+
     } else {
         LOG_WRN("Subscriber (%s) tried to sub to unknown data type (%s)", bn.subscription_type,
                 bn.data_type);
@@ -139,6 +140,46 @@ bool BatteryMessageHandlerImpl::HandleRespBatteryNotifications(MessageProto& msg
 {
     RespBatteryNotifications bn = RespBatteryNotifications_init_zero;
     if (!msg.DecodeInnerMessage(RespBatteryNotifications_fields, &bn)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleSetBatGenNotiThresh(MessageProto& msg, MessageBuffer& buffer)
+{
+    SetBatGenNotiThresh bgnt = SetBatGenNotiThresh_init_zero;
+    if (!msg.DecodeInnerMessage(SetBatGenNotiThresh_fields, &bgnt)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleRespBatGenNotiThresh(MessageProto& msg, MessageBuffer& buffer)
+{
+    RespBatGenNotiThresh bgnt = RespBatGenNotiThresh_init_zero;
+    if (!msg.DecodeInnerMessage(RespBatGenNotiThresh_fields, &bgnt)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleSetBatChgNotiThresh(MessageProto& msg, MessageBuffer& buffer)
+{
+    SetBatChgNotiThresh bcnt = SetBatChgNotiThresh_init_zero;
+    if (!msg.DecodeInnerMessage(SetBatChgNotiThresh_fields, &bcnt)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BatteryMessageHandlerImpl::HandleRespBatChgNotiThresh(MessageProto& msg, MessageBuffer& buffer)
+{
+    RespBatChgNotiThresh bcnt = RespBatChgNotiThresh_init_zero;
+    if (!msg.DecodeInnerMessage(RespBatChgNotiThresh_fields, &bcnt)) {
         return false;
     }
 

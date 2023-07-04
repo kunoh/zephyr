@@ -1,10 +1,15 @@
 #include "battery_charger_mock.h"
 
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(bat_chgr_mock, CONFIG_BATTERY_CHARGER_LOG_LEVEL);
+
 BatteryChargerMock::BatteryChargerMock()
 {}
 
 int BatteryChargerMock::Init()
 {
+    LOG_INF("Battery charger mock initialized.");
     return 0;
 }
 

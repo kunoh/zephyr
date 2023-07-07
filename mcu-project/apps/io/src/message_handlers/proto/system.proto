@@ -8,3 +8,12 @@ message RequestVersion {
 message ResponseVersion {
     int32 version = 1;
 }
+
+message RequestResetCause {
+    //
+}
+
+message ResponseResetCause {
+    int32 supported_causes = 1;
+    int32 reset_cause = 2;
+}

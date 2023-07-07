@@ -20,4 +20,5 @@ target_sources(app PRIVATE
             ${IOC_DIR}/src/managers/display_manager.cpp
             ${IOC_DIR}/src/message_handlers/system_message_handler_impl.cpp
             ${IOC_DIR}/src/message_handlers/display_message_handler_impl.cpp
+            ${IOC_DIR}/src/utils/util.cpp
 )

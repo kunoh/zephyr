@@ -15,8 +15,8 @@ const std::string installation_modes[NUM_INSTALLATION_MODES] = {"MOBILE", "FIXED
 const std::string subscriber_types[NUM_SUBSCRIBER_TYPES] = {"CPU"};
 
 struct CallbackWrapper {
-    void *user_data = NULL;
-    void (*cb)(void *) = NULL;
+    void* user_data = NULL;
+    void (*cb)(void*) = NULL;
 };
 
 struct SensorSampleData {
@@ -67,3 +67,5 @@ struct ChargingSubscription {
                                       // to determine when to push a new notification.
     BatteryChargingData last_notification_;
 };
+
+int GetResetInfo(uint32_t& supported_causes, uint32_t& reset_cause);

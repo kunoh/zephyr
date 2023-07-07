@@ -37,7 +37,7 @@ ZTEST(system_message_dispatching_suite, test_message_version)
 	ResponseVersion rv = ResponseVersion_init_zero;
 	zassert_true(msg_proto.DecodeInnerMessage(ResponseVersion_fields, &rv), "Could not decode ResponseVersion message");
 	zassert_equal(2, rv.version, "Got a wrong version number, %d", rv.version);
-};
+}
 
 ZTEST(display_message_dispatching_suite, test_message_stop_spinner)
 {
@@ -63,7 +63,7 @@ ZTEST(display_message_dispatching_suite, test_message_stop_spinner)
 	ResponseStopSpinner rv = ResponseStopSpinner_init_zero;
 	zassert_true(msg_proto.DecodeInnerMessage(ResponseStopSpinner_fields, &rv), "Could not decode ResponseStopSpinner message");
 	zassert_true(rv.status, "Got a wrong status, %d", rv.status);
-};
+}
 
 ZTEST(display_message_dispatching_suite, test_message_new_frame)
 {
@@ -89,4 +89,4 @@ ZTEST(display_message_dispatching_suite, test_message_new_frame)
 	ResponseNewFrame rv = ResponseNewFrame_init_zero;
 	zassert_true(msg_proto.DecodeInnerMessage(ResponseNewFrame_fields, &rv), "Could not decode ResponseNewFrame message");
 	zassert_true(rv.status, "Got a wrong status, %d", rv.status);
-};
+}

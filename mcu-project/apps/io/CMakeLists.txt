@@ -38,6 +38,7 @@ target_sources(app PRIVATE src/main.cpp
                            src/message_handlers/battery_message_handler_impl.cpp
                            src/message_handlers/display_message_handler_impl.cpp
                            src/message_handlers/inclinometer_message_handler_impl.cpp
+                           src/utils/util.cpp
 )
 
 target_sources_ifdef(CONFIG_BATTERY_CHARGER_BQ25713 app PRIVATE src/sensors/battery_charger_bq25713.cpp)

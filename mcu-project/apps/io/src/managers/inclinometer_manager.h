@@ -15,6 +15,7 @@ public:
     InclinometerManager(Inclinometer& inclino);
     ~InclinometerManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     float GetLastXAngle();
     float GetLastYAngle();

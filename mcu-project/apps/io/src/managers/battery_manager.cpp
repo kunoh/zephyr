@@ -61,6 +61,13 @@ int BatteryManager::Init()
     return 0;
 }
 
+int BatteryManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("Battery manager OK");
+    return 0;
+}
+
 void BatteryManager::AddErrorCb(void (*cb)(void*), void* user_data)
 {
     on_error_.cb = cb;

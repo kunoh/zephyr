@@ -23,22 +23,56 @@ void StateManagerSml::Run()
 // Init state
 void StateManagerSml::Initialize()
 {
-    LOG_INF("Initializing");
+    bool success = true;
+    LOG_INF("----------------");
+    LOG_INF("| Initializing |");
+    LOG_INF("----------------");
+
     for (auto m : managers_) {
         m->AddErrorCb(&StateManagerSml::OnError, this);
-
         if (m->Init() != 0) {
-            sm_.process_event(Failed{});
+            success = false;
+            break;
         }
     }
-    sm_.process_event(Success{});
+
+    if (success) {
+        LOG_INF("---------------------");
+        LOG_INF("| Initialization OK |");
+        LOG_INF("---------------------\n");
+        sm_.process_event(Success{});
+    } else {
+        LOG_INF("-------------------------");
+        LOG_INF("| Initialization failed |");
+        LOG_INF("-------------------------\n");
+        sm_.process_event(Failed{});
+    }
 }
 
 void StateManagerSml::Selftest()
 {
-    LOG_INF("Selftest");
-    // Do something...
-    sm_.process_event(Success{});
+    bool success = true;
+    LOG_INF("---------------------");
+    LOG_INF("| Running selftests |");
+    LOG_INF("---------------------");
+    for (auto m : managers_) {
+        if (m->Selftest() != 0) {
+            success = false;
+            break;
+        }
+    }
+
+    if (success) {
+        LOG_INF("--------------------");
+        LOG_INF("| All selftests OK |");
+        LOG_INF("--------------------\n");
+        sm_.process_event(Success{});
+    } else {
+        LOG_INF("-------------------------");
+        LOG_INF("| Some selftests failed |");
+        LOG_INF("-------------------------\n");
+        sm_.process_event(Failed{});
+    }
 }
 
 // Ready state

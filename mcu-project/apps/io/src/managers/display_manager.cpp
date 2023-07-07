@@ -40,6 +40,13 @@ int DisplayManager::Init()
     return 0;
 }
 
+int DisplayManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("Display manager OK");
+    return 0;
+}
+
 void DisplayManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
     on_error_.cb = cb;

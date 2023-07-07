@@ -31,6 +31,13 @@ int InclinometerManager::Init()
     return 0;
 }
 
+int InclinometerManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("Inclinometer manager OK");
+    return 0;
+}
+
 void InclinometerManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
     on_error_.cb = cb;

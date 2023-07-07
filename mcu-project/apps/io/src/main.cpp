@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(main);
 
 int main(void)
 {
-    LOG_INF("********************************");
+    LOG_INF("\n********************************");
     LOG_INF("**  TM5 IO Controller v.%s", "0.13  **");
     LOG_INF("********************************");
 

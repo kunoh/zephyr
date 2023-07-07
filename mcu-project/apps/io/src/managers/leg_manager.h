@@ -13,6 +13,7 @@ public:
     LegManager(LegControl& leg_control, InclinometerManager& incl_mgr);
     ~LegManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     uint32_t GetLastValue();
     bool ChangeTimer(uint32_t new_time_ms);

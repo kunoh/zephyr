@@ -31,6 +31,13 @@ int LegManager::Init()
     return 0;
 }
 
+int LegManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("Leg manager OK");
+    return 0;
+}
+
 void LegManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
     on_error_.cb = cb;

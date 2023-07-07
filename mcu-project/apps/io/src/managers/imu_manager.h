@@ -16,6 +16,7 @@ public:
     ImuManager(Imu& imu);
     ~ImuManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     void AddSubscriber(std::function<void(ImuSampleData)> cb);
     void StartSampling();

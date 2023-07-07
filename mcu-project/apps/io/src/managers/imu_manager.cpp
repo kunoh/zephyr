@@ -24,6 +24,13 @@ int ImuManager::Init()
     return ret;
 }
 
+int ImuManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("IMU manager OK");
+    return 0;
+}
+
 void ImuManager::AddErrorCb(void (*cb)(void *), void *user_data)
 {
     on_error_.cb = cb;

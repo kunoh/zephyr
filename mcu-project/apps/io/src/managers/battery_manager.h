@@ -35,6 +35,7 @@ public:
     BatteryManager(Battery& battery, BatteryCharger& charger);
     ~BatteryManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
 
     //--- Installation mode and limits ---//

@@ -15,6 +15,7 @@ public:
     MessageManager(UsbHid& usb_hid, MessageProto& msg_proto, MessageDispatcher& dispatcher);
     ~MessageManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     int on_battery_gen_data_cb(BatteryGeneralData sample_data);
     int on_battery_chg_data_cb(BatteryChargingData sample_data);

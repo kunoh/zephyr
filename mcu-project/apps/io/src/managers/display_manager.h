@@ -13,6 +13,7 @@ public:
     DisplayManager(Display& disp);
     ~DisplayManager() = default;
     int Init() override;
+    int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
     void SetBootLogo();
     void NextFrame();

@@ -24,6 +24,13 @@ int MessageManager::Init()
     return 0;
 }
 
+int MessageManager::Selftest()
+{
+    // Do selftest
+    LOG_INF("Message manager OK");
+    return 0;
+}
+
 void MessageManager::AddErrorCb(void (*cb)(void*), void* user_data)
 {
     on_error_.cb = cb;

@@ -12,7 +12,11 @@ BatteryNh2054qe34::BatteryNh2054qe34()
 
 int BatteryNh2054qe34::Init()
 {
-    if (!device_is_ready(battery_dev_)) {
+    int ret;
+    ret = sensor_attr_set(battery_dev_, (sensor_channel)SENSOR_CHAN_INIT_CONFIG,
+                          SENSOR_ATTR_CONFIGURATION, NULL);
+
+    if (ret != 0 || !device_is_ready(battery_dev_)) {
         LOG_ERR("NH2054QE34 battery not found. Aborting...");
         return 1;
     }

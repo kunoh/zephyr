@@ -45,6 +45,7 @@ enum bq25713_channel{
     SENSOR_CHAN_GAUGE_DESIRED_CHARGING_VOLTAGE = SENSOR_CHAN_PRIV_START, // Desired charging voltage in mV. Only a charging current channel type exists in Zephyr's sensor API
     SENSOR_CHAN_CHARGER_STATUS,
     SENSOR_CHAN_CHARGING_CONFIG,
+    SENSOR_CHAN_INIT_CONFIG,
 };
 
 ///

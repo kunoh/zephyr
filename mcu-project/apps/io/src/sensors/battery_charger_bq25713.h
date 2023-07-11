@@ -26,5 +26,5 @@ public:
     int GetChargerStatus(int32_t &chgr_status) override;
 
 private:
-    const struct device *charger_dev = DEVICE_DT_GET(DT_NODELABEL(smart_battery_charger));
+    const struct device *charger_dev_ = DEVICE_DT_GET(DT_NODELABEL(smart_battery_charger));
 };

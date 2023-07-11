@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/device.h>
 
 #define MILLIVOLTS_PER_VOLT                     1000
 #define MILLIAMPS_PER_AMP                       1000
@@ -76,4 +77,5 @@ enum nh2054qe34_channel{
     SENSOR_CHAN_STATUS,
     SENSOR_CHAN_BATTERY_GENERAL,
     SENSOR_CHAN_BATTERY_CHARGING,
+    SENSOR_CHAN_INIT_CONFIG,
 };

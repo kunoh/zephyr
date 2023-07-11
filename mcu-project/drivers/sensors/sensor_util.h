@@ -2,10 +2,15 @@
 
 #include <stdint.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/device.h>
 
 // Conversion functions
 void i2c_bytes_to_sensor_value(uint8_t* buf, struct sensor_value* val);
 void uint16_to_i2c_bytes(uint16_t val, uint8_t* buf);
+
+/// @brief Mark device initialized if initialization was successful. Mark false and record error code if not.
+// From kernel/init.c
+void mark_device_cond_initialized(const struct device* dev, int init_ret_code);
 
 #define Z_DEVICE_BASE_DEFINE_NO_INIT(node_id, dev_id, name, pm,                 \
                                      data, config, api, state, handles)         \

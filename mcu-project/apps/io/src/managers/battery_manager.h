@@ -186,7 +186,7 @@ private:
     bool ChargingAllowed();
 
     std::string installation_mode_ = INSTALLATION_MODE_DEFAULT;
-    bool is_charging_ = false;
+    bool is_charging_ = true;
     std::map<std::string, GeneralSubscription> subscriptions_gen_;
     std::map<std::string, ChargingSubscription> subscriptions_chg_;
     std::map<std::string, int32_t> chg_limits_;

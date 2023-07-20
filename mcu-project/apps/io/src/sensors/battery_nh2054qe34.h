@@ -3,6 +3,8 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 
+#include <bitset>
+
 #include "battery.h"
 
 #define BATTERY_STATUS_OVER_CHARGED_BIT_POS 15
@@ -39,14 +41,16 @@ public:
     /// (default).
     ///              Milliwatt hours (mWh) if battery is configured with CAPACITY_MODE 1.
     int GetRemCapacity(int32_t &rem_cap) override;
-
-    int GetRelativeStateOfCharge(int32_t &relative_charge_state) override;
     int GetCycleCount(int32_t &cycle_count) override;
+
     int GetChargingCurrent(int32_t &charging_current) override;
     int GetChargingVoltage(int32_t &charging_volt) override;
     int GetStatus(int32_t &status) override;
+    int GetRelativeStateOfCharge(int32_t &relative_charge_state) override;
     bool CanBeCharged(int32_t status_code) override;
 
 private:
     const struct device *battery_dev_ = DEVICE_DT_GET(DT_NODELABEL(smart_battery));
+    std::bitset<CHAR_BIT * sizeof(int)> rcode_sampling_gen_;
+    std::bitset<CHAR_BIT * sizeof(int)> rcode_sampling_chg_;
 };

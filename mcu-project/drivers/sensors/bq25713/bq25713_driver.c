@@ -103,8 +103,8 @@ static int bq25713_init(const struct device* dev, const struct bq25713_config* c
         return EIO;
     }
 
-    k_msleep(1);
     // Validate
+    k_msleep(2);
     ret = i2c_reg_read_byte(charger_i2c_spec.bus, charger_i2c_spec.addr, CHARGE_OPTION_0, &rx_buf);
     if(ret != 0 || (tx_buf != rx_buf))
     {
@@ -138,8 +138,12 @@ static int bq25713_sample_fetch(const struct device* dev, enum sensor_channel ch
 
     switch(chan)
     {
-        case SENSOR_CHAN_ALL:
+        case SENSOR_CHAN_CHARGER_STATUS:
             ret = i2c_burst_read(charger_i2c_spec.bus, charger_i2c_spec.addr, CHARGER_STATUS, charger_data->chg_status, CHARGER_PROPERTY_BYTES);
+            if(ret != 0)
+            {
+                ret = EIO;
+            }
             break;
 
         default:

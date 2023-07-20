@@ -5,6 +5,30 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/device.h>
 
+// General data
+#define ERR_SPEC_INFO_BIT_POS   5
+#define ERR_SPEC_INFO_CODE      BIT(ERR_SPEC_INFO_BIT_POS)
+#define ERR_VOLTAGE_BIT_POS     6
+#define ERR_VOLTAGE_CODE        BIT(ERR_VOLTAGE_BIT_POS)
+#define ERR_CURRENT_BIT_POS     7
+#define ERR_CURRENT_CODE        BIT(ERR_CURRENT_BIT_POS)
+#define ERR_REM_CAP_BIT_POS     8
+#define ERR_REM_CAP_CODE        BIT(ERR_REM_CAP_BIT_POS)
+#define ERR_TEMP_BIT_POS        9
+#define ERR_TEMP_CODE           BIT(ERR_TEMP_BIT_POS)
+#define ERR_CYCLE_COUNT_BIT_POS 10
+#define ERR_CYCLE_COUNT_CODE    BIT(ERR_CYCLE_COUNT_BIT_POS)
+
+// Charging data
+#define ERR_CHARGING_CURRENT_BIT_POS    5
+#define ERR_CHARGING_CURRENT_CODE       BIT(ERR_CHARGING_CURRENT_BIT_POS)
+#define ERR_CHARGING_VOLTAGE_BIT_POS    6
+#define ERR_CHARGING_VOLTAGE_CODE       BIT(ERR_CHARGING_VOLTAGE_BIT_POS)
+#define ERR_STATUS_BIT_POS              7
+#define ERR_STATUS_CODE                 BIT(ERR_STATUS_BIT_POS)
+#define ERR_REL_CHARGE_STATE_BIT_POS    8
+#define ERR_REL_CHARGE_STATE_CODE       BIT(ERR_REL_CHARGE_STATE_BIT_POS)
+
 #define MILLIVOLTS_PER_VOLT                     1000
 #define MILLIAMPS_PER_AMP                       1000
 

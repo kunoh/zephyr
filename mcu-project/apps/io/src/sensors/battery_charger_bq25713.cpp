@@ -80,7 +80,7 @@ int BatteryChargerBq25713::GetChargerStatus(int32_t &chgr_status)
     int ret = 0;
     sensor_value val;
 
-    ret = sensor_sample_fetch(charger_dev_);
+    ret = sensor_sample_fetch_chan(charger_dev_, (sensor_channel)SENSOR_CHAN_CHARGER_STATUS);
     if (ret != 0) {
         return ret;
     }

@@ -295,10 +295,11 @@ bool BatteryManager::IsCharging() const
 void BatteryManager::HandleBatteryGeneralData()
 {
     if (battery_.TriggerGeneralSampling() != 0) {
-        LOG_ERR("Failed sampling one or more general battery properties.");
+        LOG_WRN("Failed sampling one or more general battery properties.");
     }
+
     if (battery_.GetGeneralData(last_gen_data_) != 0) {
-        LOG_ERR("Failed fetching one or more general battery properties.");
+        LOG_WRN("Failed fetching one or more general battery properties.");
     }
 
     for (auto& pair : subscriptions_gen_) {
@@ -316,11 +317,19 @@ void BatteryManager::HandleBatteryChargingData()
     // Get charging info from battery and determine whether or not it's in a condition to be
     // charged. If we cannot sample battery reliably or battery alarm flags are set, charging is
     // inhibited.
-    if ((battery_.TriggerChargingSampling() != 0) ||
-        (battery_.GetChargingData(last_chg_data_) != 0)) {
-        LOG_WRN("Failed sampling one or more battery charging properties.");
+    if ((battery_.TriggerChargingSampling() != 0)) {
+        LOG_ERR("Failed sampling one or more battery charging properties.");
+        inhibit_charging =
+            true;  // If sampling fails we can't trust charging data, stop charging by default.
+    }
+
+    if (battery_.GetChargingData(last_chg_data_) != 0)  // We still want values to send to CPU
+    {
+        LOG_ERR("Failed fetching one or more battery charging properties.");
         inhibit_charging = true;
-    } else if (!ChargingAllowed()) {
+    } else if (!inhibit_charging && !ChargingAllowed())  // If samping was succesful, but status
+                                                         // indicates we cannot charge.
+    {
         if (is_charging_) {
             LOG_INF("Battery cannot be charged. Battery status: 0x%X", last_chg_data_.status);
         }
@@ -408,7 +417,7 @@ bool BatteryManager::IsOverThreshold(const GeneralSubscription& subscription,
          subscription.thresholds.current) ||
         (fabs(subscription.last_notificaton_.volt - last_sample.volt) >=
          subscription.thresholds.volt) ||
-        (fabs(subscription.last_notificaton_.remaining_capacity - last_sample.remaining_capacity) >=
+        (abs(subscription.last_notificaton_.remaining_capacity - last_sample.remaining_capacity) >=
          subscription.thresholds.remaining_capacity) ||
         (abs(subscription.last_notificaton_.cycle_count - last_sample.cycle_count) >=
          subscription.thresholds.cycle_count)) {

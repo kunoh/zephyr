@@ -20,7 +20,7 @@ Initialization (one time only, executed from zephyrproject dir):
   * zephyrproject/zephyr/scripts/requirements.txt
 
 # Choice of debugger
-If you are working with a 1060 board you will need to change the debugger firmware to J-Link for flashing and debugging. It is possible to use either the onboard debugger or an external MCU-Link Pro.  
+If you are working with a 1060 board you will need to change the debugger firmware to J-Link for flashing and debugging. It is possible to use either the onboard debugger or an external MCU-Link Pro.
 ## Onboard debugger
   * https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1060-EVKB/ta-p/1452717
   * https://www.nxp.com/docs/en/application-note/AN13206.pdf
@@ -29,7 +29,7 @@ If you are working with a 1060 board you will need to change the debugger firmwa
       * https://www.nxp.com/docs/en/user-guide/LPCScrypt_User_Guide.pdf
     * There is a number of mismatched names in the application note when applied to the evkb:
       * DFU jumper is J12.
-      * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.  
+      * You will need to use two usb ports. The debug circuit usb port is J1 and the rest of the board will be powered by J48. Remember to move J40 to 3-4 to power the board from J48.
 
 ## External debugger (MCU-Link Pro)
   * You will need to follow the same steps as the onboard debugger regarding powering the rest of the board from J48 without the debug circuit. Remove the usb cable from the J1 usb-port to remove power from the debug circuit. To power the rest of the board from usb-port J48, move jumper J40 to the 3-4 configuration.
@@ -103,20 +103,20 @@ West commands work as well in the project directories. You can also run `build.p
   }
   ```
 
-  Modify the zephyr-sdk, device, and JLink versions and paths to match your system.  
+  Modify the zephyr-sdk, device, and JLink versions and paths to match your system.
   Notes:
   * MIMXRT1062xxx6B boards require zephyr-sdk >= 15.2.
   * The `"request": "launch"` entry is only useful when flashing the application as standalone. When using the application with the bootloader, use `"request": "attach"`.
-  
-  
+
+
 * You will also need to update settings.json with the Zephyr arm toolchain prefix. In VSCode:
   1. Go to `File->Preferences->Settings`.
-  2. Search "cortex-debug.armToolchainPrefix".  
+  2. Search "cortex-debug.armToolchainPrefix".
   3. Click on `"Edit in settings.json"`.
   4. Add the entry `"cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",`
 
 # Unit tests
-Zephyr's Ztest framework is used for the unit tests and run with Twister.  
+Zephyr's Ztest framework is used for the unit tests and run with Twister.
 All tests should be placed in mcu-project/tests and can be run with:
 
 ``` bash
@@ -158,4 +158,20 @@ cd mcu
 git config --global --add safe.directory '*'
 west update
 ./build.py -t io
+```
+
+# Clangd Extension Setup for Vscode
+
+Install clangd extension in Vscode.
+
+If the clangd extension cannot find the clangd executable in your PATH, it will offer to download and install it for you. Please say yes to that.
+
+Vscode will complain that you have both cpptools's IntelliSense and clangd installed. Please click the "Disable IntelliSense" button to disable that.
+
+Add the following to your .vscode/settings.json:
+
+```json
+"clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/build/io1060/app"
+]
 ```

@@ -21,3 +21,4 @@ __pycache__/
 !build.py
 !pipelines/build*
 !docker/build*
+scripts/tmp/

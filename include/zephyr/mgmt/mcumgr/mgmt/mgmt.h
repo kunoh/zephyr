@@ -178,10 +178,14 @@ typedef int (*mgmt_handler_fn)(struct smp_streamer *ctxt);
 
 /**
  * @brief Read handler and write handler for a single command ID.
+ * Set use_custom_payload to true when using a user defined payload type
  */
 struct mgmt_handler {
 	mgmt_handler_fn mh_read;
 	mgmt_handler_fn mh_write;
+#if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
+	bool custom_payload;
+#endif
 };
 
 /**

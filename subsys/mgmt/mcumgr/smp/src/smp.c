@@ -191,14 +191,20 @@ static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp
 		bool ok;
 
 		*handler_found = true;
-		ok = zcbor_map_start_encode(cbuf->writer->zs,
-					    CONFIG_MCUMGR_SMP_CBOR_MAX_MAIN_MAP_ENTRIES);
+#if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
+		if (!handler->custom_payload) {
+#endif
+			ok = zcbor_map_start_encode(cbuf->writer->zs,
+						    CONFIG_MCUMGR_SMP_CBOR_MAX_MAIN_MAP_ENTRIES);
 
-		MGMT_CTXT_SET_RC_RSN(cbuf, NULL);
+			MGMT_CTXT_SET_RC_RSN(cbuf, NULL);
 
-		if (!ok) {
-			return MGMT_ERR_EMSGSIZE;
+			if (!ok) {
+				return MGMT_ERR_EMSGSIZE;
+			}
+#if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
 		}
+#endif
 
 #if defined(CONFIG_MCUMGR_SMP_COMMAND_STATUS_HOOKS)
 		cmd_recv.group = req_hdr->nh_group;
@@ -231,12 +237,18 @@ static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp
 #if defined(CONFIG_MCUMGR_SMP_COMMAND_STATUS_HOOKS)
 end:
 #endif
-		/* End response payload. */
-		if (!zcbor_map_end_encode(cbuf->writer->zs,
-					  CONFIG_MCUMGR_SMP_CBOR_MAX_MAIN_MAP_ENTRIES) &&
-		    rc == 0) {
-			rc = MGMT_ERR_EMSGSIZE;
+#if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
+		if (!handler->custom_payload) {
+#endif
+			/* End response payload. */
+			if (!zcbor_map_end_encode(cbuf->writer->zs,
+						  CONFIG_MCUMGR_SMP_CBOR_MAX_MAIN_MAP_ENTRIES) &&
+				rc == 0) {
+				rc = MGMT_ERR_EMSGSIZE;
+			}
+#if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
 		}
+#endif
 	} else {
 		rc = MGMT_ERR_ENOTSUP;
 	}

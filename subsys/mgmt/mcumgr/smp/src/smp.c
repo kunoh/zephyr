@@ -156,9 +156,9 @@ static int smp_build_err_rsp(struct smp_streamer *streamer, const struct smp_hdr
  *
  * @return A MGMT_ERR_[...] error code.
  */
-static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp_hdr *req_hdr,
-				     bool *handler_found)
+static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp_hdr *req_hdr)
 {
+	const struct mgmt_group *group;
 	const struct mgmt_handler *handler;
 	mgmt_handler_fn handler_fn;
 	int rc;
@@ -169,7 +169,12 @@ static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp
 	uint16_t ret_group;
 #endif
 
-	handler = mgmt_find_handler(req_hdr->nh_group, req_hdr->nh_id);
+	group = mgmt_find_group(req_hdr->nh_group);
+	if (group == NULL) {
+		return MGMT_ERR_ENOTSUP;
+	}
+
+	handler = mgmt_get_handler(group, req_hdr->nh_id);
 	if (handler == NULL) {
 		return MGMT_ERR_ENOTSUP;
 	}
@@ -190,9 +195,8 @@ static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp
 	if (handler_fn) {
 		bool ok;
 
-		*handler_found = true;
 #if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
-		if (!handler->custom_payload) {
+		if (!group->custom_payload) {
 #endif
 			ok = zcbor_map_start_encode(cbuf->writer->zs,
 						    CONFIG_MCUMGR_SMP_CBOR_MAX_MAIN_MAP_ENTRIES);
@@ -238,7 +242,7 @@ static int smp_handle_single_payload(struct smp_streamer *cbuf, const struct smp
 end:
 #endif
 #if defined(CONFIG_MCUMGR_MGMT_CUSTOM_PAYLOAD)
-		if (!handler->custom_payload) {
+		if (!group->custom_payload) {
 #endif
 			/* End response payload. */
 			if (!zcbor_map_end_encode(cbuf->writer->zs,
@@ -268,7 +272,7 @@ end:
  * @return A MGMT_ERR_[...] error code.
  */
 static int smp_handle_single_req(struct smp_streamer *streamer, const struct smp_hdr *req_hdr,
-				 bool *handler_found, const char **rsn)
+				 const char **rsn)
 {
 	struct smp_hdr rsp_hdr;
 	struct cbor_nb_writer *nbw = streamer->writer;
@@ -291,7 +295,7 @@ static int smp_handle_single_req(struct smp_streamer *streamer, const struct smp
 	}
 
 	/* Process the request and write the response payload. */
-	rc = smp_handle_single_payload(streamer, req_hdr, handler_found);
+	rc = smp_handle_single_payload(streamer, req_hdr);
 	if (rc != 0) {
 		*rsn = MGMT_CTXT_RC_RSN(streamer);
 		return rc;
@@ -423,7 +427,8 @@ int smp_process_request_packet(struct smp_streamer *streamer, void *vreq)
 			cbor_nb_writer_init(streamer->writer, rsp);
 
 			/* Process the request payload and build the response. */
-			rc = smp_handle_single_req(streamer, &req_hdr, &handler_found, &rsn);
+			rc = smp_handle_single_req(streamer, &req_hdr, &rsn);
+			handler_found = (rc != MGMT_ERR_ENOTSUP);
 			if (rc != 0) {
 				break;
 			}

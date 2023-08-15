@@ -18,16 +18,20 @@ steps:
 
     # Validate that all test passed by looking at the twister output file.
     # Twister is not returning any exit codes on failures, therefore we will manual scan the results.
-    for testsuite in $(jq '.testsuites[]' build/unit_tests/twister-out/twister.json | tr -d '\t\r\n '); do
-      for status in $(echo ${testsuite} | jq '.status'); do
-        if [[ "${status}" != "\"passed\"" ]]; then
-          pack_logs
-          exit 1
+    file=build/unit_tests/twister-out/twister.json
+    error=false
+    for k in $(jq '.testsuites | keys | .[]' $file); do
+        value=$(jq -r ".testsuites[$k]" $file);
+        status=$(jq -r '.status' <<< "$value");
+        if [ $status == "error" ]; then
+            jq -r '.log' <<< "$value"
+            error=true
         fi
-      done
     done
-
     pack_logs
+    if [ "$error" = true ] ; then
+        exit 1
+    fi
   displayName: Run unit tests
 
 - task: PublishPipelineArtifact@1

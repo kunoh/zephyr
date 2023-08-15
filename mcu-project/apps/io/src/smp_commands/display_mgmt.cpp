@@ -39,6 +39,8 @@ DisplayMgmt::DisplayMgmt(DisplayManager &disp_mgr) : disp_mgr_{disp_mgr}
     g_disp_mgmt = this;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 int DisplayMgmt::Init()
 {
     mgmt_group_handlers_[DISPLAY_MGMT_ID_NEXT_FRAME] = {.mh_read = &GnextFrame, .mh_write = NULL};
@@ -58,6 +60,7 @@ int DisplayMgmt::Init()
     mgmt_register_group(&mgmt_group_);
     return 0;
 }
+#pragma GCC diagnostic pop
 
 int DisplayMgmt::NextFrame(smp_streamer *ctxt)
 {

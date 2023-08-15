@@ -32,7 +32,7 @@ void MessageManagerNew::AddErrorCb(void (*cb)(void*), void* user_data)
     on_error_.user_data = user_data;
 }
 
-void MessageManagerNew::AddHandler(MgmtHandler& h)
+void MessageManagerNew::AddHandler(Mgmt& h)
 {
     mgmt_handlers_.push_back(&h);
 }

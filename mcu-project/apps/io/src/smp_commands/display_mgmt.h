@@ -2,11 +2,11 @@
 
 #include "commands.h"
 #include "display_manager.h"
-#include "mgmt_handler.h"
+#include "mgmt.h"
 
 namespace trackman {
 
-class DisplayMgmt : public MgmtHandler {
+class DisplayMgmt : public Mgmt {
 public:
     DisplayMgmt(DisplayManager& disp_mgr);
     virtual ~DisplayMgmt() = default;

@@ -29,6 +29,8 @@ SystemMgmt::SystemMgmt()
     g_sys_mgmt = this;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 int SystemMgmt::Init()
 {
     mgmt_group_handlers_[SYSTEM_MGMT_ID_HELLO_PB] = {.mh_read = &GhelloWorldPb, .mh_write = NULL};
@@ -45,6 +47,7 @@ int SystemMgmt::Init()
     mgmt_register_group(&mgmt_group_);
     return 0;
 }
+#pragma GCC diagnostic pop
 
 int SystemMgmt::HelloWorldPb(smp_streamer *ctxt)
 {

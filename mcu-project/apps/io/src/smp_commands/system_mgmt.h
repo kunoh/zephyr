@@ -1,11 +1,11 @@
 #pragma once
 
 #include "commands.h"
-#include "mgmt_handler.h"
+#include "mgmt.h"
 
 namespace trackman {
 
-class SystemMgmt : public MgmtHandler {
+class SystemMgmt : public Mgmt {
 public:
     SystemMgmt();
     virtual ~SystemMgmt() = default;

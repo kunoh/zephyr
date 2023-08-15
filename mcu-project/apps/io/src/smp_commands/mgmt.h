@@ -3,8 +3,8 @@
 #include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>
 #include <zephyr/mgmt/mcumgr/smp/smp.h>
 
-class MgmtHandler {
+class Mgmt {
 public:
-    virtual ~MgmtHandler() = default;
+    virtual ~Mgmt() = default;
     virtual int Init() = 0;
 };

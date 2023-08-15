@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "manager.h"
-#include "mgmt_handler.h"
+#include "mgmt.h"
 #include "util.h"
 
 class MessageManagerNew : public Manager {
@@ -13,9 +13,9 @@ public:
     int Init() override;
     int Selftest() override;
     void AddErrorCb(void (*cb)(void*), void* user_data) override;
-    void AddHandler(MgmtHandler& h);
+    void AddHandler(Mgmt& h);
 
 private:
-    std::vector<MgmtHandler*> mgmt_handlers_;
+    std::vector<Mgmt*> mgmt_handlers_;
     CallbackWrapper on_error_;
 };

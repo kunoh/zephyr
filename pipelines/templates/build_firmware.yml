@@ -53,7 +53,7 @@ steps:
       cp -r mcu-project/apps/io/src/message_handlers/proto/. $(Build.ArtifactStagingDirectory)/proto/inner/
       cp mcu-project/modules/message_handler/outer.proto $(Build.ArtifactStagingDirectory)/proto/outer/
       cp -r mcu-project/modules/message_handler/google $(Build.ArtifactStagingDirectory)/proto/outer/
-      cp mcu-project/apps/io/src/messages/commands.h $(Build.ArtifactStagingDirectory)
+      cp mcu-project/apps/io/src/smp_commands/commands.h $(Build.ArtifactStagingDirectory)
     fi
   displayName: Building FW
 

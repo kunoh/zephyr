@@ -20,7 +20,7 @@ target_include_directories(app
             ${CMAKE_SOURCE_DIR}/src/sensors
             ${CMAKE_SOURCE_DIR}/src/message_handlers
             ${CMAKE_SOURCE_DIR}/src/third_party
-            ${CMAKE_SOURCE_DIR}/src/messages
+            ${CMAKE_SOURCE_DIR}/src/smp_commands
 )
 
 target_sources(app PRIVATE src/main.cpp
@@ -43,8 +43,8 @@ target_sources(app PRIVATE src/main.cpp
                            src/message_handlers/display_message_handler_impl.cpp
                            src/message_handlers/inclinometer_message_handler_impl.cpp
                            src/utils/util.cpp
-                           src/messages/system_mgmt.cpp
-                           src/messages/display_mgmt.cpp
+                           src/smp_commands/system_mgmt.cpp
+                           src/smp_commands/display_mgmt.cpp
                            src/managers/message_manager_new.cpp
 )
 

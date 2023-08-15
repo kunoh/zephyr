@@ -1,6 +1,6 @@
 #pragma once
-#include "display.h"
 
+#include "display.h"
 class DisplayMock : public Display {
 public:
     DisplayMock();

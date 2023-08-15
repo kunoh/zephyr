@@ -1,7 +1,6 @@
 #pragma once
 
 #include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 
 #include "manager.h"
 #include "message_dispatcher.h"

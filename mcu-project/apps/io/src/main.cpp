@@ -6,9 +6,11 @@
 #include "battery_message_handler_impl.h"
 #include "battery_mock.h"
 #include "battery_nh2054qe34.h"
+#include "display.h"
 #include "display_com35h3.h"
 #include "display_manager.h"
 #include "display_message_handler_impl.h"
+#include "display_mgmt.h"
 #include "display_mock.h"
 #include "imu_fxos8700.h"
 #include "imu_manager.h"
@@ -21,13 +23,17 @@
 #include "leg_manager.h"
 #include "message_dispatcher.h"
 #include "message_manager.h"
+#include "message_manager_new.h"
 #include "state_manager_sml.h"
 #include "system_message_handler_impl.h"
+#include "system_mgmt.h"
 #include "usb_hid_mock.h"
 #include "usb_hid_zephyr.h"
 #include "util.h"
 
 LOG_MODULE_REGISTER(main);
+
+using namespace trackman;
 
 int main(void)
 {
@@ -88,6 +94,8 @@ int main(void)
     InclinometerManager inclino_manager(incl);
     LegManager leg_manager(leg_control, inclino_manager);
 
+    MessageManagerNew msg_manager_new;
+
     // Initialize Message Handlers
     SystemMessageHandlerImpl system_msg_handler;
     BatteryMessageHandlerImpl battery_msg_handler(battery_manager, msg_manager);
@@ -99,12 +107,19 @@ int main(void)
     dispatcher.AddHandler(display_msg_handler);
     dispatcher.AddHandler(inclinometer_msg_handler);
 
+    SystemMgmt sys_mgmt;
+    DisplayMgmt disp_mgmt(disp_manager);
+
+    msg_manager_new.AddHandler(sys_mgmt);
+    msg_manager_new.AddHandler(disp_mgmt);
+
     state_manager.AddManager(disp_manager);
     state_manager.AddManager(msg_manager);
     state_manager.AddManager(imu_manager);
     state_manager.AddManager(battery_manager);
     state_manager.AddManager(inclino_manager);
     state_manager.AddManager(leg_manager);
+    state_manager.AddManager(msg_manager_new);
 
     if (usb_enable(NULL) != 0) {
         LOG_ERR("Failed to enable USB");

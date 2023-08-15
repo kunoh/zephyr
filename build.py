@@ -68,7 +68,7 @@ def build_bootloader(mcu_type, board, clean):
     ret = run_cmd(cmd)
     print(ret)
 
-def build_app(mcu_type, board, clean, release, without_bootloader, version):
+def build_app(mcu_type, board, clean, release, without_bootloader, version, development):
 
     build_dir = f"{BUILD_DIR}/{mcu_type}/app"
     if clean:
@@ -80,7 +80,10 @@ def build_app(mcu_type, board, clean, release, without_bootloader, version):
     extra_args = ""
     if "io" in mcu_type:
         mcu_type = "io"
-        config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
+        if development:
+            config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/development.conf")
+        else:
+            config_overlay = add_to_overlay(None, f"{APP_DIR}/{mcu_type}/{board}.conf")
         config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/logging.conf")
         if not release:
             config_overlay = add_to_overlay(config_overlay, f"{APP_DIR}/{mcu_type}/debug.conf")
@@ -173,6 +176,8 @@ def main():
                         help='Flash firmware')
     parser.add_argument('-r', '--release', action='store_true',
                         help='Build firmware for release')
+    parser.add_argument('-d', '--development', action='store_true',
+                        help='Build with drivers disabled')
     parser.add_argument('-fo', '--flash-only', action='store_true',
                         help='Just flash, no build.')
     parser.add_argument('-wb', '--without-bootloader', action='store_true',
@@ -181,7 +186,7 @@ def main():
                         help='Run unit tests')
     parser.add_argument('--format', action='store_true',
                         help='Format code using clang')
-    parser.add_argument('-d', '--document', choices=['io', 'ble', 'modules'],
+    parser.add_argument('--document', choices=['io', 'ble', 'modules'],
                         help='Build Doxygen documentation')
     parser.add_argument('-v', '--version', type=str, default='0.0.0+0',
                         help='Inject a version into the signed binary, format; <major>.<minor>.<patch>[+build]')
@@ -217,7 +222,7 @@ def main():
         if args.bootloader:
             build_bootloader(args.type, board, args.clean)
         else:
-            build_app(mcu_type, board, args.clean, args.release, args.without_bootloader, args.version)
+            build_app(mcu_type, board, args.clean, args.release, args.without_bootloader, args.version, args.development)
     else:
         args.flash = True
 

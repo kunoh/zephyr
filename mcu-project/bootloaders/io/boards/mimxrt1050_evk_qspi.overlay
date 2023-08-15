@@ -1,6 +1,7 @@
 / {
     aliases {
         mcuboot-led0 = &green_led;
+        mcuboot-button0 = &user_button;
     };
 };
 

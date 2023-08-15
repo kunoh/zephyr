@@ -13,24 +13,24 @@
     maximum-speed = "high-speed";
 };
 
-&lcdif {
-	width = <320>;
-	height = <240>;
-	hsync = <48>;
-	hfp = <40>;
-	hbp = <88>;
-	vsync = <3>;
-	vfp = <13>;
-	vbp = <32>;
-};
+// &lcdif {
+// 	width = <320>;
+// 	height = <240>;
+// 	hsync = <48>;
+// 	hfp = <40>;
+// 	hbp = <88>;
+// 	vsync = <3>;
+// 	vfp = <13>;
+// 	vbp = <32>;
+// };
 
-&lpi2c1 {	
+&lpi2c1 {
 	smart_battery: nh2054qe34@b{
 		status = "okay";
 		compatible = "inspiredenergy,nh2054qe34";
 		reg = <0xb>;
 	};
-	
+
 	smart_battery_charger: bq25713@6b{
 		status = "okay";
 		compatible = "ti,bq25713";

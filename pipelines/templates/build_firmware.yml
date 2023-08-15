@@ -45,6 +45,7 @@ steps:
       exit 1
     fi
 
+    #TODO: when the transition to SMP is done the outer message should be removed as they are not used anymore
     cp build/${{ parameters.target }}/app/zephyr/zephyr.signed.bin $(Build.ArtifactStagingDirectory)/${{ parameters.artifact_name }}-$version.bin
     if [ "${{ parameters.target }}" = io1060 ]; then
       mkdir -p $(Build.ArtifactStagingDirectory)/proto/inner/
@@ -52,6 +53,7 @@ steps:
       cp -r mcu-project/apps/io/src/message_handlers/proto/. $(Build.ArtifactStagingDirectory)/proto/inner/
       cp mcu-project/modules/message_handler/outer.proto $(Build.ArtifactStagingDirectory)/proto/outer/
       cp -r mcu-project/modules/message_handler/google $(Build.ArtifactStagingDirectory)/proto/outer/
+      cp mcu-project/apps/io/src/messages/commands.h $(Build.ArtifactStagingDirectory)
     fi
   displayName: Building FW
 

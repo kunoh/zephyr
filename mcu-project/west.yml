@@ -2,7 +2,7 @@ manifest:
   version: "0.13"
   remotes:
     - name: zephyrproject
-      url-base: https://github.com/zephyrproject-rtos
+      url-base: https://github.com/kunoh
   defaults:
     remote: zephyrproject
 
@@ -10,7 +10,7 @@ manifest:
     - name: zephyr
       repo-path: zephyr
       path: zephyr
-      revision: v3.3.0
+      revision: allow_for_custom_smp_payload
       import:
         path-prefix: zephyrproject
   self:

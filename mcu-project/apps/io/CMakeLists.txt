@@ -20,9 +20,11 @@ target_include_directories(app
             ${CMAKE_SOURCE_DIR}/src/sensors
             ${CMAKE_SOURCE_DIR}/src/message_handlers
             ${CMAKE_SOURCE_DIR}/src/third_party
+            ${CMAKE_SOURCE_DIR}/src/messages
 )
 
 target_sources(app PRIVATE src/main.cpp
+                           src/display/display_mock.cpp
                            src/usb/usb_hid_zephyr.cpp
                            src/sensors/battery_mock.cpp
                            src/sensors/battery_charger_mock.cpp
@@ -41,6 +43,9 @@ target_sources(app PRIVATE src/main.cpp
                            src/message_handlers/display_message_handler_impl.cpp
                            src/message_handlers/inclinometer_message_handler_impl.cpp
                            src/utils/util.cpp
+                           src/messages/system_mgmt.cpp
+                           src/messages/display_mgmt.cpp
+                           src/managers/message_manager_new.cpp
 )
 
 target_sources_ifdef(CONFIG_BATTERY_CHARGER_BQ25713 app PRIVATE src/sensors/battery_charger_bq25713.cpp)

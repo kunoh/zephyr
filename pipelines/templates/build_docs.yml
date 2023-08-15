@@ -21,7 +21,7 @@ steps:
     rm -rf $(Build.ArtifactStagingDirectory)/mcu/build/Doxygen_*
 
     echo "Generating Doxygen documentation."
-    ./build.py -d ${{ parameters.target }}
+    ./build.py --document ${{ parameters.target }}
     if [ $? != 0 ]
     then
       echo "Couldn't generate ${{ parameters.target }} docs"

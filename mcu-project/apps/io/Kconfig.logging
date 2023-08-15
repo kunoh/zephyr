@@ -39,6 +39,14 @@ source "subsys/logging/Kconfig.template.log_config"
 endmenu
 menu "Message Handlers"
 
+module = SYSTEM_MGMT
+module-str = System Message Handler
+source "subsys/logging/Kconfig.template.log_config"
+
+module = DISPLAY_MGMT
+module-str = Display Message Handler
+source "subsys/logging/Kconfig.template.log_config"
+
 module = SYSTEM_MSG_HDLR
 module-str = System Message Handler
 source "subsys/logging/Kconfig.template.log_config"
@@ -72,6 +80,13 @@ source "subsys/logging/Kconfig.template.log_config"
 
 module = INCLINOMETER
 module-str = Inclinometer
+source "subsys/logging/Kconfig.template.log_config"
+
+endmenu
+menu "Others"
+
+module = DISPLAY
+module-str = Display
 source "subsys/logging/Kconfig.template.log_config"
 
 endmenu

@@ -1,6 +1,5 @@
 #pragma once
 #include <zephyr/device.h>
-#include <zephyr/logging/log.h>
 
 #include "display.h"
 

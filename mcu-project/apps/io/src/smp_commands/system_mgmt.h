@@ -11,6 +11,7 @@ public:
     virtual ~SystemMgmt() = default;
     int Init();
     int HelloWorldPb(smp_streamer *ctxt);
+    int ResetCausePb(smp_streamer *ctxt);
 
 private:
     mgmt_group mgmt_group_;

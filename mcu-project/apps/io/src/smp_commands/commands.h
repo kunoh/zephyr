@@ -18,8 +18,11 @@ enum tm_mcumgr_group_t {
  * Command IDs for System management group
  */
 enum system_mgmt_commands {
-    // Hello world using PB (Will not be implemented, just used as an illustration of usage)
-    SYSTEM_MGMT_ID_HELLO_PB = 0,
+    // Hello world using PB (used as an illustration of usage)
+    SYSTEM_MGMT_ID_HELLO_WORLD = 0,
+
+    // Get reset cause
+    SYSTEM_MGMT_ID_RESET_CAUSE,
 
     // It is used to allocate enough space for all commands. Should be increased everytime a new
     // command is added

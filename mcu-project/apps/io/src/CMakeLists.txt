@@ -1,1 +1,2 @@
 add_subdirectory(message_handlers)
+add_subdirectory(smp_commands)

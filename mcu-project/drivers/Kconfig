@@ -1,2 +1,1 @@
-rsource "display_lcd_w_framedisk/Kconfig"
 rsource "sensors/Kconfig"

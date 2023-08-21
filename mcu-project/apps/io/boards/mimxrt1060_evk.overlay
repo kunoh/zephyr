@@ -13,18 +13,7 @@
     maximum-speed = "high-speed";
 };
 
-// &lcdif {
-// 	width = <320>;
-// 	height = <240>;
-// 	hsync = <48>;
-// 	hfp = <40>;
-// 	hbp = <88>;
-// 	vsync = <3>;
-// 	vfp = <13>;
-// 	vbp = <32>;
-// };
-
-&lpi2c1 {
+&lpi2c1 {	
 	smart_battery: nh2054qe34@b{
 		status = "okay";
 		compatible = "inspiredenergy,nh2054qe34";
@@ -75,3 +64,18 @@
 		zephyr,sram = &ocram;
 	};
 };
+&lcdif {
+	width = <320>;
+	height = <240>;
+	display-timings {
+		compatible = "zephyr,panel-timing";
+		hsync-len = <48>;
+		hfront-porch = <40>;
+		hback-porch = <88>;
+		vsync-len = <3>;
+		vfront-porch = <13>;
+		vback-porch = <32>;
+	};
+	pixel-format = <PANEL_PIXEL_FORMAT_RGB_888>;
+};
+

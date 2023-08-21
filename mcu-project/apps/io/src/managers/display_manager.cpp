@@ -35,6 +35,7 @@ DisplayManager::DisplayManager(Display &disp) : disp_{disp}
 int DisplayManager::Init()
 {
     LOG_INF("Display Init");
+
     SetBootLogo();
     StartSpinner();
     return 0;
@@ -55,11 +56,13 @@ void DisplayManager::AddErrorCb(void (*cb)(void *), void *user_data)
 
 void DisplayManager::SetBootLogo()
 {
-    disp_.DisplayWrite((320 - 198) / 2, 10, 198, 16, 198, logo_);
+    disp_.WriteRect((320 - 198) / 2, 10, 198, 16, logo_);
+    disp_.DisplayWrite(0, 0, 320, 240, 320);
 }
 
 void DisplayManager::NextFrame()
 {
+    disp_.DisplayWrite(0, 0, 320, 240, 320);
     disp_.NextFrame();
 }
 
@@ -71,6 +74,7 @@ void DisplayManager::StartSpinner()
 void DisplayManager::StopSpinner()
 {
     k_timer_stop(&timer_);
+    disp_.NextFrame();
 }
 
 void DisplayManager::SpinnerTimerHandler(struct k_timer *timer)
@@ -84,7 +88,9 @@ void DisplayManager::DoSpin()
     static uint32_t spinner_idx = 0;
     uint8_t *spin = (uint8_t *)spinner_ + spinner_idx % 8 * (64 * 64 * 3);
     int ret = 0;
-    ret = disp_.DisplayWrite((320 - 64) / 2, 90, 64, 64, 64, spin);
+
+    disp_.WriteRect((320 - 64) / 2, 90, 64, 64, spin);
+    ret = disp_.DisplayWrite(0, 0, 320, 240, 320);
     if (ret != 0) {
         Error();
     }

@@ -8,13 +8,18 @@ DisplayMock::DisplayMock()
 {}
 
 int DisplayMock::DisplayWrite(const uint16_t x, const uint16_t y, const uint16_t width,
-                              const uint16_t height, const uint16_t pitch, const void* buf)
+                              const uint16_t height, const uint16_t pitch)
 {
     return 0;
 }
 
-int DisplayMock::NextFrame()
+void DisplayMock::WriteRect(const uint16_t x, const uint16_t y, const uint16_t width,
+                            const uint16_t height, const uint8_t* rect_buf)
 {
-    LOG_INF("Next Frame!");
-    return 0;
+    return;
+}
+
+void DisplayMock::NextFrame()
+{
+    return;
 }

@@ -10,7 +10,7 @@ manifest:
     - name: zephyr
       repo-path: zephyr
       path: zephyr
-      revision: allow_for_custom_smp_payload
+      revision: user_allocation_off_ramdisk_buffer
       import:
         path-prefix: zephyrproject
   self:

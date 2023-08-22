@@ -12,6 +12,8 @@ LOG_MODULE_REGISTER(disp_com35h3, CONFIG_DISPLAY_LOG_LEVEL);
 #define PIXEL_BYTES 3
 #define FRAMEBUF_SIZE WIDTH *HEIGHT *PIXEL_BYTES
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 K_HEAP_DEFINE(framebuf_pool, 2 * (FRAMEBUF_SIZE + 512));
 
 static const char *disk_pdrv = "RAM";

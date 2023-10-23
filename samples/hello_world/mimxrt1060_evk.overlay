@@ -1,0 +1,55 @@
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &scratch_partition;
+/delete-node/ &storage_partition;
+
+&is25wp064 {
+    partitions {
+        boot_partition: partition@0 {
+            label = "mcuboot";
+            reg = <0x00000000 DT_SIZE_K(128)>;
+        };
+        slot0_partition: partition@20000 {
+            label = "image-0";
+            reg = <0x00020000 DT_SIZE_M(1)>;
+        };
+        slot1_partition: partition@120000 {
+            label = "image-1";
+            reg = <0x00120000 DT_SIZE_M(1)>;
+        };
+        storage_partition: partition@220000 {
+            label = "storage";
+            reg = <0x00220000 DT_SIZE_K(6016)>;
+        };
+    };
+};
+
+&usb1 {
+    maximum-speed = "high-speed";
+};
+
+&usb2 {
+    maximum-speed = "high-speed";
+};
+
+/ {
+	chosen {
+		zephyr,uart-mcumgr = &cdc_acm_uart0;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+// Use interal (OC) ram,  instead of external ram.
+// This setting here replaces the default device tree "zephyr,sram" field in zephyrproject/zephyr/boards/arm/mimxrt1060_evk/mimxrt1060_evk.dts.
+// The 'ocram' tag/label is defined in zephyrproject/zephyr/dts/arm/nxp/nxp_rt1060.dtsi.
+/{
+	chosen {
+		zephyr,sram = &ocram;
+	};
+};

@@ -5,4 +5,17 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(hello_world)
 
-target_sources(app PRIVATE src/main.c)
+
+target_include_directories(app
+    PRIVATE ${CMAKE_SOURCE_DIR}/src/utils
+            ${CMAKE_SOURCE_DIR}/src/managers
+            ${CMAKE_SOURCE_DIR}/src/sensors
+)
+
+target_sources(app
+    PRIVATE src/main.cpp
+            src/sensors/imu_mock.cpp
+            src/sensors/sensor_mock.cpp
+            src/managers/imu_manager.cpp
+            src/managers/sensor_manager.cpp
+)

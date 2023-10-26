@@ -83,6 +83,10 @@ int main(void)
 	 */
 	LOG_INF("build time: " __DATE__ " " __TIME__);
 
+	// PRINT
+	printk("Test");
+	printk("Test");
+	
 	/* The system work queue handles all incoming mcumgr requests.  Let the
 	 * main thread idle while the mcumgr server runs.
 	 */

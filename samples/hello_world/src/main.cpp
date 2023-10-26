@@ -7,10 +7,21 @@
 #include <zephyr/kernel.h>
 #include <zephyr/usb/usb_device.h>
 
+#include <zephyr/fs/fs.h>
+#include <zephyr/fs/littlefs.h>
+
 #include "imu_mock.h"
 #include "sensor_mock.h"
 #include "imu_manager.h"
 #include "sensor_manager.h"
+
+FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(storage);
+static struct fs_mount_t lfs_storage_mnt = {
+	.type = FS_LITTLEFS,
+	.mnt_point = "/lfs",
+	.fs_data = &storage,
+	.storage_dev = (void *)FIXED_PARTITION_ID(storage_partition),
+};
 
 int main(void)
 {
@@ -20,154 +31,14 @@ int main(void)
         printk("Failed to enable USB");
     }
 
-	// PRINT
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
-	printk("Test");
+    int rc;
+    rc = fs_mount(&lfs_storage_mnt);
+    if (rc < 0) {
+        printk("Error mounting littlefs [%d]", rc);
+    }
 
+	// PRINT
+	
 	ImuMock imu_mock;
 	ImuManager imu_mgr(imu_mock);
 

@@ -15,3 +15,30 @@
 		compatible = "zephyr,cdc-acm-uart";
 	};
 };
+
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &scratch_partition;
+/delete-node/ &storage_partition;
+
+&is25wp064 {
+    partitions {
+        boot_partition: partition@0 {
+            label = "mcuboot";
+            reg = <0x00000000 DT_SIZE_K(128)>;
+        };
+        slot0_partition: partition@20000 {
+            label = "image-0";
+            reg = <0x00020000 DT_SIZE_M(1)>;
+        };
+        slot1_partition: partition@120000 {
+            label = "image-1";
+            reg = <0x00120000 DT_SIZE_M(1)>;
+        };
+        storage_partition: partition@220000 {
+            label = "storage";
+            reg = <0x00220000 DT_SIZE_K(6016)>;
+        };
+    };
+};

@@ -2,7 +2,7 @@ import sys
 import subprocess
 import time
 
-filename = "/home/kuno/git/mcu-zephyr-master/zephyrproject/zephyr/samples/hello_world/src/main.cpp"
+filename = "/home/kuno/git/mcu-zephyr-master/zephyrproject/zephyr/samples/subsys/mgmt/mcumgr/smp_svr/src/main.c"
 reset_counter = 0
 
 def do_add_print():
@@ -16,13 +16,13 @@ def do_add_print():
 
 def do_build():
     print("Build")
-    subprocess.run(['west build -p -b mimxrt1060_evk samples/hello_world/ -d build'], shell=True)
+    subprocess.run(['west build -b mimxrt1060_evkb samples/subsys/mgmt/mcumgr/smp_svr/ -d build-smp -- -DOVERLAY_CONFIG="overlay-cdc.conf" -DDTC_OVERLAY_FILE=usb.overlay'], shell=True)
 
 def do_flash():
     print("Flash")
     for retry in range(5):
         try:
-            subprocess.run(['west flash'], shell=True, check=True)
+            subprocess.run(['west flash -d build-smp/'], shell=True, check=True)
             break
         except Exception as e:
             print(f"Failed to flash, retrying... {retry}, err {e}")

@@ -59,6 +59,10 @@ enum {
 };
 
 struct flash_flexspi_nor_config {
+	/* Note: don't use this controller reference in code. It is
+	 * only used during init to copy the device structure from ROM
+	 * into a RAM structure
+	 */
 	const struct device *controller;
 };
 
@@ -497,7 +501,10 @@ static int flash_flexspi_nor_init(const struct device *dev)
 	uint8_t vendor_id;
 	uint32_t temp_lut[sizeof(flash_flexspi_nor_lut) / sizeof(uint32_t)];
 
-	// Move controller device struct to RAM to avoid RWW issues during erase/write.
+	/* First step- use ROM pointer to controller device to create
+	 * a copy of the device structure in RAM we can use while in
+	 * critical sections of code to avoid RWW issues.
+	 */
 	memcpy(&data->controller, config->controller, sizeof(struct device));
 
 	if (!device_is_ready(&data->controller)) {

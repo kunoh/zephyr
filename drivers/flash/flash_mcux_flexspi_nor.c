@@ -512,9 +512,12 @@ static int flash_flexspi_nor_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	if (!memc_flexspi_is_running_xip(&data->controller) &&
-	    memc_flexspi_set_device_config(&data->controller, &data->config,
-					   data->port)) {
+	if (memc_flexspi_is_running_xip(&data->controller)){
+		// Wait for bus idle before configuring.
+		memc_flexspi_wait_bus_idle(&data->controller);
+	}
+
+	if(memc_flexspi_set_device_config(&data->controller, &data->config, data->port)){
 		LOG_ERR("Could not set device configuration");
 		return -EINVAL;
 	}

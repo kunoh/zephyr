@@ -9,6 +9,9 @@
 #include <zephyr/stats/stats.h>
 #include <zephyr/usb/usb_device.h>
 
+#include <zephyr/device.h>
+#include <zephyr/drivers/watchdog.h>
+
 #ifdef CONFIG_MCUMGR_GRP_FS
 #include <zephyr/device.h>
 #include <zephyr/fs/fs.h>
@@ -50,6 +53,9 @@ static struct fs_mount_t littlefs_mnt = {
 };
 #endif
 
+#define WDT_MAX_WINDOW  1000U
+#define WDT_MIN_WINDOW  0U
+
 int main(void)
 {
 	int rc = STATS_INIT_AND_REG(smp_svr_stats, STATS_SIZE_32,
@@ -57,6 +63,38 @@ int main(void)
 
 	if (rc < 0) {
 		LOG_ERR("Error initializing stats system [%d]", rc);
+	}
+
+	int err;
+	int wdt_channel_id;
+	const struct device *const wdt = DEVICE_DT_GET(DT_ALIAS(watchdog0));
+
+	printk("Watchdog sample application\n");
+
+	if (!device_is_ready(wdt)) {
+		printk("%s: device not ready.\n", wdt->name);
+		return 0;
+	}
+
+	struct wdt_timeout_cfg wdt_config = {
+		/* Reset SoC when watchdog timer expires. */
+		.flags = WDT_FLAG_RESET_SOC,
+
+		/* Expire watchdog after max window */
+		.window.min = WDT_MIN_WINDOW,
+		.window.max = WDT_MAX_WINDOW,
+	};
+
+	wdt_channel_id = wdt_install_timeout(wdt, &wdt_config);
+	if (wdt_channel_id < 0) {
+		printk("Watchdog install error\n");
+		return 0;
+	}
+
+	err = wdt_setup(wdt, WDT_OPT_PAUSE_HALTED_BY_DBG);
+	if (err < 0) {
+		printk("Watchdog setup error\n");
+		return 0;
 	}
 
 	/* Register the built-in mcumgr command handlers. */
@@ -87,8 +125,9 @@ int main(void)
 	 * main thread idle while the mcumgr server runs.
 	 */
 	while (1) {
-		k_sleep(K_MSEC(1000));
+		k_sleep(K_MSEC(500));
 		STATS_INC(smp_svr_stats, ticks);
+		wdt_feed(wdt, wdt_channel_id);
 	}
 	return 0;
 }
